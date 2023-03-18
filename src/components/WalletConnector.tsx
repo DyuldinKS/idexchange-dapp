@@ -1,4 +1,4 @@
-import { getAccount, getNetwork, watchNetwork, watchSigner } from '@wagmi/core';
+import { getAccount, watchNetwork, watchSigner } from '@wagmi/core';
 import debug from 'debug';
 import { useEffect } from 'react';
 import { equals } from 'ramda';
@@ -22,7 +22,6 @@ export const WalletConnector = () => {
       setWeb3Store(newWeb3);
     };
 
-    console.log('use effect');
     const unwatchNetwork = watchNetwork((newNetwork) => {
       const chainId = newNetwork.chain?.id;
       log('network changed:', chainId, newNetwork);

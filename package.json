@@ -11,16 +11,19 @@
   "dependencies": {
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
+    "@hookform/resolvers": "^2.9.11",
     "@mui/material": "^5.11.13",
     "@wagmi/core": "^0.10.2",
     "@web3modal/ethereum": "^2.2.1",
     "@web3modal/html": "^2.2.1",
+    "bignumber.js": "^9.1.1",
     "debug": "^4.3.4",
     "ethers": "^5",
     "ramda": "^0.28.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.43.7"
+    "react-hook-form": "^7.43.7",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
