@@ -1,0 +1,34 @@
+{
+  "name": "idena-atomic-dex-dapp",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@mui/material": "^5.11.13",
+    "@wagmi/core": "^0.10.2",
+    "@web3modal/ethereum": "^2.2.1",
+    "@web3modal/html": "^2.2.1",
+    "debug": "^4.3.4",
+    "ethers": "^5",
+    "ramda": "^0.28.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.43.7"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/ramda": "^0.28.23",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react-swc": "^3.0.0",
+    "typescript": "^4.9.3",
+    "vite": "^4.2.0"
+  }
+}
