@@ -1,4 +1,3 @@
-import './utils/web3modal';
 import { WalletConnector } from './components/WalletConnector';
 import { z } from 'zod';
 import { OrderCreationPage } from './components/OrderCreationPage';

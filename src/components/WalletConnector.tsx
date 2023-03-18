@@ -5,7 +5,7 @@ import { equals } from 'ramda';
 import { useActualRef } from '../hooks/useActualRef';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { buildNewStore } from '../providers/store/web3';
-import { web3Modal } from '../utils/web3modal';
+import { web3Modal } from '../utils/web3Modal';
 
 const log = debug('components:WalletConnector');
 

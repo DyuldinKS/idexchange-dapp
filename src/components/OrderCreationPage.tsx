@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Box, Breakpoint, Button, ButtonProps, Stack, styled, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
 import { switchNetwork } from '@wagmi/core';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useWeb3Store } from '../providers/store/StoreProvider';
-import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3modal';
+import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
 import { UiPage, UiSubmitButton } from './ui';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
