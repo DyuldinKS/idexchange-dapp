@@ -1,0 +1,199 @@
+[
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_ownerClaimPeriod", "type": "uint256" },
+      { "internalType": "uint256", "name": "_securityDepositAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "_minOrderTTL", "type": "uint256" },
+      { "internalType": "uint256", "name": "_protocolPenaltyFee", "type": "uint256" },
+      { "internalType": "address", "name": "_protocolFund", "type": "address" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "secretHash", "type": "bytes32" }
+    ],
+    "name": "OrderBurned",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "secretHash", "type": "bytes32" },
+      { "indexed": false, "internalType": "bytes", "name": "secret", "type": "bytes" }
+    ],
+    "name": "OrderCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "secretHash", "type": "bytes32" },
+      { "indexed": false, "internalType": "uint256", "name": "amountXDAI", "type": "uint256" },
+      { "indexed": false, "internalType": "address", "name": "payoutAddress", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "deadline", "type": "uint256" }
+    ],
+    "name": "OrderConfirmed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "secretHash", "type": "bytes32" },
+      { "indexed": false, "internalType": "address", "name": "matcher", "type": "address" }
+    ],
+    "name": "OrderMatched",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "secretHash", "type": "bytes32" }
+    ],
+    "name": "OwnerPenalized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "SecurityDepositSubmitted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "SecurityDepositWithdrawn",
+    "type": "event"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "secretHash", "type": "bytes32" }],
+    "name": "burnOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes", "name": "secret", "type": "bytes" }],
+    "name": "completeOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "secretHash", "type": "bytes32" },
+      { "internalType": "uint256", "name": "amountXDAI", "type": "uint256" },
+      { "internalType": "address", "name": "payoutAddress", "type": "address" },
+      { "internalType": "uint256", "name": "deadline", "type": "uint256" }
+    ],
+    "name": "confirmOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "secretHash", "type": "bytes32" }],
+    "name": "matchOrder",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minOrderTTL",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "name": "orders",
+    "outputs": [
+      { "internalType": "bool", "name": "confirmed", "type": "bool" },
+      { "internalType": "address", "name": "owner", "type": "address" },
+      { "internalType": "address", "name": "payoutAddress", "type": "address" },
+      { "internalType": "address", "name": "matcher", "type": "address" },
+      { "internalType": "uint256", "name": "amountXDAI", "type": "uint256" },
+      { "internalType": "uint256", "name": "matchDeadline", "type": "uint256" },
+      { "internalType": "uint256", "name": "executionDeadline", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ownerClaimPeriod",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "secretHash", "type": "bytes32" }],
+    "name": "penalizeOwner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "protocolFund",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "protocolPenaltyFee",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "securityDepositAmount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "securityDepositInUse",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "securityDeposits",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "submitSecurityDeposit",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawSecurityDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

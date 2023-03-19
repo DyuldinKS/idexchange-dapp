@@ -1,4 +1,13 @@
-import { Breakpoint, Button, ButtonProps, Stack, styled } from '@mui/material';
+import {
+  Breakpoint,
+  Button,
+  ButtonProps,
+  Stack,
+  styled,
+  Typography,
+  TypographyProps,
+} from '@mui/material';
+import { FC, ReactNode } from 'react';
 
 export const UiPage = styled(Stack)<{
   width: Breakpoint | number | string;
@@ -8,7 +17,7 @@ export const UiPage = styled(Stack)<{
     maxWidth: typeof breakpoint === 'number' ? `${breakpoint}px` : width,
     alignItems: 'stretch',
     flexGrow: 1,
-    margin: '5rem auto',
+    margin: '1rem auto',
     padding: '0 1rem',
     minWidth: '280px',
     width: '100%',
@@ -16,5 +25,18 @@ export const UiPage = styled(Stack)<{
 });
 
 export const UiSubmitButton = (props: ButtonProps) => (
-  <Button size="large" variant="outlined" {...props} />
+  <Button size="large" variant="contained" {...props} />
 );
+
+export const UiLogo = () => (
+  <Typography variant="h2" component="h1" color="#aaa" fontWeight="light">
+    Idena atomic&nbsp;DEX
+  </Typography>
+);
+
+export const UiError: FC<TypographyProps & { msg: ReactNode }> = ({ msg, ...typProps }) =>
+  msg ? (
+    <Typography color="error" {...typProps}>
+      {msg}
+    </Typography>
+  ) : null;
