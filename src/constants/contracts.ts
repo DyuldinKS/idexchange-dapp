@@ -3,9 +3,9 @@ import { addr } from '../utils/address';
 
 export const CONTRACTS = {
   idena: {
-    orderCreation: addr('0xdfa64FC435298E3C45bd81491055a597B4CaC98E'),
+    sellIdna: addr('0xdfa64FC435298E3C45bd81491055a597B4CaC98E'),
   },
   [gnosis.id]: {
-    responseOrderCreation: addr('0x0000000000000000000000000000000000000001'),
+    receiveXdai: addr('0x426b466Af327E53B4c2a7D1Ea7672E397BE7b408'),
   },
 } as const;
