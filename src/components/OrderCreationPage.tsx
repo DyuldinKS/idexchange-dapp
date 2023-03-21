@@ -28,7 +28,7 @@ const orderCreationFormSchema = z.object({
   amountToSell: z
     .string()
     .refine((arg) => Number(arg) > 0, { message: 'should be a positive number' }),
-  amountToBuy: z
+  amountToReceive: z
     .string()
     .refine((arg) => Number(arg) > 0, { message: 'should be a positive number' }),
   secret: z.string().nonempty().min(12),
@@ -41,7 +41,7 @@ export const OrderCreationPage = () => {
     resolver: zodResolver(orderCreationFormSchema),
     defaultValues: {
       amountToSell: '',
-      amountToBuy: '',
+      amountToReceive: '',
       secret: '',
     },
     mode: 'onChange',
@@ -53,8 +53,8 @@ export const OrderCreationPage = () => {
     rData: [securityDepositRD],
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
-  const [submitDepositRD, submitDepositRDApi] = useRemoteData(null);
-  const error = securityDepositRD.error || submitDepositRD.error;
+  const [depositChangeRD, depositChangeRDApi] = useRemoteData(null);
+  const error = securityDepositRD.error || depositChangeRD.error;
   console.log('>>> error', typeof error, error);
   console.log('>>> sec deposit', securityDepositRD);
 
@@ -98,12 +98,16 @@ export const OrderCreationPage = () => {
         </>
       );
 
+    const contractInfo = {
+      chainId: gnosis.id,
+      address: CONTRACTS[gnosis.id].receiveXdai,
+      abi: abiToReceiveXdai,
+    };
+
     const replenishDeposit = () => {
-      const callSubmitDeposit = async () => {
+      const processTx = async () => {
         const txConfig = await prepareWriteContract({
-          chainId: gnosis.id,
-          address: CONTRACTS[gnosis.id].receiveXdai,
-          abi: abiToReceiveXdai,
+          ...contractInfo,
           functionName: 'submitSecurityDeposit',
           overrides: {
             value: securityDepositRD.data.requiredAmount,
@@ -111,21 +115,33 @@ export const OrderCreationPage = () => {
         });
         log('replenishDeposit txConfig', txConfig);
         const tx = await writeContract(txConfig);
-        console.log('>>> tx', tx);
-        const { hash } = tx;
-        const data = await waitForTransaction({ hash });
-        console.log('>>> data', data);
+        await waitForTransaction({ hash: tx.hash });
         await reloadSecurityDeposit();
       };
 
-      submitDepositRDApi.track(callSubmitDeposit());
+      depositChangeRDApi.track(processTx().then(reloadSecurityDeposit));
     };
 
-    if (rData.isLoading(submitDepositRD))
+    const withdrawDeposit = () => {
+      const processTx = async () => {
+        const txConfig = await prepareWriteContract({
+          ...contractInfo,
+          functionName: 'withdrawSecurityDeposit',
+        });
+        log('withdrawDeposit txConfig', txConfig);
+        const tx = await writeContract(txConfig);
+        await waitForTransaction({ hash: tx.hash });
+        await reloadSecurityDeposit();
+      };
+
+      depositChangeRDApi.track(processTx().then(reloadSecurityDeposit));
+    };
+
+    if (rData.isLoading(depositChangeRD))
       return (
         <>
           {commonInfo}
-          <UiSubmitButton disabled>Loading...</UiSubmitButton>
+          <UiSubmitButton disabled>Updating deposit...</UiSubmitButton>
         </>
       );
 
@@ -142,7 +158,22 @@ export const OrderCreationPage = () => {
         </>
       );
 
-    return null;
+    return (
+      <>
+        {commonInfo}
+        <UiSubmitButton variant="outlined" onClick={withdrawDeposit}>
+          Withdraw deposit
+        </UiSubmitButton>
+      </>
+    );
+  };
+
+  const createOrderToSellBlock = () => {
+    return (
+      <>
+        <UiSubmitButton onClick={() => {}}>Create order to sell IDNA</UiSubmitButton>
+      </>
+    );
   };
 
   return (
@@ -161,9 +192,9 @@ export const OrderCreationPage = () => {
           size="small"
         />
         <TextField
-          {...register('amountToBuy')}
-          error={Boolean(errors.amountToBuy)}
-          helperText={errors.amountToBuy?.message}
+          {...register('amountToReceive')}
+          error={Boolean(errors.amountToReceive)}
+          helperText={errors.amountToReceive?.message}
           variant="outlined"
           placeholder="XDAI amount to receive"
           size="small"
@@ -173,7 +204,7 @@ export const OrderCreationPage = () => {
           error={Boolean(errors.secret)}
           helperText={errors.secret?.message}
           variant="outlined"
-          placeholder="Come up with a secret order code"
+          placeholder="A secret code to identify the order"
           size="small"
         />
         {(!address && (
@@ -185,8 +216,12 @@ export const OrderCreationPage = () => {
             <UiSubmitButton onClick={() => switchNetwork({ chainId: DEFAULT_CHAIN_ID })}>
               Switch network
             </UiSubmitButton>
-          )) ||
-          renderSecurityDepositBlock()}
+          )) || (
+            <>
+              {renderSecurityDepositBlock()}
+              {createOrderToSellBlock()}
+            </>
+          )}
         {<UiError msg={error?.message || error} />}
       </Stack>
     </UiPage>
