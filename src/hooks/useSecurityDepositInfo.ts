@@ -7,7 +7,7 @@ import { Address, readContract } from '@wagmi/core';
 import { useRemoteData } from '../hooks/useRemoteData';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 
-type SecurityDepositInfo = {
+export type SecurityDepositInfoType = {
   amount: BigNumber;
   isInUse: Boolean;
   requiredAmount: BigNumber;
@@ -18,8 +18,8 @@ const log = debug('hooks:useSecurityDepositInfo');
 
 export const useGetSecurityDepositInfo = (contractToReceiveTokens: Address, abi: any) => {
   const [{ chainId, address }] = useWeb3Store();
-  const rd = useRemoteData<SecurityDepositInfo>(null, log);
-  const [, rdApi] = rd;
+  const rd = useRemoteData<SecurityDepositInfoType>(null, log);
+  const [, rdMethods] = rd;
 
   const reloadSecurityDeposit = useCallback(() => {
     if (!address || !chainId) return;
@@ -45,18 +45,15 @@ export const useGetSecurityDepositInfo = (contractToReceiveTokens: Address, abi:
         functionName: 'securityDepositAmount',
         args: [],
       }),
-    ]).then(
-      ([amount, isInUse, requiredAmount]: any[]) =>
-        (console.log('BN(amount).gte(requiredAmount)', amount.gte(requiredAmount)) as any) || {
-          amount,
-          isInUse,
-          requiredAmount,
-          isValid: amount.gte(requiredAmount) && !isInUse,
-        },
-    );
-    rdApi.track(load);
+    ]).then(([amount, isInUse, requiredAmount]: any[]) => ({
+      amount,
+      isInUse,
+      requiredAmount,
+      isValid: amount.gte(requiredAmount) && !isInUse,
+    }));
+    rdMethods.track(load);
     return load;
-  }, [address, chainId, rdApi]);
+  }, [address, chainId, rdMethods]);
 
   useEffect(() => {
     reloadSecurityDeposit();

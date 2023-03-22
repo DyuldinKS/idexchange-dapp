@@ -20,9 +20,10 @@ type UseRemoteDataReturn<SuccessData, InitialData = null, Err = any> = [
  * A hook that bounds RemoteData state and its updates to React state.
  * @param initialState - initial state of the RemoteData
  * @param log - a function to log changes of the RemoteData state.
- * @returns a tuple consisting of the RemoteData itself and the API object,
- * which is represented by the set of methods to control the RemoteData state.
- * The API object is immutable - it is always the same object in memory.
+ * @returns a tuple consisting of the RemoteData itself and the immutable object,
+ * representing the set of methods to control the RemoteData state.
+ * The methods object is immutable - it is always the same object in memory,
+ * while the methods themselves are re-created on every render.
  */
 export const useRemoteData = <SuccessData, InitialData = null, Err = any>(
   initialState: InitialData,
@@ -59,7 +60,7 @@ export const useRemoteData = <SuccessData, InitialData = null, Err = any>(
     return promise.then(setSuccess).catch(setFailure);
   };
 
-  const api = {
+  const methodsBoundToNewState = {
     getState,
     setState,
     setNotAsked,
@@ -68,9 +69,9 @@ export const useRemoteData = <SuccessData, InitialData = null, Err = any>(
     setFailure,
     track,
   } as const;
-  const apiRef = useRef(api);
-  // meld new api methods into existing object, without changing the link on it
-  Object.assign(apiRef.current, api);
+  const methodsRef = useRef(methodsBoundToNewState);
+  // meld new methods into existing object, without changing the link on it
+  Object.assign(methodsRef.current, methodsBoundToNewState);
 
-  return [state, apiRef.current];
+  return [state, methodsRef.current];
 };

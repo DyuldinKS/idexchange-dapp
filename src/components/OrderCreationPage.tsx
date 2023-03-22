@@ -58,7 +58,7 @@ export const OrderCreationPage = () => {
     rData: [securityDepositRD],
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
-  const [depositChangeRD, depositChangeRDApi] = useRemoteData(null);
+  const [depositChangeRD, depositChangeRDM] = useRemoteData(null);
   const error = securityDepositRD.error || depositChangeRD.error;
   console.log('>>> error', typeof error, error);
   console.log('>>> sec deposit', securityDepositRD);
@@ -103,7 +103,7 @@ export const OrderCreationPage = () => {
         await reloadSecurityDeposit();
       };
 
-      depositChangeRDApi.track(processTx().then(reloadSecurityDeposit));
+      depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
     };
 
     const withdrawDeposit = () => {
@@ -118,7 +118,7 @@ export const OrderCreationPage = () => {
         await reloadSecurityDeposit();
       };
 
-      depositChangeRDApi.track(processTx().then(reloadSecurityDeposit));
+      depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
     };
 
     if (rData.isLoading(depositChangeRD))
