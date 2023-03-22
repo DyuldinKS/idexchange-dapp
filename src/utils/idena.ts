@@ -3,7 +3,6 @@ import {
   TransactionType,
   IdenaProvider,
   CallContractAttachment,
-  hexToUint8Array,
   ContractArgument,
   Transaction,
   toHexString,
@@ -12,8 +11,11 @@ import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
 import { keccak256 } from 'ethers/lib/utils.js';
 
+export type IdnaOrderState = Awaited<ReturnType<typeof getIdnaOrderState>>;
+
 const MAX_FEE = '3';
 const IDENA_CONF = APP_CONFIG.idena;
+export const MIN_IDNA_AMOUNT_TO_SELL = 100;
 
 // TODO: make idena-sdk-js fix PR
 // idena-sdk-js uses wrong case of writeBigUInt64LE method. It is supported by nodejs, but not supported by browsers.
@@ -27,21 +29,39 @@ export const idenaProvider = IdenaProvider.create(IDENA_CONF.rpcUrl, IDENA_CONF.
 
 const contractAddress = CONTRACTS.idena.sellIdna;
 
-async function getOrderState(secretHash: string) {
-  const [
-    owner,
-    payoutAddress,
-    amountDNA,
-    amountXDAI,
-    expirationBlock,
-    matcher,
-    matchExpirationBlock,
-  ] = await Promise.all([
-    tryReadMap(contractAddress, 'getOwner', secretHash, ContractArgumentFormat.Hex), // address == hex or string?
-    tryReadMap(contractAddress, 'getPayoutAddresses', secretHash, ContractArgumentFormat.Hex),
-    tryReadMap(contractAddress, 'getAmountDNA', secretHash, ContractArgumentFormat.Dna),
-    tryReadMap(contractAddress, 'getAmountXDAI', secretHash, ContractArgumentFormat.Dna),
-    tryReadMap(contractAddress, 'getExpirationBlock', secretHash, ContractArgumentFormat.Uint64),
+export async function getIdnaOrderState(secretHash: string) {
+  const res = await Promise.all([
+    idenaProvider.Contract.readMap(
+      contractAddress,
+      'getOwner',
+      secretHash,
+      ContractArgumentFormat.Hex,
+    ),
+    idenaProvider.Contract.readMap(
+      contractAddress,
+      'getPayoutAddresses',
+      secretHash,
+      ContractArgumentFormat.Hex,
+    ),
+    idenaProvider.Contract.readMap(
+      contractAddress,
+      'getAmountDNA',
+      secretHash,
+      ContractArgumentFormat.Dna,
+    ),
+    idenaProvider.Contract.readMap(
+      contractAddress,
+      'getAmountXDAI',
+      secretHash,
+      ContractArgumentFormat.Dna,
+    ),
+    idenaProvider.Contract.readMap(
+      contractAddress,
+      'getExpirationBlock',
+      secretHash,
+      ContractArgumentFormat.Uint64,
+    ),
+    // TODO: remove tryReadMap
     tryReadMap(contractAddress, 'getMatcher', secretHash, ContractArgumentFormat.Hex),
     tryReadMap(
       contractAddress,
@@ -49,16 +69,16 @@ async function getOrderState(secretHash: string) {
       secretHash,
       ContractArgumentFormat.Uint64,
     ),
-  ]);
+  ] as const);
 
   return {
-    owner,
-    payoutAddress,
-    amountDNA,
-    amountXDAI,
-    expirationBlock,
-    matcher,
-    matchExpirationBlock,
+    owner: res[0],
+    payoutAddress: res[1],
+    amountDna: res[2],
+    amountXdai: res[3],
+    expirationBlock: res[4],
+    matcher: res[5],
+    matchExpirationBlock: res[6],
   };
 }
 
@@ -71,7 +91,7 @@ async function tryReadMap(
   try {
     return await idenaProvider.Contract.readMap(contractAddress, method, key, type);
   } catch (e) {
-    console.error('>>> tryReadMap error', e);
+    console.error('>>> tryReadMap error', method, key, type, e);
     return null;
   }
 }
@@ -85,13 +105,12 @@ const estimateWriteTx = async (tx: Transaction, sender: string) =>
     params: [tx.toHex(true), sender],
   });
 
-const createOrderToSellIdnaTx = async (
+export const createOrderToSellIdnaTx = async (
   from: string,
   idnaAmount: string,
   xDaiAmount: string,
   secretHex: string,
 ) => {
-  const secretBytes = hexToUint8Array(secretHex);
   const lastBlock = await idenaProvider.Blockchain.lastBlock();
   const deadline = Number(lastBlock.height) + 600;
   const secretHash = keccak256(secretHex);
@@ -133,13 +152,9 @@ const createOrderToSellIdnaTx = async (
     maxFee: MAX_FEE,
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
-  console.log('>>> tx', tx);
-  const res = await estimateWriteTx(tx, from);
-  console.log('>>> res', res, tx.maxFee);
+  await estimateWriteTx(tx, from);
   return tx;
 };
-
-(window as any).createOrderToSellIdna = createOrderToSellIdnaTx;
 
 export const getIdenaLinkToSignTx = (rawTx: Transaction) =>
   `${IDENA_CONF.webAppOrigin}/dna/raw?tx=${rawTx.toHex(true)}&callback_url=${encodeURIComponent(
@@ -151,4 +166,4 @@ export const generateRandomSecret = () => {
   return toHexString(secretBytes, true);
 };
 
-export const hashSecret = (secret: string) => keccak256(secret);
+export const getSecretHash = (secret: string) => keccak256(secret);
