@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --force",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
@@ -19,6 +19,8 @@
     "bignumber.js": "^9.1.1",
     "debug": "^4.3.4",
     "ethers": "^5",
+    "idena-sdk-js": "^0.1.0",
+    "keccak256": "^1.0.6",
     "ramda": "^0.28.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

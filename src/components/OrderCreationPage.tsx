@@ -26,6 +26,7 @@ import { rData, RemoteData, RemoteDataSuccess } from '../utils/remoteData';
 import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
 import { UiError, UiLogo, UiPage, UiSubmitButton } from './ui';
 import { SecurityDepositInfo } from './SecurityDepositInfo';
+import '../utils/idena';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
