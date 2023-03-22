@@ -52,7 +52,7 @@ const orderCreationFormSchema = z.object({
 
 const log = debug('OrderCreationPage');
 
-export const OrderCreationPage = () => {
+export const OrderCreationPage: FC = () => {
   const form = useForm<OrderCreationFormSchema>({
     resolver: zodResolver(orderCreationFormSchema),
     defaultValues: {
@@ -178,6 +178,15 @@ export const OrderCreationPage = () => {
   };
 
   const renderIdnaOrderBlock = () => {
+    if (isOrderSuccessfullyCreated) {
+      return (
+        <Stack>
+          <Typography>Order successfully created!</Typography>
+          <Typography>Expiration block {idenaOrderRD.data.expirationBlock}</Typography>
+        </Stack>
+      );
+    }
+
     const generateTxLink = () => {
       setIsIdenaTxLinkClicked(false);
       handleSubmit((values) => {
@@ -198,7 +207,7 @@ export const OrderCreationPage = () => {
       return (
         <>
           <UiSubmitButton disabled={rData.isLoading(idenaTxLinkRD)} onClick={generateTxLink}>
-            Create order to sell IDNA
+            Prepare order to sell Idna
           </UiSubmitButton>
         </>
       );
@@ -210,7 +219,7 @@ export const OrderCreationPage = () => {
         disabled={rData.isLoading(idenaTxLinkRD)}
         onClick={generateTxLink}
       >
-        Regenerate order to sell idna
+        Regenerate order to sell Idna
       </UiSubmitButton>
     );
 
@@ -241,21 +250,29 @@ export const OrderCreationPage = () => {
       );
     };
 
-    if (!isOrderSuccessfullyCreated) {
-      return (
-        <>
-          {regenerateOrderBtn}
-          <Stack>
-            <Typography>Wait for the transaction to complete:</Typography>
-            <UiSubmitButton sx={{ mt: 1 }} onClick={checkOrderState}>
-              Check order status
-            </UiSubmitButton>
-          </Stack>
-        </>
-      );
-    }
+    return (
+      <>
+        {regenerateOrderBtn}
+        <Stack>
+          <Typography>Wait for the transaction to complete:</Typography>
+          <UiSubmitButton sx={{ mt: 1 }} onClick={checkOrderState}>
+            Check order status
+          </UiSubmitButton>
+        </Stack>
+      </>
+    );
+  };
 
-    return null;
+  const renderXdaiOrderBlock = () => {
+    return (
+      <UiSubmitButton
+        onClick={() => {
+          // TODO: to be implemented
+        }}
+      >
+        Create order to receive xDai
+      </UiSubmitButton>
+    );
   };
 
   return (
@@ -326,6 +343,7 @@ export const OrderCreationPage = () => {
               {rData.isSuccess(securityDepositRD) &&
                 securityDepositRD.data.isValid &&
                 renderIdnaOrderBlock()}
+              {isOrderSuccessfullyCreated && renderXdaiOrderBlock()}
             </>
           )}
         {<UiError msg={error?.message || error} />}
