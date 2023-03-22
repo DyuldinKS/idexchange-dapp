@@ -6,6 +6,7 @@ import {
   hexToUint8Array,
   ContractArgument,
   Transaction,
+  toHexString,
 } from 'idena-sdk-js';
 import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
@@ -144,3 +145,10 @@ export const getIdenaLinkToSignTx = (rawTx: Transaction) =>
   `${IDENA_CONF.webAppOrigin}/dna/raw?tx=${rawTx.toHex(true)}&callback_url=${encodeURIComponent(
     IDENA_CONF.callbackUrl,
   )}&callback_format=html`;
+
+export const generateRandomSecret = () => {
+  const secretBytes = crypto.getRandomValues(new Uint8Array(24));
+  return toHexString(secretBytes, true);
+};
+
+export const hashSecret = (secret: string) => keccak256(secret);

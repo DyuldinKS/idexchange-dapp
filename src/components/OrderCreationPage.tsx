@@ -1,6 +1,6 @@
 import debug from 'debug';
 import { formatUnits } from 'ethers/lib/utils.js';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -27,17 +27,21 @@ import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Moda
 import { UiError, UiLogo, UiPage, UiSubmitButton } from './ui';
 import { SecurityDepositInfo } from './SecurityDepositInfo';
 import '../utils/idena';
+import { generateRandomSecret, hashSecret } from '../utils/idena';
+import { ethers } from 'ethers';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
 const orderCreationFormSchema = z.object({
   amountToSell: z
     .string()
-    .refine((arg) => Number(arg) > 0, { message: 'should be a positive number' }),
+    .refine((arg) => Number(arg) > 0, { message: 'Should be a positive number' }),
   amountToReceive: z
     .string()
-    .refine((arg) => Number(arg) > 0, { message: 'should be a positive number' }),
-  secret: z.string().nonempty().min(12),
+    .refine((arg) => Number(arg) > 0, { message: 'Should be a positive number' }),
+  idenaAddress: z
+    .string()
+    .refine((val) => ethers.utils.isAddress(val), { message: 'Invalid Idena address' }),
 });
 
 const log = debug('OrderCreationPage');
@@ -48,7 +52,8 @@ export const OrderCreationPage = () => {
     defaultValues: {
       amountToSell: '',
       amountToReceive: '',
-      secret: '',
+      idenaAddress: '',
+      // secret: generateRandomSecret(),
     },
     mode: 'onChange',
   });
@@ -61,6 +66,8 @@ export const OrderCreationPage = () => {
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
   const [depositChangeRD, depositChangeRDM] = useRemoteData(null);
   const error = securityDepositRD.error || depositChangeRD.error;
+  const [secret] = useState(generateRandomSecret);
+  const [hash] = useState(() => hashSecret(secret));
   console.log('>>> error', typeof error, error);
   console.log('>>> sec deposit', securityDepositRD);
 
@@ -126,7 +133,7 @@ export const OrderCreationPage = () => {
       return (
         <>
           {depositInfo}
-          <UiSubmitButton disabled>Updating deposit...</UiSubmitButton>
+          <UiSubmitButton disabled>Updating xDai deposit...</UiSubmitButton>
         </>
       );
 
@@ -147,7 +154,7 @@ export const OrderCreationPage = () => {
       <>
         {depositInfo}
         <UiSubmitButton variant="outlined" onClick={withdrawDeposit}>
-          Withdraw deposit
+          Withdraw xDai deposit
         </UiSubmitButton>
       </>
     );
@@ -169,6 +176,14 @@ export const OrderCreationPage = () => {
       </Typography>
       <Stack spacing="1rem" mt={4}>
         <TextField
+          {...register('idenaAddress')}
+          error={Boolean(errors.idenaAddress)}
+          helperText={errors.idenaAddress?.message}
+          variant="outlined"
+          placeholder="Your Idena identity address"
+          size="small"
+        />
+        <TextField
           {...register('amountToSell')}
           error={Boolean(errors.amountToSell)}
           helperText={errors.amountToSell?.message}
@@ -184,13 +199,19 @@ export const OrderCreationPage = () => {
           placeholder="XDAI amount to receive"
           size="small"
         />
+
+        <Typography>
+          A secret code has been automatically generated for your order, which you must copy and
+          securely store. Losing this code would prevent you from either completing or canceling
+          your order, resulting in the loss of your funds.
+        </Typography>
         <TextField
-          {...register('secret')}
-          error={Boolean(errors.secret)}
-          helperText={errors.secret?.message}
+          disabled={true} // prevent auto-generated secret from changing
           variant="outlined"
           placeholder="A secret code to identify the order"
           size="small"
+          multiline={true}
+          value={secret}
         />
         {(!address && (
           <UiSubmitButton onClick={() => web3Modal.openModal()} variant="contained">
