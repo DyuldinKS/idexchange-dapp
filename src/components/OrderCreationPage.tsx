@@ -1,5 +1,6 @@
 import debug from 'debug';
 import { formatUnits } from 'ethers/lib/utils.js';
+import { FC } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -16,11 +17,15 @@ import { gnosis } from '@wagmi/core/chains';
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
 import { useRemoteData } from '../hooks/useRemoteData';
-import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
+import {
+  SecurityDepositInfoType,
+  useGetSecurityDepositInfo,
+} from '../hooks/useSecurityDepositInfo';
 import { useWeb3Store } from '../providers/store/StoreProvider';
-import { rData } from '../utils/remoteData';
+import { rData, RemoteData, RemoteDataSuccess } from '../utils/remoteData';
 import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
 import { UiError, UiLogo, UiPage, UiSubmitButton } from './ui';
+import { SecurityDepositInfo } from './SecurityDepositInfo';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
@@ -67,33 +72,12 @@ export const OrderCreationPage = () => {
 
     const { isInUse } = securityDepositRD.data;
 
-    const commonInfo = (
-      <Stack alignItems="start">
-        <Typography>{`Current security deposit: ${formatUnits(
-          securityDepositRD.data.amount,
-          gnosis.nativeCurrency.decimals,
-        )}`}</Typography>
-        {securityDepositRD.data.amount.gt(0) && (
-          <Tooltip
-            placement="top-start"
-            title={
-              <>
-                Shows if your deposit is already being used to confirm another order. If it is true,
-                you will need to wait until your previous order is complete or use a different
-                account to create a new order.
-              </>
-            }
-          >
-            <Typography>{`Already in use: ${isInUse} (?)`}</Typography>
-          </Tooltip>
-        )}
-      </Stack>
-    );
+    const depositInfo = <SecurityDepositInfo {...securityDepositRD.data} />;
 
     if (isInUse)
       return (
         <>
-          {commonInfo}
+          {depositInfo}
           <UiSubmitButton disabled={true}>Wait for the end of your previous order</UiSubmitButton>
         </>
       );
@@ -140,7 +124,7 @@ export const OrderCreationPage = () => {
     if (rData.isLoading(depositChangeRD))
       return (
         <>
-          {commonInfo}
+          {depositInfo}
           <UiSubmitButton disabled>Updating deposit...</UiSubmitButton>
         </>
       );
@@ -148,7 +132,7 @@ export const OrderCreationPage = () => {
     if (!securityDepositRD.data?.isValid)
       return (
         <>
-          {commonInfo}
+          {depositInfo}
           <UiSubmitButton onClick={replenishDeposit}>
             {`Replenish deposit for ${formatUnits(
               securityDepositRD.data.requiredAmount,
@@ -160,7 +144,7 @@ export const OrderCreationPage = () => {
 
     return (
       <>
-        {commonInfo}
+        {depositInfo}
         <UiSubmitButton variant="outlined" onClick={withdrawDeposit}>
           Withdraw deposit
         </UiSubmitButton>
@@ -219,7 +203,9 @@ export const OrderCreationPage = () => {
           )) || (
             <>
               {renderSecurityDepositBlock()}
-              {createOrderToSellBlock()}
+              {rData.isSuccess(securityDepositRD) &&
+                securityDepositRD.data.isValid &&
+                createOrderToSellBlock()}
             </>
           )}
         {<UiError msg={error?.message || error} />}
