@@ -1,38 +1,45 @@
-import { Box, Stack, TextField, Tooltip, Typography } from '@mui/material';
-
-import { rData, RemoteData } from '../utils/remoteData';
-import { UiInfoBlockContent, UiBlock, UiInfoBlockRow } from './ui';
-import { IdnaOrderState } from '../utils/idena';
-import { FCC } from '../types/FCC';
 import dayjs from 'dayjs';
+import { FC } from 'react';
+
+import { Typography } from '@mui/material';
+import { Stack } from '@mui/system';
+
+import { FCC } from '../types/FCC';
+import { IdnaOrderState } from '../utils/idena';
+import { UiBlock, UiInfoBlockContent, UiInfoBlockRow } from './ui';
 
 const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss Z';
 
-export const IdenaOrderInfo: FCC<{
-  infoRD: RemoteData<IdnaOrderState>;
-}> = ({ children, infoRD }) => {
+export const IdenaOrderInfo: FC<IdnaOrderState> = ({
+  owner,
+  amountDna,
+  amountXdai,
+  expirationAt,
+}) => {
+  return (
+    <UiInfoBlockContent mt={2}>
+      <UiInfoBlockRow title="Owner:" value={owner} />
+      <UiInfoBlockRow title="Sell:" value={`${amountDna} iDNA`} />
+      <UiInfoBlockRow title="Receive:" value={`${amountXdai} xDAI`} />
+      <UiInfoBlockRow
+        title="Rate:"
+        value={`iDNA = ${(Number(amountXdai) / Number(amountDna)).toFixed(3)} xDAI`}
+      />
+      <UiInfoBlockRow title="Expire time:" value={dayjs(expirationAt).format(DATE_TIME_FORMAT)} />
+    </UiInfoBlockContent>
+  );
+};
+
+export const IdenaOrderInfoBlock: FCC<{ order?: IdnaOrderState | null }> = ({
+  order,
+  children,
+}) => {
   return (
     <UiBlock alignItems="start">
       <Typography variant="h3" fontSize="1.125rem" display="flex" alignItems="center">
         Order to sell iDNA
       </Typography>
-      {rData.isSuccess(infoRD) && (
-        <UiInfoBlockContent mt={2}>
-          <UiInfoBlockRow title="Owner:" value={infoRD.data.owner} />
-          <UiInfoBlockRow title="Sell:" value={`${infoRD.data.amountDna} iDNA`} />
-          <UiInfoBlockRow title="Receive:" value={`${infoRD.data.amountXdai} xDAI`} />
-          <UiInfoBlockRow
-            title="Rate:"
-            value={`iDNA = ${(
-              Number(infoRD.data.amountXdai) / Number(infoRD.data.amountDna)
-            ).toFixed(3)} xDAI`}
-          />
-          <UiInfoBlockRow
-            title="Expire time:"
-            value={dayjs(infoRD.data.expirationAt).format(DATE_TIME_FORMAT)}
-          />
-        </UiInfoBlockContent>
-      )}
+      {order && <IdenaOrderInfo {...order} />}
       <Stack mt={2} alignItems="stretch">
         {children}
       </Stack>

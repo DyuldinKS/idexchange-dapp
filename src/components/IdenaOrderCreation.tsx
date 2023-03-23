@@ -1,3 +1,4 @@
+import debug from 'debug';
 import { FC, ReactNode, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
@@ -14,10 +15,9 @@ import {
 } from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { theme } from '../utils/theme';
-import { IdenaOrderInfo } from './IdenaOrderInfo';
+import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderCreationFormSchema } from './OrderCreationPage';
 import { UiError, UiSubmitButton } from './ui';
-import debug from 'debug';
 
 const log = debug('IdenaOrderCreation');
 
@@ -32,10 +32,10 @@ export const IdenaOrderCreation: FC<{
   const error = idenaOrderRD.error || idenaTxLinkRD.error;
 
   const renderIdenaOrderInfo = (children: ReactNode) => (
-    <IdenaOrderInfo infoRD={idenaOrderRD}>
+    <IdenaOrderInfoBlock order={idenaOrderRD.data}>
       {children}
       {error && <UiError msg={error?.message || String(error)} />}
-    </IdenaOrderInfo>
+    </IdenaOrderInfoBlock>
   );
 
   const checkOrderState = async () => {
