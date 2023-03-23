@@ -8,7 +8,7 @@ type UseRemoteDataApi<SuccessData, InitialData = null, Err = any> = {
   setLoading: (data?: InitialData) => void;
   setSuccess: (data: SuccessData) => void;
   setFailure: (error: Err, data?: InitialData) => void;
-  track: (promise: Promise<SuccessData>) => Promise<void>;
+  track: (promise: Promise<SuccessData>) => Promise<SuccessData | void>;
 };
 
 export type UseRemoteDataReturn<SuccessData, InitialData = null, Err = any> = [
@@ -57,7 +57,7 @@ export const useRemoteData = <SuccessData, InitialData = null, Err = any>(
 
   const track = (promise: Promise<SuccessData>) => {
     setLoading();
-    return promise.then(setSuccess).catch(setFailure);
+    return promise.then((res) => (setSuccess(res), res)).catch(setFailure);
   };
 
   const methodsBoundToNewState = {

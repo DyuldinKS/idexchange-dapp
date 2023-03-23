@@ -7,7 +7,8 @@ import { Stack, Typography } from '@mui/material';
 import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
 import { mapRejected } from '../utils/async';
 import {
-  createOrderToSellIdnaTx,
+  buildCreateIdenaOrderTx,
+  buildBurnIdenaOrderTx,
   getIdenaLinkToSignTx,
   getIdnaOrderState,
   getSecretHash,
@@ -18,6 +19,7 @@ import { theme } from '../utils/theme';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderCreationFormSchema } from './OrderCreationPage';
 import { UiError, UiSubmitButton } from './ui';
+import { Transaction } from 'idena-sdk-js';
 
 const log = debug('IdenaOrderCreation');
 
@@ -26,10 +28,11 @@ export const IdenaOrderCreation: FC<{
   form: UseFormReturn<OrderCreationFormSchema>;
   secret: string;
 }> = ({ idenaOrderRDState: [idenaOrderRD, idenaOrderRDM], form: { handleSubmit }, secret }) => {
-  const [idenaTxLinkRD, idenaTxLinkRDM] = useRemoteData<string>(null);
+  const [createOrderTxRD, createOrderTxRDM] = useRemoteData<Transaction>(null);
+  const [burnOrderTxRD, burnOrderTxRDM] = useRemoteData<Transaction>(null);
   const [isIdenaTxLinkClicked, setIsIdenaTxLinkClicked] = useState(false);
   const [secretHash] = useState(() => getSecretHash(secret));
-  const error = idenaOrderRD.error || idenaTxLinkRD.error;
+  const error = idenaOrderRD.error || createOrderTxRD.error;
 
   const renderIdenaOrderInfo = (children: ReactNode) => (
     <IdenaOrderInfoBlock order={idenaOrderRD.data}>
@@ -50,36 +53,60 @@ export const IdenaOrderCreation: FC<{
   };
 
   if (rData.isSuccess(idenaOrderRD)) {
+    const buildBurnOrderTx = () => {
+      setIsIdenaTxLinkClicked(false);
+      handleSubmit(({ idenaAddress }) => {
+        log('generate tx link to burn order');
+        burnOrderTxRDM.track(buildBurnIdenaOrderTx(idenaAddress, secretHash));
+      })().catch(() => {});
+    };
+
     return renderIdenaOrderInfo(
-      <UiSubmitButton sx={{ mt: 1 }} variant="outlined" onClick={checkOrderState}>
-        Check order status
-      </UiSubmitButton>,
+      <Stack spacing={1}>
+        <UiSubmitButton sx={{ mt: 1 }} variant="outlined" onClick={checkOrderState}>
+          Reload order info
+        </UiSubmitButton>
+        {Date.now() > idenaOrderRD.data.expirationAt &&
+          (!rData.isSuccess(burnOrderTxRD) ? (
+            <UiSubmitButton disabled={rData.isLoading(burnOrderTxRD)} onClick={buildBurnOrderTx}>
+              Cancel order
+            </UiSubmitButton>
+          ) : (
+            <UiSubmitButton
+              onClick={() => setIsIdenaTxLinkClicked(true)}
+              LinkComponent="a"
+              href={getIdenaLinkToSignTx(burnOrderTxRD.data)}
+              {...{ target: '_blank' }}
+            >
+              Sign burning order transaction
+            </UiSubmitButton>
+          ))}
+      </Stack>,
     );
   }
 
-  const generateTxLink = () => {
+  const buildCreateOrderTx = () => {
     setIsIdenaTxLinkClicked(false);
     handleSubmit((values) => {
       log('generate tx link to create order', values);
       const { idenaAddress, amountToSell, amountToReceive } = values;
-      const promisedLink = createOrderToSellIdnaTx(
+      const promisedLink = buildCreateIdenaOrderTx(
         idenaAddress,
         amountToSell,
         amountToReceive,
         secret,
-      ).then(getIdenaLinkToSignTx);
-      idenaTxLinkRDM.track(promisedLink);
-      return promisedLink;
+      );
+      return createOrderTxRDM.track(promisedLink);
     })().catch(() => {});
   };
 
-  if (rData.isLoading(idenaTxLinkRD)) {
+  if (rData.isLoading(createOrderTxRD)) {
     return renderIdenaOrderInfo(<UiSubmitButton disabled={true}>Creating order...</UiSubmitButton>);
   }
 
-  if (!rData.isSuccess(idenaTxLinkRD)) {
+  if (!rData.isSuccess(createOrderTxRD)) {
     return renderIdenaOrderInfo(
-      <UiSubmitButton disabled={rData.isLoading(idenaTxLinkRD)} onClick={generateTxLink}>
+      <UiSubmitButton disabled={rData.isLoading(createOrderTxRD)} onClick={buildCreateOrderTx}>
         Create order in Idena chain
       </UiSubmitButton>,
     );
@@ -88,8 +115,8 @@ export const IdenaOrderCreation: FC<{
   const regenerateOrderBtn = (
     <UiSubmitButton
       variant="outlined"
-      disabled={rData.isLoading(idenaTxLinkRD)}
-      onClick={generateTxLink}
+      disabled={rData.isLoading(createOrderTxRD)}
+      onClick={buildCreateOrderTx}
     >
       Regenerate order
     </UiSubmitButton>
@@ -102,7 +129,7 @@ export const IdenaOrderCreation: FC<{
         <UiSubmitButton
           onClick={() => setIsIdenaTxLinkClicked(true)}
           LinkComponent="a"
-          href={idenaTxLinkRD.data}
+          href={getIdenaLinkToSignTx(createOrderTxRD.data)}
           {...{ target: '_blank' }}
         >
           Sign order creation transaction

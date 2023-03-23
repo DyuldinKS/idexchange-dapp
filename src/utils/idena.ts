@@ -112,7 +112,7 @@ const estimateWriteTx = async (tx: Transaction, sender: string) =>
     params: [tx.toHex(true), sender],
   });
 
-export const createOrderToSellIdnaTx = async (
+export const buildCreateIdenaOrderTx = async (
   from: string,
   idnaAmount: string,
   xDaiAmount: string,
@@ -120,10 +120,7 @@ export const createOrderToSellIdnaTx = async (
 ) => {
   const lastBlock = await idenaProvider.Blockchain.lastBlock();
   const deadline = Number(lastBlock.height) + 600;
-  const secretHash = keccak256(secretHex);
-
-  const infoToLog = { secretHex, secretHash, deadline, lastBlock };
-  console.log('>>> createOrderToSellIdna', infoToLog, JSON.stringify(infoToLog));
+  const secretHash = getSecretHash(secretHex);
 
   const createOrderCallPayload = new CallContractAttachment({
     method: 'createOrder',
@@ -131,22 +128,10 @@ export const createOrderToSellIdnaTx = async (
   });
   createOrderCallPayload.setArgs(
     buildContractArgs([
-      {
-        format: ContractArgumentFormat.Dna,
-        value: xDaiAmount,
-      },
-      {
-        format: ContractArgumentFormat.Uint64,
-        value: String(deadline),
-      },
-      {
-        format: ContractArgumentFormat.Hex,
-        value: from,
-      },
-      {
-        format: ContractArgumentFormat.Hex,
-        value: secretHash,
-      },
+      { format: ContractArgumentFormat.Dna, value: xDaiAmount },
+      { format: ContractArgumentFormat.Uint64, value: String(deadline) },
+      { format: ContractArgumentFormat.Hex, value: from },
+      { format: ContractArgumentFormat.Hex, value: secretHash },
     ]),
   );
 
@@ -155,6 +140,26 @@ export const createOrderToSellIdnaTx = async (
     to: contractAddress,
     type: TransactionType.CallContractTx,
     amount: idnaAmount,
+    payload: createOrderCallPayload.toBytes(),
+    maxFee: MAX_FEE,
+  };
+  const tx = await idenaProvider.Blockchain.buildTx(txData);
+  await estimateWriteTx(tx, from);
+  return tx;
+};
+
+export const buildBurnIdenaOrderTx = async (from: string, secretHashHex: string) => {
+  const createOrderCallPayload = new CallContractAttachment({
+    method: 'burnOrder',
+    args: [],
+  });
+  createOrderCallPayload.setArgs(
+    buildContractArgs([{ format: ContractArgumentFormat.Hex, value: secretHashHex }]),
+  );
+  const txData = {
+    from,
+    to: contractAddress,
+    type: TransactionType.CallContractTx,
     payload: createOrderCallPayload.toBytes(),
     maxFee: MAX_FEE,
   };
