@@ -1,13 +1,19 @@
 import {
+  Box,
   Breakpoint,
   Button,
   ButtonProps,
   Stack,
   styled,
+  Tooltip,
+  TooltipProps,
   Typography,
   TypographyProps,
+  useTheme,
 } from '@mui/material';
-import { FC, ReactNode } from 'react';
+import { StackProps } from '@mui/system';
+import { FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
+import { FCC } from '../types/FCC';
 
 export const UiPage = styled(Stack)<{
   width: Breakpoint | number | string;
@@ -40,3 +46,90 @@ export const UiError: FC<TypographyProps & { msg: ReactNode }> = ({ msg, ...typP
       {msg}
     </Typography>
   ) : null;
+
+export const UiInputTooltipBtn = styled(Stack)(({ theme }) => ({
+  backgroundColor: theme.palette.grey[200],
+  color: theme.palette.grey[700],
+  width: '1.5rem',
+  height: '1.5rem',
+  borderRadius: '1.75rem',
+  textAlign: 'center',
+  justifyContent: 'center',
+  alignItems: 'center',
+  fontSize: '0.875rem',
+  cursor: 'pointer',
+}));
+
+export const UiLabel = forwardRef<
+  HTMLLabelElement,
+  PropsWithChildren<
+    {
+      label: string;
+      required?: boolean;
+      tooltip?: TooltipProps['title'];
+      htmlFor?: string;
+    } & Omit<TypographyProps, 'ref'>
+  >
+>(({ label, required, tooltip, children, ...props }, ref) => {
+  return (
+    <Typography
+      variant="h3"
+      component="label"
+      sx={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'stretch',
+        // fontWeight: 'normal'
+      }}
+      fontSize="1.125rem"
+      ref={ref}
+      {...props}
+    >
+      <Box component="span" display="flex" alignItems="center" fontFamily="inherit" mb={2}>
+        {label}
+        {required && (
+          <Box component="span" ml={1} fontFamily="Roboto">
+            *
+          </Box>
+        )}
+        {tooltip && (
+          <Tooltip title={tooltip} placement="bottom-start">
+            <UiInputTooltipBtn ml={1}>?</UiInputTooltipBtn>
+          </Tooltip>
+        )}
+      </Box>
+      {children}
+    </Typography>
+  );
+});
+
+UiLabel.displayName = 'UiLabel';
+
+export const UiBlock = styled(Stack)(({ theme }) => ({
+  padding: '1rem',
+  backgroundColor: theme.palette.grey[100],
+  borderRadius: theme.shape.borderRadius,
+  alignItems: 'stretch',
+}));
+
+export const UiInfoBlockRow: FC<{ title: ReactNode; value?: ReactNode } & TypographyProps> = ({
+  title,
+  value,
+  ...props
+}) => {
+  const theme = useTheme();
+  return (
+    <Typography {...props}>
+      <Box component="span" mr={1} color={theme.palette.grey[700]}>
+        {title}
+      </Box>
+      {value && <Box component="span">{value}</Box>}
+    </Typography>
+  );
+};
+
+export const UiInfoBlockContent: FCC<StackProps> = (props) => {
+  return <Stack {...props} spacing={1} />;
+};

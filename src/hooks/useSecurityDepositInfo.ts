@@ -14,6 +14,8 @@ export type SecurityDepositInfoType = {
   isValid: Boolean;
 };
 
+export type UseGetSecurityDepositInfoReturn = ReturnType<typeof useGetSecurityDepositInfo>;
+
 const log = debug('hooks:useSecurityDepositInfo');
 
 export const useGetSecurityDepositInfo = (contractToReceiveTokens: Address, abi: any) => {

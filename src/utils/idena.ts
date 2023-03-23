@@ -16,6 +16,7 @@ export type IdnaOrderState = Awaited<ReturnType<typeof getIdnaOrderState>>;
 const MAX_FEE = '3';
 const IDENA_CONF = APP_CONFIG.idena;
 export const MIN_IDNA_AMOUNT_TO_SELL = 100;
+export const IDENA_BLOCK_DURATION_MS = 20000;
 
 // TODO: make idena-sdk-js fix PR
 // idena-sdk-js uses wrong case of writeBigUInt64LE method. It is supported by nodejs, but not supported by browsers.
@@ -69,16 +70,22 @@ export async function getIdnaOrderState(secretHash: string) {
       secretHash,
       ContractArgumentFormat.Uint64,
     ),
+    idenaProvider.Blockchain.lastBlock().then((lastBlock) => ({
+      lastBlock,
+      timestamp: Date.now(),
+    })),
   ] as const);
-
+  const { lastBlock, timestamp } = res[7];
+  const expirationBlock = Number(res[4]);
   return {
     owner: res[0],
     payoutAddress: res[1],
     amountDna: res[2],
     amountXdai: res[3],
-    expirationBlock: res[4],
+    expirationBlock,
     matcher: res[5],
     matchExpirationBlock: res[6],
+    expirationAt: (expirationBlock - lastBlock.height) * IDENA_BLOCK_DURATION_MS + timestamp,
   };
 }
 

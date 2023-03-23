@@ -1,35 +1,40 @@
 import { formatUnits } from 'ethers/lib/utils.js';
 
-import { Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography, TypographyProps, useTheme } from '@mui/material';
 import { gnosis } from '@wagmi/core/chains';
 
 import { SecurityDepositInfoType } from '../hooks/useSecurityDepositInfo';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
+import { UiBlock, UiInfoBlockContent, UiInfoBlockRow, UiInputTooltipBtn } from './ui';
+import { FCC } from '../types/FCC';
+import { StackProps } from '@mui/system';
 
-export const SecurityDepositInfo: FC<Pick<SecurityDepositInfoType, 'amount' | 'isInUse'>> = ({
+export const SecurityDepositInfo: FCC<Pick<SecurityDepositInfoType, 'amount' | 'isInUse'>> = ({
   amount,
   isInUse,
+  children,
 }) => {
   return (
-    <Stack alignItems="start">
-      <Typography>{`Current security deposit: ${formatUnits(
-        amount,
-        gnosis.nativeCurrency.decimals,
-      )} xDai`}</Typography>
-      {amount.gt(0) && (
-        <Tooltip
-          placement="top-start"
-          title={
-            <>
-              Shows if your deposit is already being used to confirm another order. If it is true,
-              you will need to wait until your previous order is complete or use a different account
-              to create a new order.
-            </>
-          }
-        >
-          <Typography>{`Already in use: ${isInUse} (?)`}</Typography>
-        </Tooltip>
-      )}
-    </Stack>
+    <UiBlock alignItems="start">
+      <Typography variant="h3" fontSize="1.125rem" display="flex" alignItems="center">
+        Security deposit
+        <UiInputTooltipBtn ml={1}>?</UiInputTooltipBtn>
+      </Typography>
+      <UiInfoBlockContent mt={2}>
+        <UiInfoBlockRow
+          title="Current security deposit:"
+          value={`${formatUnits(amount, gnosis.nativeCurrency.decimals)} xDAI`}
+        />
+        {isInUse && (
+          <Typography color="error">
+            This deposit is already being used to confirm another order. You have to wait until your
+            previous order is complete or use a different account to create a new order.
+          </Typography>
+        )}
+      </UiInfoBlockContent>
+      <Stack mt={2} alignItems="stretch">
+        {children}
+      </Stack>
+    </UiBlock>
   );
 };

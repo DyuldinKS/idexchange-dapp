@@ -1,11 +1,11 @@
 import debug from 'debug';
 import { formatUnits } from 'ethers/lib/utils.js';
-import { FC, useState } from 'react';
+import { FC, ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
 import {
   prepareWriteContract,
   switchNetwork,
@@ -14,27 +14,18 @@ import {
 } from '@wagmi/core';
 import { gnosis } from '@wagmi/core/chains';
 
+import { ethers } from 'ethers';
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
 import { useRemoteData } from '../hooks/useRemoteData';
 import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
 import { useWeb3Store } from '../providers/store/StoreProvider';
+import { IdnaOrderState, MIN_IDNA_AMOUNT_TO_SELL } from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
-import { UiError, UiLogo, UiPage, UiSubmitButton } from './ui';
+import { IdenaOrderCreation } from './IdenaOrderCreation';
 import { SecurityDepositInfo } from './SecurityDepositInfo';
-import '../utils/idena';
-import {
-  createOrderToSellIdnaTx,
-  generateRandomSecret,
-  getIdenaLinkToSignTx,
-  getIdnaOrderState,
-  getSecretHash,
-  IdnaOrderState,
-  MIN_IDNA_AMOUNT_TO_SELL,
-} from '../utils/idena';
-import { ethers } from 'ethers';
-import { mapRejected } from '../utils/async';
+import { UiError, UiLabel, UiLogo, UiPage, UiSubmitButton } from './ui';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
@@ -56,12 +47,12 @@ export const OrderCreationPage: FC = () => {
   const form = useForm<OrderCreationFormSchema>({
     resolver: zodResolver(orderCreationFormSchema),
     defaultValues: {
-      amountToSell: '',
-      amountToReceive: '',
-      idenaAddress: '',
-      // amountToSell: '101',
-      // amountToReceive: '2.2',
-      // idenaAddress: '0x75d6cE9A43A681BD21B79ccB148C07DA65345072',
+      // amountToSell: '',
+      // amountToReceive: '',
+      // idenaAddress: '',
+      amountToSell: '101',
+      amountToReceive: '2.2',
+      idenaAddress: '0x75d6cE9A43A681BD21B79ccB148C07DA65345072',
     },
     mode: 'onChange',
   });
@@ -73,16 +64,14 @@ export const OrderCreationPage: FC = () => {
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
   const [depositChangeRD, depositChangeRDM] = useRemoteData(null);
-  const [idenaTxLinkRD, idenaTxLinkRDM] = useRemoteData<string>(null);
-  const [isIdenaTxLinkClicked, setIsIdenaTxLinkClicked] = useState(false);
-  const [idenaOrderRD, idenaOrderRDM] = useRemoteData<IdnaOrderState>(null);
+  const idenaOrderRDState = useRemoteData<IdnaOrderState>(null);
+  const [idenaOrderRD, idenaOrderRDM] = idenaOrderRDState;
   const isOrderSuccessfullyCreated = rData.isSuccess(idenaOrderRD);
 
-  const [secret] = useState(generateRandomSecret);
-  // const secret = '0x58cc7a0588b09d10a2874f6e50dceed3fcb3580de658767b09fbd93c71a5bff2';
-  const [secretHash] = useState(() => getSecretHash(secret));
+  // const [secret] = useState(generateRandomSecret);
+  const secret = '0x58cc7a0588b09d10a2874f6e50dceed3fcb3580de658767b09fbd93c71a5bff2';
 
-  const error = securityDepositRD.error || depositChangeRD.error || idenaTxLinkRD.error;
+  const error = securityDepositRD.error || depositChangeRD.error;
 
   const renderSecurityDepositBlock = () => {
     if (rData.isNotAsked(securityDepositRD) || rData.isLoading(securityDepositRD))
@@ -93,14 +82,13 @@ export const OrderCreationPage: FC = () => {
 
     const { isInUse } = securityDepositRD.data;
 
-    const depositInfo = <SecurityDepositInfo {...securityDepositRD.data} />;
+    const renderDepositInfo = (children: ReactNode) => (
+      <SecurityDepositInfo {...securityDepositRD.data}>{children}</SecurityDepositInfo>
+    );
 
     if (isInUse)
-      return (
-        <>
-          {depositInfo}
-          <UiSubmitButton disabled={true}>Wait for the end of your previous order</UiSubmitButton>
-        </>
+      return renderDepositInfo(
+        <UiSubmitButton disabled={true}>Wait for the end of your previous order</UiSubmitButton>,
       );
 
     const contractInfo = {
@@ -144,122 +132,32 @@ export const OrderCreationPage: FC = () => {
 
     if (rData.isLoading(depositChangeRD))
       return (
-        <>
-          {depositInfo}
-          <UiSubmitButton disabled>Updating xDAI deposit...</UiSubmitButton>
-        </>
+        <>{renderDepositInfo(<UiSubmitButton disabled>Updating xDAI deposit...</UiSubmitButton>)}</>
       );
 
     if (!securityDepositRD.data?.isValid)
       return (
         <>
-          {depositInfo}
-          <UiSubmitButton onClick={replenishDeposit}>
-            {`Replenish deposit for ${formatUnits(
-              securityDepositRD.data.requiredAmount,
-              gnosis.nativeCurrency.decimals,
-            )} xDAI`}
-          </UiSubmitButton>
+          {renderDepositInfo(
+            <UiSubmitButton onClick={replenishDeposit}>
+              {`Replenish deposit for ${formatUnits(
+                securityDepositRD.data.requiredAmount,
+                gnosis.nativeCurrency.decimals,
+              )} xDAI`}
+            </UiSubmitButton>,
+          )}
         </>
       );
 
-    if (!isOrderSuccessfullyCreated) {
-      return (
-        <>
-          {depositInfo}
-          <UiSubmitButton color="error" variant="outlined" onClick={withdrawDeposit}>
-            Withdraw xDAI deposit
-          </UiSubmitButton>
-        </>
-      );
-    }
-
-    return depositInfo;
-  };
-
-  const renderIdnaOrderBlock = () => {
-    if (isOrderSuccessfullyCreated) {
-      return (
-        <Stack>
-          <Typography>Order successfully created!</Typography>
-          <Typography>Expiration block {idenaOrderRD.data.expirationBlock}</Typography>
-        </Stack>
-      );
-    }
-
-    const generateTxLink = () => {
-      setIsIdenaTxLinkClicked(false);
-      handleSubmit((values) => {
-        log('generate tx link to create order', values);
-        const { idenaAddress, amountToSell, amountToReceive } = values;
-        const promisedLink = createOrderToSellIdnaTx(
-          idenaAddress,
-          amountToSell,
-          amountToReceive,
-          secret,
-        ).then(getIdenaLinkToSignTx);
-        idenaTxLinkRDM.track(promisedLink);
-        return promisedLink;
-      })().catch(() => {});
-    };
-
-    if (!rData.isSuccess(idenaTxLinkRD)) {
-      return (
-        <>
-          <UiSubmitButton disabled={rData.isLoading(idenaTxLinkRD)} onClick={generateTxLink}>
-            Prepare order to sell iDNA
-          </UiSubmitButton>
-        </>
-      );
-    }
-
-    const regenerateOrderBtn = (
+    return renderDepositInfo(
       <UiSubmitButton
+        disabled={isInUse || isOrderSuccessfullyCreated}
+        color="error"
         variant="outlined"
-        disabled={rData.isLoading(idenaTxLinkRD)}
-        onClick={generateTxLink}
+        onClick={withdrawDeposit}
       >
-        Regenerate order to sell iDNA
-      </UiSubmitButton>
-    );
-
-    if (!isIdenaTxLinkClicked) {
-      return (
-        <>
-          {regenerateOrderBtn}
-          <UiSubmitButton
-            onClick={() => setIsIdenaTxLinkClicked(true)}
-            LinkComponent="a"
-            href={idenaTxLinkRD.data}
-            {...{ target: '_blank' }}
-          >
-            Sign order creation transaction
-          </UiSubmitButton>
-        </>
-      );
-    }
-
-    const checkOrderState = async () => {
-      idenaOrderRDM.track(
-        getIdnaOrderState(secretHash).catch(
-          mapRejected((err: any) => {
-            console.error('Failed to load order state:', err);
-            return err;
-          }),
-        ),
-      );
-    };
-
-    return (
-      <>
-        {regenerateOrderBtn}
-        <Stack>
-          <Typography>Wait for the transaction to complete:</Typography>
-          <UiSubmitButton sx={{ mt: 1 }} onClick={checkOrderState}>
-            Check order status
-          </UiSubmitButton>
-        </Stack>
-      </>
+        Withdraw xDAI deposit
+      </UiSubmitButton>,
     );
   };
 
@@ -278,7 +176,7 @@ export const OrderCreationPage: FC = () => {
   return (
     <UiPage width="sm">
       <UiLogo />
-      <Typography variant="h4" component="h2" mt={4}>
+      <Typography variant="h4" component="h2" mt={4} fontWeight="bold">
         Create an order to sell iDNA for xDAI
       </Typography>
       <Stack spacing="1rem" mt={4}>
@@ -306,20 +204,19 @@ export const OrderCreationPage: FC = () => {
           error={Boolean(errors.amountToReceive)}
           helperText={errors.amountToReceive?.message}
           variant="outlined"
-          placeholder="XDAI amount to receive"
+          placeholder="xDAI amount to receive"
           size="small"
         />
-        <Stack>
-          <Tooltip
-            placement="top-start"
-            title="A secret code has been automatically generated for your order, which you must copy and
+      </Stack>
+      <Stack>
+        <UiLabel
+          mt={4}
+          label="Secret code"
+          tooltip="A secret code has been automatically generated for your order, which you must copy and
           securely store. Losing this code would prevent you from either completing or canceling
           your order, resulting in the loss of your funds."
-          >
-            <Typography>Secret code (?)</Typography>
-          </Tooltip>
+        >
           <TextField
-            sx={{ mt: 1 }}
             disabled={true} // prevent auto-generated secret from changing
             variant="outlined"
             placeholder="A secret code to identify the order"
@@ -327,7 +224,7 @@ export const OrderCreationPage: FC = () => {
             multiline={true}
             value={secret}
           />
-        </Stack>
+        </UiLabel>
         {(!address && (
           <UiSubmitButton onClick={() => web3Modal.openModal()} variant="contained">
             Connect wallet
@@ -339,10 +236,20 @@ export const OrderCreationPage: FC = () => {
             </UiSubmitButton>
           )) || (
             <>
-              {renderSecurityDepositBlock()}
-              {rData.isSuccess(securityDepositRD) &&
-                securityDepositRD.data.isValid &&
-                renderIdnaOrderBlock()}
+              {
+                <Stack alignItems="stretch" mt={4}>
+                  {renderSecurityDepositBlock()}
+                </Stack>
+              }
+              {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
+                <Stack alignItems="stretch" mt={2}>
+                  <IdenaOrderCreation
+                    idenaOrderRDState={idenaOrderRDState}
+                    form={form}
+                    secret={secret}
+                  />
+                </Stack>
+              )}
               {isOrderSuccessfullyCreated && renderXdaiOrderBlock()}
             </>
           )}

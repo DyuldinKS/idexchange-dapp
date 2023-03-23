@@ -11,7 +11,7 @@ type UseRemoteDataApi<SuccessData, InitialData = null, Err = any> = {
   track: (promise: Promise<SuccessData>) => Promise<void>;
 };
 
-type UseRemoteDataReturn<SuccessData, InitialData = null, Err = any> = [
+export type UseRemoteDataReturn<SuccessData, InitialData = null, Err = any> = [
   rData: RemoteData<SuccessData, InitialData, Err>,
   api: UseRemoteDataApi<SuccessData, InitialData, Err>,
 ];
