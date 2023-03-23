@@ -128,38 +128,38 @@ export const OrderCreationPage: FC = () => {
             value={secret}
           />
         </UiLabel>
-        {(!address && (
-          <UiSubmitButton onClick={() => web3Modal.openModal()} variant="contained">
-            Connect wallet
-          </UiSubmitButton>
-        )) ||
-          (!isChainSupported(chainId) && (
-            <UiSubmitButton onClick={() => switchNetwork({ chainId: DEFAULT_CHAIN_ID })}>
-              Switch network
+        <Stack alignItems="stretch" mt={4}>
+          {(!address && (
+            <UiSubmitButton onClick={() => web3Modal.openModal()} variant="contained">
+              Connect wallet
             </UiSubmitButton>
-          )) || (
-            <>
-              {
-                <Stack alignItems="stretch" mt={4}>
+          )) ||
+            (!isChainSupported(chainId) && (
+              <UiSubmitButton onClick={() => switchNetwork({ chainId: DEFAULT_CHAIN_ID })}>
+                Switch network
+              </UiSubmitButton>
+            )) || (
+              <>
+                {
                   <SecurityDeposit
                     state={securityDepositRD}
                     reloadSecurityDeposit={reloadSecurityDeposit}
                     isWithdrawDisabled={isOrderSuccessfullyCreated}
                   />
-                </Stack>
-              }
-              {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
-                <Stack alignItems="stretch" mt={2}>
-                  <IdenaOrderCreation
-                    idenaOrderRDState={idenaOrderRDState}
-                    form={form}
-                    secret={secret}
-                  />
-                </Stack>
-              )}
-              {isOrderSuccessfullyCreated && renderXdaiOrderBlock()}
-            </>
-          )}
+                }
+                {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
+                  <Stack alignItems="stretch" mt={2}>
+                    <IdenaOrderCreation
+                      idenaOrderRDState={idenaOrderRDState}
+                      form={form}
+                      secret={secret}
+                    />
+                  </Stack>
+                )}
+                {isOrderSuccessfullyCreated && renderXdaiOrderBlock()}
+              </>
+            )}
+        </Stack>
       </Stack>
     </UiPage>
   );

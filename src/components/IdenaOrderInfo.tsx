@@ -8,9 +8,9 @@ import { FCC } from '../types/FCC';
 import { IdnaOrderState } from '../utils/idena';
 import { UiBlock, UiInfoBlockContent, UiInfoBlockRow } from './ui';
 
-const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss Z';
+const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm Z';
 
-export const IdenaOrderInfo: FC<IdnaOrderState> = ({
+export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState>> = ({
   owner,
   amountDna,
   amountXdai,
