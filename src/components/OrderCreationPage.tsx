@@ -146,7 +146,7 @@ export const OrderCreationPage: FC = () => {
       return (
         <>
           {depositInfo}
-          <UiSubmitButton disabled>Updating xDai deposit...</UiSubmitButton>
+          <UiSubmitButton disabled>Updating xDAI deposit...</UiSubmitButton>
         </>
       );
 
@@ -158,7 +158,7 @@ export const OrderCreationPage: FC = () => {
             {`Replenish deposit for ${formatUnits(
               securityDepositRD.data.requiredAmount,
               gnosis.nativeCurrency.decimals,
-            )} xDai`}
+            )} xDAI`}
           </UiSubmitButton>
         </>
       );
@@ -167,8 +167,8 @@ export const OrderCreationPage: FC = () => {
       return (
         <>
           {depositInfo}
-          <UiSubmitButton variant="outlined" onClick={withdrawDeposit}>
-            Withdraw xDai deposit
+          <UiSubmitButton color="error" variant="outlined" onClick={withdrawDeposit}>
+            Withdraw xDAI deposit
           </UiSubmitButton>
         </>
       );
@@ -207,7 +207,7 @@ export const OrderCreationPage: FC = () => {
       return (
         <>
           <UiSubmitButton disabled={rData.isLoading(idenaTxLinkRD)} onClick={generateTxLink}>
-            Prepare order to sell Idna
+            Prepare order to sell iDNA
           </UiSubmitButton>
         </>
       );
@@ -219,7 +219,7 @@ export const OrderCreationPage: FC = () => {
         disabled={rData.isLoading(idenaTxLinkRD)}
         onClick={generateTxLink}
       >
-        Regenerate order to sell Idna
+        Regenerate order to sell iDNA
       </UiSubmitButton>
     );
 
@@ -270,7 +270,7 @@ export const OrderCreationPage: FC = () => {
           // TODO: to be implemented
         }}
       >
-        Create order to receive xDai
+        Create order to receive xDAI
       </UiSubmitButton>
     );
   };
@@ -279,7 +279,7 @@ export const OrderCreationPage: FC = () => {
     <UiPage width="sm">
       <UiLogo />
       <Typography variant="h4" component="h2" mt={4}>
-        Create an order to sell IDNA
+        Create an order to sell iDNA for xDAI
       </Typography>
       <Stack spacing="1rem" mt={4}>
         <TextField
@@ -297,7 +297,7 @@ export const OrderCreationPage: FC = () => {
           error={Boolean(errors.amountToSell)}
           helperText={errors.amountToSell?.message}
           variant="outlined"
-          placeholder="IDNA amount to sell"
+          placeholder="iDNA amount to sell"
           size="small"
         />
         <TextField
