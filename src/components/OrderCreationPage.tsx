@@ -1,20 +1,14 @@
 import debug from 'debug';
-import { formatUnits } from 'ethers/lib/utils.js';
-import { FC, ReactNode } from 'react';
+import { ethers } from 'ethers';
+import { FC } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, TextField, Typography } from '@mui/material';
-import {
-  prepareWriteContract,
-  switchNetwork,
-  waitForTransaction,
-  writeContract,
-} from '@wagmi/core';
+import { switchNetwork } from '@wagmi/core';
 import { gnosis } from '@wagmi/core/chains';
 
-import { ethers } from 'ethers';
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
 import { useRemoteData } from '../hooks/useRemoteData';
@@ -24,8 +18,8 @@ import { IdnaOrderState, MIN_IDNA_AMOUNT_TO_SELL } from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
 import { IdenaOrderCreation } from './IdenaOrderCreation';
-import { SecurityDepositInfo } from './SecurityDepositInfo';
-import { UiError, UiLabel, UiLogo, UiPage, UiSubmitButton } from './ui';
+import { SecurityDeposit } from './SecurityDeposit';
+import { UiLabel, UiLogo, UiPage, UiSubmitButton } from './ui';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
@@ -63,103 +57,12 @@ export const OrderCreationPage: FC = () => {
     rData: [securityDepositRD],
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
-  const [depositChangeRD, depositChangeRDM] = useRemoteData(null);
   const idenaOrderRDState = useRemoteData<IdnaOrderState>(null);
   const [idenaOrderRD, idenaOrderRDM] = idenaOrderRDState;
   const isOrderSuccessfullyCreated = rData.isSuccess(idenaOrderRD);
 
   // const [secret] = useState(generateRandomSecret);
   const secret = '0x58cc7a0588b09d10a2874f6e50dceed3fcb3580de658767b09fbd93c71a5bff2';
-
-  const error = securityDepositRD.error || depositChangeRD.error;
-
-  const renderSecurityDepositBlock = () => {
-    if (rData.isNotAsked(securityDepositRD) || rData.isLoading(securityDepositRD))
-      return <UiSubmitButton disabled>Loading...</UiSubmitButton>;
-
-    if (!rData.isSuccess(securityDepositRD))
-      return <UiSubmitButton disabled>Error occurred</UiSubmitButton>;
-
-    const { isInUse } = securityDepositRD.data;
-
-    const renderDepositInfo = (children: ReactNode) => (
-      <SecurityDepositInfo {...securityDepositRD.data}>{children}</SecurityDepositInfo>
-    );
-
-    if (isInUse)
-      return renderDepositInfo(
-        <UiSubmitButton disabled={true}>Wait for the end of your previous order</UiSubmitButton>,
-      );
-
-    const contractInfo = {
-      chainId: gnosis.id,
-      address: CONTRACTS[gnosis.id].receiveXdai,
-      abi: abiToReceiveXdai,
-    };
-
-    const replenishDeposit = () => {
-      const processTx = async () => {
-        const txConfig = await prepareWriteContract({
-          ...contractInfo,
-          functionName: 'submitSecurityDeposit',
-          overrides: {
-            value: securityDepositRD.data.requiredAmount,
-          },
-        });
-        log('replenishDeposit txConfig', txConfig);
-        const tx = await writeContract(txConfig);
-        await waitForTransaction({ hash: tx.hash });
-        await reloadSecurityDeposit();
-      };
-
-      depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
-    };
-
-    const withdrawDeposit = () => {
-      const processTx = async () => {
-        const txConfig = await prepareWriteContract({
-          ...contractInfo,
-          functionName: 'withdrawSecurityDeposit',
-        });
-        log('withdrawDeposit txConfig', txConfig);
-        const tx = await writeContract(txConfig);
-        await waitForTransaction({ hash: tx.hash });
-        await reloadSecurityDeposit();
-      };
-
-      depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
-    };
-
-    if (rData.isLoading(depositChangeRD))
-      return (
-        <>{renderDepositInfo(<UiSubmitButton disabled>Updating xDAI deposit...</UiSubmitButton>)}</>
-      );
-
-    if (!securityDepositRD.data?.isValid)
-      return (
-        <>
-          {renderDepositInfo(
-            <UiSubmitButton onClick={replenishDeposit}>
-              {`Replenish deposit for ${formatUnits(
-                securityDepositRD.data.requiredAmount,
-                gnosis.nativeCurrency.decimals,
-              )} xDAI`}
-            </UiSubmitButton>,
-          )}
-        </>
-      );
-
-    return renderDepositInfo(
-      <UiSubmitButton
-        disabled={isInUse || isOrderSuccessfullyCreated}
-        color="error"
-        variant="outlined"
-        onClick={withdrawDeposit}
-      >
-        Withdraw xDAI deposit
-      </UiSubmitButton>,
-    );
-  };
 
   const renderXdaiOrderBlock = () => {
     return (
@@ -238,7 +141,11 @@ export const OrderCreationPage: FC = () => {
             <>
               {
                 <Stack alignItems="stretch" mt={4}>
-                  {renderSecurityDepositBlock()}
+                  <SecurityDeposit
+                    state={securityDepositRD}
+                    reloadSecurityDeposit={reloadSecurityDeposit}
+                    isWithdrawDisabled={isOrderSuccessfullyCreated}
+                  />
                 </Stack>
               }
               {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
@@ -253,7 +160,6 @@ export const OrderCreationPage: FC = () => {
               {isOrderSuccessfullyCreated && renderXdaiOrderBlock()}
             </>
           )}
-        {<UiError msg={error?.message || error} />}
       </Stack>
     </UiPage>
   );

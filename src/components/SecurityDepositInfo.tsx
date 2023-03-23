@@ -9,7 +9,7 @@ import { UiBlock, UiInfoBlockContent, UiInfoBlockRow, UiInputTooltipBtn } from '
 import { FCC } from '../types/FCC';
 import { StackProps } from '@mui/system';
 
-export const SecurityDepositInfo: FCC<Pick<SecurityDepositInfoType, 'amount' | 'isInUse'>> = ({
+export const SecurityDepositInfoBlock: FCC<Pick<SecurityDepositInfoType, 'amount' | 'isInUse'>> = ({
   amount,
   isInUse,
   children,

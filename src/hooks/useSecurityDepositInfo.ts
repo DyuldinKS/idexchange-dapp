@@ -23,8 +23,8 @@ export const useGetSecurityDepositInfo = (contractToReceiveTokens: Address, abi:
   const rd = useRemoteData<SecurityDepositInfoType>(null, log);
   const [, rdMethods] = rd;
 
-  const reloadSecurityDeposit = useCallback(() => {
-    if (!address || !chainId) return;
+  const reloadSecurityDeposit = useCallback(async () => {
+    if (!address || !chainId) return null;
 
     const contractInfo = {
       address: contractToReceiveTokens,
