@@ -26,12 +26,11 @@ const log = debug('IdenaOrderCreation');
 export const IdenaOrderCreation: FC<{
   idenaOrderRDState: UseRemoteDataReturn<IdnaOrderState>;
   form: UseFormReturn<OrderCreationFormSchema>;
-  secret: string;
-}> = ({ idenaOrderRDState: [idenaOrderRD, idenaOrderRDM], form: { handleSubmit }, secret }) => {
+  secretHash: string;
+}> = ({ idenaOrderRDState: [idenaOrderRD, idenaOrderRDM], form: { handleSubmit }, secretHash }) => {
   const [createOrderTxRD, createOrderTxRDM] = useRemoteData<Transaction>(null);
   const [burnOrderTxRD, burnOrderTxRDM] = useRemoteData<Transaction>(null);
   const [isIdenaTxLinkClicked, setIsIdenaTxLinkClicked] = useState(false);
-  const [secretHash] = useState(() => getSecretHash(secret));
   const error = idenaOrderRD.error || createOrderTxRD.error;
 
   const renderIdenaOrderInfo = (children: ReactNode) => (
@@ -41,7 +40,7 @@ export const IdenaOrderCreation: FC<{
     </IdenaOrderInfoBlock>
   );
 
-  const checkOrderState = async () => {
+  const reloadOrderState = async () => {
     idenaOrderRDM.track(
       getIdnaOrderState(secretHash).catch(
         mapRejected((err: any) => {
@@ -51,6 +50,10 @@ export const IdenaOrderCreation: FC<{
       ),
     );
   };
+
+  if (rData.isLoading(idenaOrderRD)) {
+    return renderIdenaOrderInfo(<UiSubmitButton disabled={true}>Reloading info...</UiSubmitButton>);
+  }
 
   if (rData.isSuccess(idenaOrderRD)) {
     const buildBurnOrderTx = () => {
@@ -62,11 +65,16 @@ export const IdenaOrderCreation: FC<{
     };
 
     return renderIdenaOrderInfo(
-      <Stack spacing={1}>
-        <UiSubmitButton sx={{ mt: 1 }} variant="outlined" onClick={checkOrderState}>
+      <Stack spacing={1} mt={1}>
+        {!idenaOrderRD.data && (
+          <Typography color={theme.palette.grey[700]}>Order not found.</Typography>
+        )}
+        <UiSubmitButton variant="outlined" onClick={reloadOrderState}>
           Reload order info
         </UiSubmitButton>
-        {Date.now() > idenaOrderRD.data.expirationAt &&
+        {/* TODO: move part of burning order to another page */}
+        {idenaOrderRD.data &&
+          Date.now() > idenaOrderRD.data?.expirationAt &&
           (!rData.isSuccess(burnOrderTxRD) ? (
             <UiSubmitButton disabled={rData.isLoading(burnOrderTxRD)} onClick={buildBurnOrderTx}>
               Cancel order
@@ -94,7 +102,7 @@ export const IdenaOrderCreation: FC<{
         idenaAddress,
         amountToSell,
         amountToReceive,
-        secret,
+        secretHash,
       );
       return createOrderTxRDM.track(promisedLink);
     })().catch(() => {});
@@ -145,7 +153,7 @@ export const IdenaOrderCreation: FC<{
         <Typography color={theme.palette.grey[700]}>
           Wait for the transaction to complete and then update state:
         </Typography>
-        <UiSubmitButton sx={{ mt: 1 }} onClick={checkOrderState}>
+        <UiSubmitButton sx={{ mt: 1 }} onClick={reloadOrderState}>
           Check order status
         </UiSubmitButton>
       </Stack>

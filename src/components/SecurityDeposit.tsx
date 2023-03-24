@@ -15,6 +15,12 @@ import { UiError, UiSubmitButton } from './ui';
 
 const log = debug('SecurityDeposit');
 
+const contractInfo = {
+  chainId: gnosis.id,
+  address: CONTRACTS[gnosis.id].receiveXdai,
+  abi: abiToReceiveXdai,
+};
+
 export const SecurityDeposit: FC<{
   state: RemoteData<SecurityDepositInfoType>;
   reloadSecurityDeposit: () => Promise<SecurityDepositInfoType | null>;
@@ -43,12 +49,6 @@ export const SecurityDeposit: FC<{
       <UiSubmitButton disabled={true}>Wait for the end of your previous order</UiSubmitButton>,
     );
 
-  const contractInfo = {
-    chainId: gnosis.id,
-    address: CONTRACTS[gnosis.id].receiveXdai,
-    abi: abiToReceiveXdai,
-  };
-
   const replenishDeposit = () => {
     const processTx = async () => {
       const txConfig = await prepareWriteContract({
@@ -60,8 +60,7 @@ export const SecurityDeposit: FC<{
       });
       log('replenishDeposit txConfig', txConfig);
       const tx = await writeContract(txConfig);
-      await waitForTransaction({ hash: tx.hash });
-      await reloadSecurityDeposit();
+      return waitForTransaction({ hash: tx.hash });
     };
 
     depositChangeRDM.track(processTx().then(reloadSecurityDeposit));

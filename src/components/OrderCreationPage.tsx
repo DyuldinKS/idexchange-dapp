@@ -1,6 +1,6 @@
 import debug from 'debug';
 import { ethers } from 'ethers';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -14,12 +14,18 @@ import { CONTRACTS } from '../constants/contracts';
 import { useRemoteData } from '../hooks/useRemoteData';
 import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
 import { useWeb3Store } from '../providers/store/StoreProvider';
-import { IdnaOrderState, MIN_IDNA_AMOUNT_TO_SELL } from '../utils/idena';
+import {
+  generateRandomSecret,
+  getSecretHash,
+  IdnaOrderState,
+  MIN_IDNA_AMOUNT_TO_SELL,
+} from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
 import { IdenaOrderCreation } from './IdenaOrderCreation';
 import { SecurityDeposit } from './SecurityDeposit';
 import { UiLabel, UiLogo, UiPage, UiSubmitButton } from './ui';
+import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
@@ -41,12 +47,9 @@ export const OrderCreationPage: FC = () => {
   const form = useForm<OrderCreationFormSchema>({
     resolver: zodResolver(orderCreationFormSchema),
     defaultValues: {
-      // amountToSell: '',
-      // amountToReceive: '',
-      // idenaAddress: '',
-      amountToSell: '101',
-      amountToReceive: '2.2',
-      idenaAddress: '0x75d6cE9A43A681BD21B79ccB148C07DA65345072',
+      amountToSell: '',
+      amountToReceive: '',
+      idenaAddress: '',
     },
     mode: 'onChange',
   });
@@ -58,23 +61,13 @@ export const OrderCreationPage: FC = () => {
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
   const idenaOrderRDState = useRemoteData<IdnaOrderState>(null);
-  const [idenaOrderRD, idenaOrderRDM] = idenaOrderRDState;
-  const isOrderSuccessfullyCreated = rData.isSuccess(idenaOrderRD);
-
+  const [idenaOrderRD] = idenaOrderRDState;
+  const isOrderSuccessfullyCreated = Boolean(rData.isSuccess(idenaOrderRD) && idenaOrderRD.data);
   // const [secret] = useState(generateRandomSecret);
-  const secret = '0x58cc7a0588b09d10a2874f6e50dceed3fcb3580de658767b09fbd93c71a5bff2';
-
-  const renderXdaiOrderBlock = () => {
-    return (
-      <UiSubmitButton
-        onClick={() => {
-          // TODO: to be implemented
-        }}
-      >
-        Create order to receive xDAI
-      </UiSubmitButton>
-    );
-  };
+  const secret = '0x1c3b15b9f7aeaea2b9b66d4d6de4d0e1a05f2e248b705c18';
+  const [secretHash] = useState(() => getSecretHash(secret));
+  console.log('>>> secret', secret, secretHash);
+  // const secretHash = '0xb7df2e05d1d74fa58fb5888f93343373d1d58987156254d58fcc9c61601eca42';
 
   return (
     <UiPage width="sm">
@@ -152,11 +145,13 @@ export const OrderCreationPage: FC = () => {
                     <IdenaOrderCreation
                       idenaOrderRDState={idenaOrderRDState}
                       form={form}
-                      secret={secret}
+                      secretHash={secretHash}
                     />
                   </Stack>
                 )}
-                {isOrderSuccessfullyCreated && renderXdaiOrderBlock()}
+                {rData.isSuccess(idenaOrderRD) && idenaOrderRD.data && (
+                  <XdaiOrderConfirmation secretHash={secretHash} idenaOrder={idenaOrderRD.data} />
+                )}
               </>
             )}
         </Stack>

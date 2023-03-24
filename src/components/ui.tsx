@@ -114,6 +114,19 @@ export const UiBlock = styled(Stack)(({ theme }) => ({
   alignItems: 'stretch',
 }));
 
+export const UiBlockTitle: FCC<{ tooltip?: ReactNode }> = ({ tooltip, children }) => {
+  return (
+    <Typography variant="h3" fontSize="1.125rem" display="flex" alignItems="center">
+      {children}
+      {tooltip && (
+        <Tooltip title={tooltip}>
+          <UiInputTooltipBtn ml={1}>?</UiInputTooltipBtn>
+        </Tooltip>
+      )}
+    </Typography>
+  );
+};
+
 export const UiInfoBlockRow: FC<{ title: ReactNode; value?: ReactNode } & TypographyProps> = ({
   title,
   value,

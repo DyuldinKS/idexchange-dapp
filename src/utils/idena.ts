@@ -1,5 +1,5 @@
 import {
-  ContractArgumentFormat,
+  ContractArgumentFormat as CAF,
   TransactionType,
   IdenaProvider,
   CallContractAttachment,
@@ -30,51 +30,34 @@ export const idenaProvider = IdenaProvider.create(IDENA_CONF.rpcUrl, IDENA_CONF.
 
 const contractAddress = CONTRACTS.idena.sellIdna;
 
+export const isNilData = (err: any) => /data is nil/.test(err?.message || String(err));
+
+const handleNilData =
+  (prefix = '') =>
+  (err: any) => {
+    if (isNilData(err)) return null;
+    console.error('handleNilData:', prefix, err);
+    throw err;
+  };
+
 export async function getIdnaOrderState(secretHash: string) {
+  const { Contract } = idenaProvider;
   const res = await Promise.all([
-    idenaProvider.Contract.readMap(
-      contractAddress,
-      'getOwner',
-      secretHash,
-      ContractArgumentFormat.Hex,
-    ),
-    idenaProvider.Contract.readMap(
-      contractAddress,
-      'getPayoutAddresses',
-      secretHash,
-      ContractArgumentFormat.Hex,
-    ),
-    idenaProvider.Contract.readMap(
-      contractAddress,
-      'getAmountDNA',
-      secretHash,
-      ContractArgumentFormat.Dna,
-    ),
-    idenaProvider.Contract.readMap(
-      contractAddress,
-      'getAmountXDAI',
-      secretHash,
-      ContractArgumentFormat.Dna,
-    ),
-    idenaProvider.Contract.readMap(
-      contractAddress,
-      'getExpirationBlock',
-      secretHash,
-      ContractArgumentFormat.Uint64,
-    ),
-    // TODO: remove tryReadMap
-    tryReadMap(contractAddress, 'getMatcher', secretHash, ContractArgumentFormat.Hex),
-    tryReadMap(
-      contractAddress,
-      'getMatchExpirationBlock',
-      secretHash,
-      ContractArgumentFormat.Uint64,
-    ),
+    Contract.readMap(contractAddress, 'getOwner', secretHash, CAF.Hex),
+    Contract.readMap(contractAddress, 'getPayoutAddresses', secretHash, CAF.Hex),
+    Contract.readMap(contractAddress, 'getAmountDNA', secretHash, CAF.Dna),
+    Contract.readMap(contractAddress, 'getAmountXDAI', secretHash, CAF.Dna),
+    Contract.readMap(contractAddress, 'getExpirationBlock', secretHash, CAF.Uint64),
+    safeReadMapNils(contractAddress, 'getMatcher', secretHash, CAF.Hex),
+    safeReadMapNils(contractAddress, 'getMatchExpirationBlock', secretHash, CAF.Uint64),
     idenaProvider.Blockchain.lastBlock().then((lastBlock) => ({
       lastBlock,
       timestamp: Date.now(),
     })),
-  ] as const);
+  ] as const).catch(handleNilData('getIdnaOrderState'));
+
+  if (!res) return null;
+
   const { lastBlock, timestamp } = res[7];
   const expirationBlock = Number(res[4]);
   return {
@@ -89,18 +72,12 @@ export async function getIdnaOrderState(secretHash: string) {
   };
 }
 
-async function tryReadMap(
-  contractAddress: string,
-  method: string,
-  key: string,
-  type: ContractArgumentFormat,
-) {
-  try {
-    return await idenaProvider.Contract.readMap(contractAddress, method, key, type);
-  } catch (e) {
-    console.error('>>> tryReadMap error', method, key, type, e);
-    return null;
-  }
+(window as any).getIdnaOrderState = getIdnaOrderState;
+
+async function safeReadMapNils(contractAddress: string, method: string, key: string, type: CAF) {
+  return idenaProvider.Contract.readMap(contractAddress, method, key, type).catch(
+    handleNilData(`safeReadMapNils ${contractAddress} ${method} ${key}`),
+  );
 }
 
 const buildContractArgs = (args: Omit<ContractArgument, 'index'>[]): ContractArgument[] =>
@@ -116,11 +93,10 @@ export const buildCreateIdenaOrderTx = async (
   from: string,
   idnaAmount: string,
   xDaiAmount: string,
-  secretHex: string,
+  secretHashHex: string,
 ) => {
   const lastBlock = await idenaProvider.Blockchain.lastBlock();
   const deadline = Number(lastBlock.height) + 600;
-  const secretHash = getSecretHash(secretHex);
 
   const createOrderCallPayload = new CallContractAttachment({
     method: 'createOrder',
@@ -128,10 +104,10 @@ export const buildCreateIdenaOrderTx = async (
   });
   createOrderCallPayload.setArgs(
     buildContractArgs([
-      { format: ContractArgumentFormat.Dna, value: xDaiAmount },
-      { format: ContractArgumentFormat.Uint64, value: String(deadline) },
-      { format: ContractArgumentFormat.Hex, value: from },
-      { format: ContractArgumentFormat.Hex, value: secretHash },
+      { format: CAF.Dna, value: xDaiAmount },
+      { format: CAF.Uint64, value: String(deadline) },
+      { format: CAF.Hex, value: from },
+      { format: CAF.Hex, value: secretHashHex },
     ]),
   );
 
@@ -153,9 +129,7 @@ export const buildBurnIdenaOrderTx = async (from: string, secretHashHex: string)
     method: 'burnOrder',
     args: [],
   });
-  createOrderCallPayload.setArgs(
-    buildContractArgs([{ format: ContractArgumentFormat.Hex, value: secretHashHex }]),
-  );
+  createOrderCallPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secretHashHex }]));
   const txData = {
     from,
     to: contractAddress,
@@ -179,3 +153,16 @@ export const generateRandomSecret = () => {
 };
 
 export const getSecretHash = (secret: string) => keccak256(secret);
+
+const tx = Transaction.fromHex(
+  '0x0a8c01080d106818102214e23369534efbfbc1e51f028dae5f412ccce1cca92a0905f68e8131ecf80000320829a2241af62c000042590a0b6372656174654f7264657212081feb3dd06766000012085bfa570000000000121475d6ce9a43a681bd21b79ccb148c07da653450721220b7df2e05d1d74fa58fb5888f93343373d1d58987156254d58fcc9c61601eca42',
+);
+console.log('>>>> test', tx);
+if (tx.payload) {
+  const attachement = new CallContractAttachment({
+    method: 'createOrder',
+    args: [],
+  }).fromBytes(tx.payload);
+  console.log('>>> attachement', attachement);
+  console.log('>>> hash', toHexString(attachement.args[3]));
+}
