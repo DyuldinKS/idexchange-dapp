@@ -5,7 +5,7 @@ import { gnosis } from '@wagmi/core/chains';
 
 import { SecurityDepositInfoType } from '../hooks/useSecurityDepositInfo';
 import { FC, ReactNode } from 'react';
-import { UiBlock, UiInfoBlockContent, UiInfoBlockRow, UiInputTooltipBtn } from './ui';
+import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiInputTooltipBtn } from './ui';
 import { FCC } from '../types/FCC';
 import { StackProps } from '@mui/system';
 
@@ -16,10 +16,7 @@ export const SecurityDepositInfoBlock: FCC<Pick<SecurityDepositInfoType, 'amount
 }) => {
   return (
     <UiBlock alignItems="start">
-      <Typography variant="h3" fontSize="1.125rem" display="flex" alignItems="center">
-        Security deposit
-        <UiInputTooltipBtn ml={1}>?</UiInputTooltipBtn>
-      </Typography>
+      <UiBlockTitle>Security deposit</UiBlockTitle>
       <UiInfoBlockContent mt={2}>
         <UiInfoBlockRow
           title="Current security deposit:"

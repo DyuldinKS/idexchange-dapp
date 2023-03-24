@@ -6,7 +6,7 @@ import { Stack } from '@mui/system';
 
 import { FCC } from '../types/FCC';
 import { IdnaOrderState } from '../utils/idena';
-import { UiBlock, UiInfoBlockContent, UiInfoBlockRow } from './ui';
+import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow } from './ui';
 
 const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm Z';
 
@@ -36,9 +36,7 @@ export const IdenaOrderInfoBlock: FCC<{ order?: IdnaOrderState | null }> = ({
 }) => {
   return (
     <UiBlock alignItems="start">
-      <Typography variant="h3" fontSize="1.125rem" display="flex" alignItems="center">
-        Order to sell iDNA
-      </Typography>
+      <UiBlockTitle> Order to sell iDNA</UiBlockTitle>
       {order && <IdenaOrderInfo {...order} />}
       <Stack mt={2} alignItems="stretch">
         {children}

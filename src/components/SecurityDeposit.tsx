@@ -45,9 +45,7 @@ export const SecurityDeposit: FC<{
   );
 
   if (isInUse)
-    return renderDepositInfo(
-      <UiSubmitButton disabled={true}>Wait for the end of your previous order</UiSubmitButton>,
-    );
+    return renderDepositInfo(<UiSubmitButton disabled={true}>Withdraw deposit</UiSubmitButton>);
 
   const replenishDeposit = () => {
     const processTx = async () => {
