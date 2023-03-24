@@ -1,23 +1,15 @@
+import { waitForTransaction } from '@wagmi/core';
 import { gnosis } from '@wagmi/core/chains';
+import debug from 'debug';
 import { FC } from 'react';
+import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
 import { useRemoteData } from '../hooks/useRemoteData';
-import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
-import { UiBlock, UiBlockTitle, UiSubmitButton } from './ui';
-import {
-  Address,
-  prepareWriteContract,
-  readContract,
-  writeContract,
-  waitForTransaction,
-} from '@wagmi/core';
-import { BigNumber } from 'ethers';
 import { useWeb3Store } from '../providers/store/StoreProvider';
-import { isChainSupported } from '../utils/web3Modal';
-import debug from 'debug';
-import { parseUnits } from 'ethers/lib/utils.js';
 import { IdnaOrderState } from '../utils/idena';
-import { hexToUint8Array, toHexString } from 'idena-sdk-js';
+import { isChainSupported } from '../utils/web3Modal';
+import { createXdaiConfirmedOrder, OrderConfirmation, readXdaiConfirmedOrder } from '../utils/xdai';
+import { UiBlock, UiBlockTitle, UiSubmitButton } from './ui';
 
 const log = debug('XdaiOrderConfirmation');
 
@@ -26,27 +18,6 @@ const contractInfo = {
   address: CONTRACTS[gnosis.id].receiveXdai,
   abi: abiToReceiveXdai,
 };
-
-export type OrderConfirmation = {
-  confirmed: Boolean;
-  owner: Address;
-  payoutAddress: Address;
-  matcher: Address | null;
-  amountXDAI: BigNumber;
-  matchDeadline: BigNumber;
-  executionDeadline: BigNumber | null;
-};
-
-const readXdaiConfirmedOrder = (secretHashHex: string) => {
-  log('readXdaiConfirmedOrder', secretHashHex, [hexToUint8Array(secretHashHex)]);
-  return readContract({
-    ...contractInfo,
-    functionName: 'orders',
-    args: [hexToUint8Array(secretHashHex)],
-  }) as Promise<OrderConfirmation>;
-};
-
-(window as any).readXdaiConfirmedOrder = readXdaiConfirmedOrder;
 
 export const XdaiOrderConfirmation: FC<{
   secretHash: string;
@@ -60,20 +31,12 @@ export const XdaiOrderConfirmation: FC<{
     if (!address || !isChainSupported(chainId)) return;
 
     const processTx = async () => {
-      const args = [
-        hexToUint8Array(secretHash),
-        parseUnits(idenaOrder.amountXdai, gnosis.nativeCurrency.decimals),
+      const tx = await createXdaiConfirmedOrder(
+        secretHash,
+        idenaOrder.amountXdai,
         address,
-        Math.floor(idenaOrder?.expirationAt / 1000),
-      ];
-      console.log('>>> args', args);
-      const txConfig = await prepareWriteContract({
-        ...contractInfo,
-        functionName: 'confirmOrder',
-        args,
-      });
-      log('confirmOrder txConfig:', txConfig);
-      const tx = await writeContract(txConfig);
+        idenaOrder.expirationAt,
+      );
       const res = await waitForTransaction({ hash: tx.hash });
       log('successfully confirmed');
       return res;
