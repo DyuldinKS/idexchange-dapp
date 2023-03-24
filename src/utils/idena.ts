@@ -24,10 +24,6 @@ globalThis.Buffer.prototype.writeBigUint64LE = Buffer.prototype.writeBigUInt64LE
 
 export const idenaProvider = IdenaProvider.create(IDENA_CONF.rpcUrl, IDENA_CONF.apiKey);
 
-// idenaProvider.Dna.balance('0x75d6cE9A43A681BD21B79ccB148C07DA65345072').then((res) =>
-//   console.log('>>> dnaProvider.balance', res),
-// );
-
 const contractAddress = CONTRACTS.idena.sellIdna;
 
 export const isNilData = (err: any) => /data is nil/.test(err?.message || String(err));
@@ -71,8 +67,6 @@ export async function getIdnaOrderState(secretHash: string) {
     expirationAt: (expirationBlock - lastBlock.height) * IDENA_BLOCK_DURATION_MS + timestamp,
   };
 }
-
-(window as any).getIdnaOrderState = getIdnaOrderState;
 
 async function safeReadMapNils(contractAddress: string, method: string, key: string, type: CAF) {
   return idenaProvider.Contract.readMap(contractAddress, method, key, type).catch(
@@ -153,16 +147,3 @@ export const generateRandomSecret = () => {
 };
 
 export const getSecretHash = (secret: string) => keccak256(secret);
-
-const tx = Transaction.fromHex(
-  '0x0a8c01080d106818102214e23369534efbfbc1e51f028dae5f412ccce1cca92a0905f68e8131ecf80000320829a2241af62c000042590a0b6372656174654f7264657212081feb3dd06766000012085bfa570000000000121475d6ce9a43a681bd21b79ccb148c07da653450721220b7df2e05d1d74fa58fb5888f93343373d1d58987156254d58fcc9c61601eca42',
-);
-console.log('>>>> test', tx);
-if (tx.payload) {
-  const attachement = new CallContractAttachment({
-    method: 'createOrder',
-    args: [],
-  }).fromBytes(tx.payload);
-  console.log('>>> attachement', attachement);
-  console.log('>>> hash', toHexString(attachement.args[3]));
-}

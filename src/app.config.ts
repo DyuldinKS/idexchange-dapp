@@ -1,4 +1,5 @@
 export const APP_CONFIG = {
+  devMode: localStorage.devMode === 'true',
   walletConnect: {
     projectId: '995c625498beb452c9f03c654006ea87',
   },

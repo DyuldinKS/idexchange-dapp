@@ -1,7 +1,4 @@
 import { getNetwork, getAccount } from '@wagmi/core';
-import * as wagmi from '@wagmi/core';
-
-(window as any).wagmi = wagmi;
 
 export type Web3Store = {
   chainId: number | null;
