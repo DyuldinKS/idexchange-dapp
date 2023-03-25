@@ -44,8 +44,7 @@ export const SecurityDeposit: FC<{
     </SecurityDepositInfoBlock>
   );
 
-  if (isInUse)
-    return renderDepositInfo(<UiSubmitButton disabled={true}>Withdraw deposit</UiSubmitButton>);
+  if (isInUse) return renderDepositInfo(null);
 
   const replenishDeposit = () => {
     const processTx = async () => {

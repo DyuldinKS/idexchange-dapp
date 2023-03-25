@@ -9,7 +9,11 @@ import { IdnaOrderState } from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { isChainSupported } from '../utils/web3Modal';
-import { createXdaiConfirmedOrder, OrderConfirmation, readXdaiConfirmedOrder } from '../utils/xdai';
+import {
+  createXdaiConfirmedOrder,
+  XdaiConfirmedOrder,
+  readXdaiConfirmedOrder,
+} from '../utils/xdai';
 import { UiBlock, UiBlockTitle, UiError, UiSubmitButton } from './ui';
 
 const log = debug('XdaiOrderConfirmation');
@@ -18,7 +22,7 @@ export const XdaiOrderConfirmation: FC<{
   secretHash: string;
   idenaOrder: NonNullable<IdnaOrderState>;
 }> = ({ secretHash, idenaOrder }) => {
-  const [orderRD, orderRDM] = useRemoteData<OrderConfirmation>(null);
+  const [orderRD, orderRDM] = useRemoteData<XdaiConfirmedOrder>(null);
   const [{ chainId, address }] = useWeb3Store();
   const theme = useTheme();
   console.log('>>> orderRD', orderRD);

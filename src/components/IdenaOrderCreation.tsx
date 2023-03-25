@@ -50,13 +50,13 @@ export const IdenaOrderCreation: FC<{
   };
 
   const renderIdenaOrderInfo = (children: ReactNode) => (
-    <IdenaOrderInfoBlock order={orderInfo}>
+    <IdenaOrderInfoBlock title="Order in Idena chain" order={orderInfo} secretHash={secretHash}>
       {children}
       {error && <UiError msg={error?.message || String(error)} />}
     </IdenaOrderInfoBlock>
   );
 
-  const buildCreateOrderTx = (): Promise<Transaction | null> => {
+  const buildCreateOrderTx = (evt: React.BaseSyntheticEvent): Promise<Transaction | null> => {
     idenaOrderRDM.setNotAsked();
     return new Promise((resolve) => {
       setIsIdenaTxLinkClicked(false);
@@ -71,15 +71,15 @@ export const IdenaOrderCreation: FC<{
         );
         createOrderTxRDM.track(txPromise);
         resolve(txPromise);
-      })().catch((err) => {
+      })(evt).catch((err) => {
         console.warn('buildCreateOrderTx caught', err);
         resolve(null);
       });
     });
   };
 
-  const buildOrderTxAndSign = () => {
-    buildCreateOrderTx().then((tx: Transaction | null) => {
+  const buildOrderTxAndSign = (evt: React.BaseSyntheticEvent) => {
+    buildCreateOrderTx(evt).then((tx: Transaction | null) => {
       console.log('try to sign tx', createOrderTxRD, tx);
       if (tx) {
         console.log('open window to sign tx');

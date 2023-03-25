@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { FC } from 'react';
+import React, { FC } from 'react';
 
 import { Typography } from '@mui/material';
 import { Stack } from '@mui/system';
@@ -8,9 +8,10 @@ import { FCC } from '../types/FCC';
 import { IdnaOrderState } from '../utils/idena';
 import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow } from './ui';
 
-const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm Z';
+export const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm Z';
 
-export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState>> = ({
+export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState & { id: string }>> = ({
+  id,
   owner,
   amountDna,
   amountXdai,
@@ -18,6 +19,7 @@ export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState>> = ({
 }) => {
   return (
     <UiInfoBlockContent mt={2}>
+      <UiInfoBlockRow title="Id:" value={id} />
       <UiInfoBlockRow title="Owner:" value={owner} />
       <UiInfoBlockRow title="Sell:" value={`${amountDna} iDNA`} />
       <UiInfoBlockRow title="Receive:" value={`${amountXdai} xDAI`} />
@@ -30,17 +32,20 @@ export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState>> = ({
   );
 };
 
-export const IdenaOrderInfoBlock: FCC<{ order?: IdnaOrderState | null }> = ({
-  order,
-  children,
-}) => {
+export const IdenaOrderInfoBlock: FCC<{
+  title: string;
+  order?: IdnaOrderState | null;
+  secretHash: string;
+}> = ({ title, order, children, secretHash }) => {
   return (
     <UiBlock alignItems="start">
-      <UiBlockTitle> Order to sell iDNA</UiBlockTitle>
-      {order && <IdenaOrderInfo {...order} />}
-      <Stack mt={2} alignItems="stretch">
-        {children}
-      </Stack>
+      <UiBlockTitle>{title}</UiBlockTitle>
+      {order && <IdenaOrderInfo id={secretHash} {...order} />}
+      {React.Children.toArray(children).filter(Boolean).length > 0 && (
+        <Stack mt={2} alignItems="stretch">
+          {children}
+        </Stack>
+      )}
     </UiBlock>
   );
 };

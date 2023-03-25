@@ -8,6 +8,7 @@ import { OrderCreationPage } from './components/OrderCreationPage';
 import { WalletConnector } from './components/WalletConnector';
 import { Header } from './components/Header';
 import { MainPage } from './components/MainPage';
+import { OrderPage } from './components/OrderPage';
 
 const DebugTools = lazy(() => import('./components/DebugTools'));
 const LazyDebugTools = () => (
@@ -50,6 +51,7 @@ function App() {
         <Route path="/" element={<AppAsRoute />}>
           <Route index element={<MainPage />} />
           <Route path="order/new" element={<OrderCreationPage />} />
+          <Route path="order/:hash" element={<OrderPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       </Routes>

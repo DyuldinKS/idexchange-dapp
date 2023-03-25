@@ -6,17 +6,27 @@ import { parseUnits } from 'ethers/lib/utils.js';
 import { hexToUint8Array } from 'idena-sdk-js';
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
+import { isAddrEqual, ZERO_ADDRESS } from './address';
 
 const log = debug('utils:xdai');
 
-export type OrderConfirmation = {
+export type XdaiRawConfirmedOrder = {
   confirmed: Boolean;
   owner: Address;
   payoutAddress: Address;
-  matcher: Address | null;
+  matcher: Address;
   amountXDAI: BigNumber;
   matchDeadline: BigNumber;
-  executionDeadline: BigNumber | null;
+  executionDeadline: BigNumber;
+};
+
+export type XdaiConfirmedOrder = Omit<
+  XdaiRawConfirmedOrder,
+  'matcher' | 'matchDeadline' | 'executionDeadline'
+> & {
+  matcher: Address | null;
+  matchDeadline: number | null; // ms
+  executionDeadline: number | null; // ms
 };
 
 const CONTRACT_INFO = {
@@ -26,11 +36,23 @@ const CONTRACT_INFO = {
 };
 
 export const readXdaiConfirmedOrder = async (secretHash: string) => {
-  return readContract({
-    ...CONTRACT_INFO,
-    functionName: 'orders',
-    args: [hexToUint8Array(secretHash)],
-  }) as Promise<OrderConfirmation>;
+  return (
+    readContract({
+      ...CONTRACT_INFO,
+      functionName: 'orders',
+      args: [hexToUint8Array(secretHash)],
+    }) as Promise<XdaiRawConfirmedOrder>
+  ).then(
+    (res) =>
+      (console.log('res', res) as any) || {
+        ...res,
+        matcher: isAddrEqual(res.matcher, ZERO_ADDRESS) ? null : res.matcher,
+        matchDeadline: res.matchDeadline.eq(0) ? null : res.matchDeadline.toNumber() * 1000,
+        executionDeadline: res.executionDeadline.eq(0)
+          ? null
+          : res.executionDeadline.toNumber() * 1000,
+      },
+  ) as Promise<XdaiConfirmedOrder>;
 };
 
 export const createXdaiConfirmedOrder = async (
