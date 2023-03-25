@@ -1,8 +1,8 @@
 import debug from 'debug';
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode, useEffect, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
-import { Stack, Typography } from '@mui/material';
+import { Button, Link, Stack, Typography } from '@mui/material';
 
 import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
 import { mapRejected } from '../utils/async';
@@ -15,7 +15,7 @@ import {
   IdnaOrderState,
 } from '../utils/idena';
 import { rData } from '../utils/remoteData';
-import { theme } from '../utils/theme';
+import { getColor, theme } from '../utils/theme';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderCreationFormSchema } from './OrderCreationPage';
 import { UiError, UiSubmitButton } from './ui';
@@ -32,13 +32,7 @@ export const IdenaOrderCreation: FC<{
   const [burnOrderTxRD, burnOrderTxRDM] = useRemoteData<Transaction>(null);
   const [isIdenaTxLinkClicked, setIsIdenaTxLinkClicked] = useState(false);
   const error = idenaOrderRD.error || createOrderTxRD.error;
-
-  const renderIdenaOrderInfo = (children: ReactNode) => (
-    <IdenaOrderInfoBlock order={idenaOrderRD.data}>
-      {children}
-      {error && <UiError msg={error?.message || String(error)} />}
-    </IdenaOrderInfoBlock>
-  );
+  const orderInfo = idenaOrderRD.data;
 
   const reloadOrderState = async () => {
     idenaOrderRDM.track(
@@ -51,61 +45,51 @@ export const IdenaOrderCreation: FC<{
     );
   };
 
-  if (rData.isLoading(idenaOrderRD)) {
-    return renderIdenaOrderInfo(<UiSubmitButton disabled={true}>Reloading info...</UiSubmitButton>);
+  const renderIdenaOrderInfo = (children: ReactNode) => (
+    <IdenaOrderInfoBlock order={orderInfo}>
+      {children}
+      {error && <UiError msg={error?.message || String(error)} />}
+    </IdenaOrderInfoBlock>
+  );
+
+  useEffect(() => {
+    reloadOrderState();
+  }, [secretHash]);
+
+  if (rData.isNotAsked(createOrderTxRD) && orderInfo) {
+    return renderIdenaOrderInfo(<UiError msg="Order with this id (secret hash) already exists." />);
   }
 
-  if (rData.isSuccess(idenaOrderRD)) {
-    const buildBurnOrderTx = () => {
+  const buildCreateOrderTx = (): Promise<Transaction | null> => {
+    idenaOrderRDM.setNotAsked();
+    return new Promise((resolve) => {
       setIsIdenaTxLinkClicked(false);
-      handleSubmit(({ idenaAddress }) => {
-        log('generate tx link to burn order');
-        burnOrderTxRDM.track(buildBurnIdenaOrderTx(idenaAddress, secretHash));
-      })().catch(() => {});
-    };
+      handleSubmit((values) => {
+        log('generate tx link to create order', values);
+        const { idenaAddress, amountToSell, amountToReceive } = values;
+        const txPromise = buildCreateIdenaOrderTx(
+          idenaAddress,
+          amountToSell,
+          amountToReceive,
+          secretHash,
+        );
+        createOrderTxRDM.track(txPromise);
+        resolve(txPromise);
+      })().catch((err) => {
+        console.warn('buildCreateOrderTx caught', err);
+        resolve(null);
+      });
+    });
+  };
 
-    return renderIdenaOrderInfo(
-      <Stack spacing={1} mt={1}>
-        {!idenaOrderRD.data && (
-          <Typography color={theme.palette.grey[700]}>Order not found.</Typography>
-        )}
-        <UiSubmitButton variant="outlined" onClick={reloadOrderState}>
-          Reload order info
-        </UiSubmitButton>
-        {/* TODO: move part of burning order to another page */}
-        {idenaOrderRD.data &&
-          Date.now() > idenaOrderRD.data?.expirationAt &&
-          (!rData.isSuccess(burnOrderTxRD) ? (
-            <UiSubmitButton disabled={rData.isLoading(burnOrderTxRD)} onClick={buildBurnOrderTx}>
-              Cancel order
-            </UiSubmitButton>
-          ) : (
-            <UiSubmitButton
-              onClick={() => setIsIdenaTxLinkClicked(true)}
-              LinkComponent="a"
-              href={getIdenaLinkToSignTx(burnOrderTxRD.data)}
-              {...{ target: '_blank' }}
-            >
-              Sign burning order transaction
-            </UiSubmitButton>
-          ))}
-      </Stack>,
-    );
-  }
-
-  const buildCreateOrderTx = () => {
-    setIsIdenaTxLinkClicked(false);
-    handleSubmit((values) => {
-      log('generate tx link to create order', values);
-      const { idenaAddress, amountToSell, amountToReceive } = values;
-      const promisedLink = buildCreateIdenaOrderTx(
-        idenaAddress,
-        amountToSell,
-        amountToReceive,
-        secretHash,
-      );
-      return createOrderTxRDM.track(promisedLink);
-    })().catch(() => {});
+  const buildOrderTxAndSign = () => {
+    buildCreateOrderTx().then((tx: Transaction | null) => {
+      console.log('try to sign tx', createOrderTxRD, tx);
+      if (tx) {
+        console.log('open window to sign tx');
+        window.open(getIdenaLinkToSignTx(tx), '_blank')?.focus();
+      }
+    });
   };
 
   if (rData.isLoading(createOrderTxRD)) {
@@ -114,49 +98,53 @@ export const IdenaOrderCreation: FC<{
 
   if (!rData.isSuccess(createOrderTxRD)) {
     return renderIdenaOrderInfo(
-      <UiSubmitButton disabled={rData.isLoading(createOrderTxRD)} onClick={buildCreateOrderTx}>
-        Create order in Idena chain
-      </UiSubmitButton>,
+      <>
+        <Typography color={getColor.textGrey(theme)}>
+          To create an order you need to sign transaction in Idena App:
+        </Typography>
+        <UiSubmitButton
+          sx={{ mt: 1 }}
+          disabled={rData.isLoading(createOrderTxRD)}
+          onClick={buildOrderTxAndSign}
+        >
+          Create order in Idena chain
+        </UiSubmitButton>
+      </>,
     );
   }
 
-  const regenerateOrderBtn = (
-    <UiSubmitButton
-      variant="outlined"
-      disabled={rData.isLoading(createOrderTxRD)}
-      onClick={buildCreateOrderTx}
-    >
-      Regenerate order
-    </UiSubmitButton>
-  );
-
-  if (!isIdenaTxLinkClicked) {
+  if (rData.isLoading(idenaOrderRD)) {
     return renderIdenaOrderInfo(
-      <Stack spacing={1}>
-        {regenerateOrderBtn}
-        <UiSubmitButton
-          onClick={() => setIsIdenaTxLinkClicked(true)}
-          LinkComponent="a"
-          href={getIdenaLinkToSignTx(createOrderTxRD.data)}
-          {...{ target: '_blank' }}
-        >
-          Sign order creation transaction
-        </UiSubmitButton>
-      </Stack>,
+      <UiSubmitButton disabled={true}>Loading order info...</UiSubmitButton>,
     );
+  }
+
+  if (rData.isSuccess(idenaOrderRD) && orderInfo) {
+    return renderIdenaOrderInfo(null);
   }
 
   return renderIdenaOrderInfo(
-    <Stack spacing={1}>
-      {regenerateOrderBtn}
-      <Stack>
-        <Typography color={theme.palette.grey[700]}>
-          Wait for the transaction to complete and then update state:
-        </Typography>
-        <UiSubmitButton sx={{ mt: 1 }} onClick={reloadOrderState}>
-          Check order status
-        </UiSubmitButton>
-      </Stack>
+    <Stack>
+      <Typography color={getColor.textGrey(theme)}>
+        Click{' '}
+        <Link href={getIdenaLinkToSignTx(createOrderTxRD.data)} target="_blank">
+          this link
+        </Link>{' '}
+        if Idena App did not open automatically. Wait for the transaction to complete, then load the
+        order data to continue.
+      </Typography>
+      <UiSubmitButton sx={{ mt: 2 }} onClick={reloadOrderState}>
+        {rData.isSuccess(idenaOrderRD) && !orderInfo
+          ? 'Order not found. Try again.'
+          : 'Check order status'}
+      </UiSubmitButton>
+      <Typography mt={2} color={getColor.textGrey(theme)}>
+        If something wrong you can try to{' '}
+        <Link sx={{ cursor: 'pointer' }} onClick={buildOrderTxAndSign}>
+          regenerate
+        </Link>{' '}
+        the order creation transaction and sign it again.
+      </Typography>
     </Stack>,
   );
 };

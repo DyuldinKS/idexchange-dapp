@@ -50,3 +50,7 @@ export const theme = createTheme({
     },
   },
 });
+
+export const getColor = {
+  textGrey: (theme: Theme) => theme.palette.grey[700],
+};
