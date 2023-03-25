@@ -13,31 +13,24 @@ import {
 } from '@mui/material';
 import { StackProps } from '@mui/system';
 import { FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { FCC } from '../types/FCC';
-
-export const UiPage = styled(Stack)<{
-  width: Breakpoint | number | string;
-}>(({ theme, width }) => {
-  const breakpoint = theme.breakpoints.values[width as Breakpoint];
-  return {
-    maxWidth: typeof breakpoint === 'number' ? `${breakpoint}px` : width,
-    alignItems: 'stretch',
-    flexGrow: 1,
-    margin: '1rem auto',
-    padding: '0 1rem',
-    minWidth: '280px',
-    width: '100%',
-  };
-});
 
 export const UiSubmitButton = (props: ButtonProps) => (
   <Button size="large" variant="contained" {...props} />
 );
 
 export const UiLogo = () => (
-  <Typography variant="h2" component="h1" color="#aaa" fontWeight={200}>
-    Idena Atomic&nbsp;DEX
-  </Typography>
+  <RouterLink to="/">
+    <Typography
+      sx={{ textDecoration: 'none', fontSize: { sm: '2.4rem', xs: '1.8rem' } }}
+      variant="h2"
+      color="#aaa"
+      fontWeight={200}
+    >
+      Idena Atomic&nbsp;DEX
+    </Typography>
+  </RouterLink>
 );
 
 export const UiError: FC<TypographyProps & { msg: ReactNode }> = ({ msg, ...typProps }) =>
@@ -108,7 +101,7 @@ export const UiLabel = forwardRef<
 UiLabel.displayName = 'UiLabel';
 
 export const UiBlock = styled(Stack)(({ theme }) => ({
-  padding: '1rem',
+  padding: '1rem 1rem 1.25rem',
   backgroundColor: theme.palette.grey[100],
   borderRadius: theme.shape.borderRadius,
   alignItems: 'stretch',

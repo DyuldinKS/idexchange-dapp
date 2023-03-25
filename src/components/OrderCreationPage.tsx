@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack, TextField, Typography } from '@mui/material';
+import { Container, Stack, TextField, Typography } from '@mui/material';
 import { switchNetwork } from '@wagmi/core';
 import { gnosis } from '@wagmi/core/chains';
 
@@ -24,7 +24,7 @@ import { rData } from '../utils/remoteData';
 import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
 import { IdenaOrderCreation } from './IdenaOrderCreation';
 import { SecurityDeposit } from './SecurityDeposit';
-import { UiLabel, UiLogo, UiPage, UiSubmitButton } from './ui';
+import { UiLabel, UiSubmitButton } from './ui';
 import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
@@ -63,16 +63,15 @@ export const OrderCreationPage: FC = () => {
   const idenaOrderRDState = useRemoteData<IdnaOrderState>(null);
   const [idenaOrderRD] = idenaOrderRDState;
   const isOrderSuccessfullyCreated = Boolean(rData.isSuccess(idenaOrderRD) && idenaOrderRD.data);
-  // const [secret] = useState(generateRandomSecret);
-  const secret = '0x1c3b15b9f7aeaea2b9b66d4d6de4d0e1a05f2e248b705c18';
+  const [secret] = useState(generateRandomSecret);
+  // const secret = '0x1c3b15b9f7aeaea2b9b66d4d6de4d0e1a05f2e248b705c18';
   const [secretHash] = useState(() => getSecretHash(secret));
   console.log('>>> secret', secret, secretHash);
   // const secretHash = '0xb7df2e05d1d74fa58fb5888f93343373d1d58987156254d58fcc9c61601eca42';
 
   return (
-    <UiPage width="sm">
-      <UiLogo />
-      <Typography variant="h4" component="h2" mt={4} fontWeight="bold">
+    <Container maxWidth="sm">
+      <Typography variant="h4" component="h1" mt={4} fontWeight={400}>
         Create an order to sell iDNA for xDAI
       </Typography>
       <Stack spacing="1rem" mt={4}>
@@ -150,12 +149,14 @@ export const OrderCreationPage: FC = () => {
                   </Stack>
                 )}
                 {rData.isSuccess(idenaOrderRD) && idenaOrderRD.data && (
-                  <XdaiOrderConfirmation secretHash={secretHash} idenaOrder={idenaOrderRD.data} />
+                  <Stack alignItems="stretch" mt={2}>
+                    <XdaiOrderConfirmation secretHash={secretHash} idenaOrder={idenaOrderRD.data} />
+                  </Stack>
                 )}
               </>
             )}
         </Stack>
       </Stack>
-    </UiPage>
+    </Container>
   );
 };
