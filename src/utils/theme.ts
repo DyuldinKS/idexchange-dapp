@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, Theme } from '@mui/material/styles';
 
 export const theme = createTheme({
   palette: {
@@ -13,6 +13,7 @@ export const theme = createTheme({
     },
   },
   typography: {
+    fontFamily: ['"Noto Sans","Source Sans Pro","Roboto","Helvetica","Arial",sans-serif'].join(','),
     h1: {
       fontSize: '3.2rem',
       fontWeight: 700,

@@ -35,8 +35,8 @@ export const UiSubmitButton = (props: ButtonProps) => (
 );
 
 export const UiLogo = () => (
-  <Typography variant="h2" component="h1" color="#aaa" fontWeight="light">
-    Idena atomic&nbsp;DEX
+  <Typography variant="h2" component="h1" color="#aaa" fontWeight={200}>
+    Idena Atomic&nbsp;DEX
   </Typography>
 );
 
@@ -81,9 +81,9 @@ export const UiLabel = forwardRef<
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'stretch',
-        // fontWeight: 'normal'
+        fontWeight: 500,
       }}
-      fontSize="1.125rem"
+      fontSize="1.25rem"
       ref={ref}
       {...props}
     >
@@ -116,7 +116,7 @@ export const UiBlock = styled(Stack)(({ theme }) => ({
 
 export const UiBlockTitle: FCC<{ tooltip?: ReactNode }> = ({ tooltip, children }) => {
   return (
-    <Typography variant="h3" fontSize="1.125rem" display="flex" alignItems="center">
+    <Typography variant="h3" fontSize="1.25rem" display="flex" alignItems="center" fontWeight={500}>
       {children}
       {tooltip && (
         <Tooltip title={tooltip}>
