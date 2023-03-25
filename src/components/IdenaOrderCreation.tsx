@@ -34,6 +34,10 @@ export const IdenaOrderCreation: FC<{
   const error = idenaOrderRD.error || createOrderTxRD.error;
   const orderInfo = idenaOrderRD.data;
 
+  useEffect(() => {
+    reloadOrderState();
+  }, [secretHash]);
+
   const reloadOrderState = async () => {
     idenaOrderRDM.track(
       getIdnaOrderState(secretHash).catch(
@@ -51,14 +55,6 @@ export const IdenaOrderCreation: FC<{
       {error && <UiError msg={error?.message || String(error)} />}
     </IdenaOrderInfoBlock>
   );
-
-  useEffect(() => {
-    reloadOrderState();
-  }, [secretHash]);
-
-  if (rData.isNotAsked(createOrderTxRD) && orderInfo) {
-    return renderIdenaOrderInfo(<UiError msg="Order with this id (secret hash) already exists." />);
-  }
 
   const buildCreateOrderTx = (): Promise<Transaction | null> => {
     idenaOrderRDM.setNotAsked();
@@ -91,6 +87,10 @@ export const IdenaOrderCreation: FC<{
       }
     });
   };
+
+  if (rData.isNotAsked(createOrderTxRD) && orderInfo) {
+    return renderIdenaOrderInfo(<UiError msg="Order with this id (secret hash) already exists." />);
+  }
 
   if (rData.isLoading(createOrderTxRD)) {
     return renderIdenaOrderInfo(<UiSubmitButton disabled={true}>Creating order...</UiSubmitButton>);
