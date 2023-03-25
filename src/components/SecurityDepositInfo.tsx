@@ -4,7 +4,7 @@ import { Box, Stack, Tooltip, Typography, TypographyProps, useTheme } from '@mui
 import { gnosis } from '@wagmi/core/chains';
 
 import { SecurityDepositInfoType } from '../hooks/useSecurityDepositInfo';
-import { FC, ReactNode } from 'react';
+import React, { FC, ReactNode } from 'react';
 import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiInputTooltipBtn } from './ui';
 import { FCC } from '../types/FCC';
 import { StackProps } from '@mui/system';
@@ -29,9 +29,11 @@ export const SecurityDepositInfoBlock: FCC<Pick<SecurityDepositInfoType, 'amount
           </Typography>
         )}
       </UiInfoBlockContent>
-      <Stack mt={2} alignItems="stretch">
-        {children}
-      </Stack>
+      {React.Children.toArray(children).filter(Boolean).length > 0 && (
+        <Stack mt={2} alignItems="stretch">
+          {children}
+        </Stack>
+      )}
     </UiBlock>
   );
 };

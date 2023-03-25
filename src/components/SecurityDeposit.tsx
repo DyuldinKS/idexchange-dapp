@@ -64,21 +64,6 @@ export const SecurityDeposit: FC<{
     depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
   };
 
-  const withdrawDeposit = () => {
-    const processTx = async () => {
-      const txConfig = await prepareWriteContract({
-        ...contractInfo,
-        functionName: 'withdrawSecurityDeposit',
-      });
-      log('withdrawDeposit txConfig', txConfig);
-      const tx = await writeContract(txConfig);
-      await waitForTransaction({ hash: tx.hash });
-      await reloadSecurityDeposit();
-    };
-
-    depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
-  };
-
   if (rData.isLoading(depositChangeRD))
     return (
       <>{renderDepositInfo(<UiSubmitButton disabled>Updating xDAI deposit...</UiSubmitButton>)}</>
@@ -98,9 +83,27 @@ export const SecurityDeposit: FC<{
       </>
     );
 
+  return renderDepositInfo(null);
+
+  // TODO: move this logic to the specific order page
+  const withdrawDeposit = () => {
+    const processTx = async () => {
+      const txConfig = await prepareWriteContract({
+        ...contractInfo,
+        functionName: 'withdrawSecurityDeposit',
+      });
+      log('withdrawDeposit txConfig', txConfig);
+      const tx = await writeContract(txConfig);
+      await waitForTransaction({ hash: tx.hash });
+      await reloadSecurityDeposit();
+    };
+
+    depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
+  };
+
   return renderDepositInfo(
     <UiSubmitButton
-      disabled={isInUse || isWithdrawDisabled}
+      disabled={Boolean(isInUse || isWithdrawDisabled)}
       color="error"
       variant="outlined"
       onClick={withdrawDeposit}
