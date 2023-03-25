@@ -8,5 +8,6 @@ export const APP_CONFIG = {
     apiKey: 'idena-restricted-node-key',
     webAppOrigin: 'https://app.idena.io',
     callbackUrl: window.location.origin,
+    secretBytesLength: 40,
   },
 } as const;

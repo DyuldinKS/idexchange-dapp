@@ -1,13 +1,13 @@
-import { WalletConnector } from './components/WalletConnector';
-import { z } from 'zod';
-import { OrderCreationPage } from './components/OrderCreationPage';
-import { APP_CONFIG } from './app.config';
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
-import { Box, Container, Stack, styled, useTheme } from '@mui/material';
-import { UiLogo } from './components/ui';
 
-export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
+import { Stack, styled } from '@mui/material';
+
+import { APP_CONFIG } from './app.config';
+import { OrderCreationPage } from './components/OrderCreationPage';
+import { WalletConnector } from './components/WalletConnector';
+import { Header } from './components/Header';
+import { MainPage } from './components/MainPage';
 
 const DebugTools = lazy(() => import('./components/DebugTools'));
 const LazyDebugTools = () => (
@@ -15,16 +15,6 @@ const LazyDebugTools = () => (
     <DebugTools />
   </Suspense>
 );
-
-const orderCreationFormSchema = z.object({
-  amountToSell: z
-    .string()
-    .refine((arg) => Number(arg) > 0, { message: 'should be a positive number' }),
-  amountToBuy: z
-    .string()
-    .refine((arg) => Number(arg) > 0, { message: 'should be a positive number' }),
-  secret: z.string().nonempty().min(12),
-});
 
 export const AppWrap = styled(Stack)(({ theme }) => {
   return {
@@ -37,17 +27,6 @@ export const AppWrap = styled(Stack)(({ theme }) => {
     },
   };
 });
-
-const Header = () => {
-  const theme = useTheme();
-  return (
-    <Box sx={{ bgcolor: theme.palette.grey[100], py: 0.5 }}>
-      <Container maxWidth="sm">
-        <UiLogo />
-      </Container>
-    </Box>
-  );
-};
 
 const AppAsRoute = () => {
   return (
@@ -69,6 +48,7 @@ function App() {
       {/** renderful */}
       <Routes>
         <Route path="/" element={<AppAsRoute />}>
+          <Route index element={<MainPage />} />
           <Route path="order/new" element={<OrderCreationPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>

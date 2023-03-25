@@ -142,7 +142,7 @@ export const getIdenaLinkToSignTx = (rawTx: Transaction) =>
   )}&callback_format=html`;
 
 export const generateRandomSecret = () => {
-  const secretBytes = crypto.getRandomValues(new Uint8Array(24));
+  const secretBytes = crypto.getRandomValues(new Uint8Array(IDENA_CONF.secretBytesLength));
   return toHexString(secretBytes, true);
 };
 

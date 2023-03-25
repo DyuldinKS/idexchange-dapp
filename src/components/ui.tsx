@@ -3,6 +3,7 @@ import {
   Breakpoint,
   Button,
   ButtonProps,
+  Container,
   Stack,
   styled,
   Tooltip,
@@ -32,6 +33,13 @@ export const UiLogo = () => (
     </Typography>
   </RouterLink>
 );
+
+export const UiPage = styled(Container)({
+  paddingTop: '2rem',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'stretch',
+});
 
 export const UiError: FC<TypographyProps & { msg: ReactNode }> = ({ msg, ...typProps }) =>
   msg ? (
@@ -127,7 +135,7 @@ export const UiInfoBlockRow: FC<{ title: ReactNode; value?: ReactNode } & Typogr
 }) => {
   const theme = useTheme();
   return (
-    <Typography {...props}>
+    <Typography {...props} sx={{ wordWrap: 'break-word' }}>
       <Box component="span" mr={1} color={theme.palette.grey[700]}>
         {title}
       </Box>

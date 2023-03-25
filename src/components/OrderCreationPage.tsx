@@ -24,7 +24,7 @@ import { rData } from '../utils/remoteData';
 import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
 import { IdenaOrderCreation } from './IdenaOrderCreation';
 import { SecurityDeposit } from './SecurityDeposit';
-import { UiLabel, UiSubmitButton } from './ui';
+import { UiPage, UiLabel, UiSubmitButton } from './ui';
 import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
@@ -63,15 +63,16 @@ export const OrderCreationPage: FC = () => {
   const idenaOrderRDState = useRemoteData<IdnaOrderState>(null);
   const [idenaOrderRD] = idenaOrderRDState;
   const isOrderSuccessfullyCreated = Boolean(rData.isSuccess(idenaOrderRD) && idenaOrderRD.data);
-  const [secret] = useState(generateRandomSecret);
-  // const secret = '0x1c3b15b9f7aeaea2b9b66d4d6de4d0e1a05f2e248b705c18';
+  // const [secret] = useState(generateRandomSecret);
+  const secret = '0x1c3b15b9f7aeaea2b9b66d4d6de4d0e1a05f2e248b705c18';
   const [secretHash] = useState(() => getSecretHash(secret));
   console.log('>>> secret', secret, secretHash);
+  // const secretHash = '0x933e53cd11087d89871cb9fff4382aa409014d4ff708333e69ac220b3c123e0c
   // const secretHash = '0xb7df2e05d1d74fa58fb5888f93343373d1d58987156254d58fcc9c61601eca42';
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" component="h1" mt={4} fontWeight={400}>
+    <UiPage maxWidth="sm">
+      <Typography variant="h4" component="h1" fontWeight={400}>
         Create an order to sell iDNA for xDAI
       </Typography>
       <Stack spacing="1rem" mt={4}>
@@ -157,6 +158,6 @@ export const OrderCreationPage: FC = () => {
             )}
         </Stack>
       </Stack>
-    </Container>
+    </UiPage>
   );
 };
