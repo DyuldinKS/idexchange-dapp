@@ -147,3 +147,7 @@ export const generateRandomSecret = () => {
 };
 
 export const getSecretHash = (secret: string) => keccak256(secret);
+
+export const openIdenaAppToSignTx = (tx: Transaction) => {
+  window.open(getIdenaLinkToSignTx(tx), '_blank')?.focus();
+};

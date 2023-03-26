@@ -26,6 +26,7 @@ import { IdenaOrderCreation } from './IdenaOrderCreation';
 import { SecurityDeposit } from './SecurityDeposit';
 import { UiPage, UiLabel, UiSubmitButton } from './ui';
 import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
+import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
@@ -44,6 +45,7 @@ const orderCreationFormSchema = z.object({
 const log = debug('OrderCreationPage');
 
 export const OrderCreationPage: FC = () => {
+  const [web3Store] = useWeb3Store();
   const form = useForm<OrderCreationFormSchema>({
     resolver: zodResolver(orderCreationFormSchema),
     defaultValues: {
@@ -122,40 +124,32 @@ export const OrderCreationPage: FC = () => {
           />
         </UiLabel>
         <Stack alignItems="stretch" mt={4}>
-          {(!address && (
-            <UiSubmitButton onClick={() => web3Modal.openModal()} variant="contained">
-              Connect wallet
-            </UiSubmitButton>
-          )) ||
-            (!isChainSupported(chainId) && (
-              <UiSubmitButton onClick={() => switchNetwork({ chainId: DEFAULT_CHAIN_ID })}>
-                Switch network
-              </UiSubmitButton>
-            )) || (
-              <>
-                {
-                  <SecurityDeposit
-                    state={securityDepositRD}
-                    reloadSecurityDeposit={reloadSecurityDeposit}
-                    isWithdrawDisabled={isOrderSuccessfullyCreated}
+          {renderWalletRoutineIfNeeded(web3Store) || (
+            <>
+              {
+                <SecurityDeposit
+                  state={securityDepositRD}
+                  reloadSecurityDeposit={reloadSecurityDeposit}
+                  isWithdrawDisabled={isOrderSuccessfullyCreated}
+                />
+              }
+              {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
+                <Stack alignItems="stretch" mt={2}>
+                  <IdenaOrderCreation
+                    // TODO: split list to RD and RDM props to prevent updates
+                    idenaOrderRDState={idenaOrderRDState}
+                    form={form}
+                    secretHash={secretHash}
                   />
-                }
-                {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
-                  <Stack alignItems="stretch" mt={2}>
-                    <IdenaOrderCreation
-                      idenaOrderRDState={idenaOrderRDState}
-                      form={form}
-                      secretHash={secretHash}
-                    />
-                  </Stack>
-                )}
-                {rData.isSuccess(idenaOrderRD) && idenaOrderRD.data && (
-                  <Stack alignItems="stretch" mt={2}>
-                    <XdaiOrderConfirmation secretHash={secretHash} idenaOrder={idenaOrderRD.data} />
-                  </Stack>
-                )}
-              </>
-            )}
+                </Stack>
+              )}
+              {rData.isSuccess(idenaOrderRD) && idenaOrderRD.data && (
+                <Stack alignItems="stretch" mt={2}>
+                  <XdaiOrderConfirmation secretHash={secretHash} idenaOrder={idenaOrderRD.data} />
+                </Stack>
+              )}
+            </>
+          )}
         </Stack>
       </Stack>
     </UiPage>

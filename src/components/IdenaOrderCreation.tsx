@@ -13,6 +13,7 @@ import {
   getIdnaOrderState,
   getSecretHash,
   IdnaOrderState,
+  openIdenaAppToSignTx,
 } from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { getColor, theme } from '../utils/theme';
@@ -80,10 +81,8 @@ export const IdenaOrderCreation: FC<{
 
   const buildOrderTxAndSign = (evt: React.BaseSyntheticEvent) => {
     buildCreateOrderTx(evt).then((tx: Transaction | null) => {
-      console.log('try to sign tx', createOrderTxRD, tx);
       if (tx) {
-        console.log('open window to sign tx');
-        window.open(getIdenaLinkToSignTx(tx), '_blank')?.focus();
+        openIdenaAppToSignTx(tx);
       }
     });
   };
