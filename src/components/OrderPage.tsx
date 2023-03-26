@@ -1,8 +1,8 @@
 import debug from 'debug';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Stack, Typography, useTheme } from '@mui/material';
+import { Box, Grid, Stack, TextField, Tooltip, Typography, useTheme } from '@mui/material';
 import { gnosis } from '@wagmi/core/chains';
 
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
@@ -11,15 +11,33 @@ import { useRemoteData } from '../hooks/useRemoteData';
 import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { shortenHash } from '../utils/address';
-import { getIdnaOrderState, IdnaOrderState } from '../utils/idena';
+import { getIdnaOrderState, getSecretHash, IdnaOrderState } from '../utils/idena';
 import { isOrderConfirmationValid } from '../utils/orderControls';
 import { rData } from '../utils/remoteData';
 import { readXdaiConfirmedOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
-import { UiError, UiPage } from './ui';
+import { UiError, UiPage, UiSubmitButton } from './ui';
+import { isHexString } from 'ethers/lib/utils.js';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { APP_CONFIG } from '../app.config';
 
-const log = debug('OrderCreationPage');
+const log = debug('OrderPage');
+
+export type SecretSchema = z.infer<typeof secretSchema>;
+
+const secretSchema = z.object({
+  secret: z.string().refine(
+    (val) =>
+      // TODO: remove 24 bytes secret
+      isHexString(val, 24) || isHexString(val, APP_CONFIG.idena.secretBytesLength),
+    {
+      message: "The order's secret expected to be a hex string.",
+    },
+  ),
+});
 
 export const OrderPage: FC = () => {
   const { hash } = useParams() as { hash: string };
@@ -31,10 +49,20 @@ export const OrderPage: FC = () => {
   const [orderRD, orderRDM] = useRemoteData<IdnaOrderState | null>(null);
   const [confirmedOrderRD, confirmedOrderRDM] = useRemoteData<XdaiConfirmedOrder>(null);
   const theme = useTheme();
-  console.log('>>> RD', orderRD, confirmedOrderRD);
-  // const [secret] = useState(generateRandomSecret);
-  // const secretHash = '0x933e53cd11087d89871cb9fff4382aa409014d4ff708333e69ac220b3c123e0c
-  // const secretHash = '0xb7df2e05d1d74fa58fb5888f93343373d1d58987156254d58fcc9c61601eca42';
+
+  // owner part
+  const form = useForm<SecretSchema>({
+    resolver: zodResolver(secretSchema),
+    defaultValues: { secret: '' },
+    mode: 'onChange',
+  });
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+    setError,
+  } = form;
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     orderRDM.track(getIdnaOrderState(hash));
@@ -56,9 +84,11 @@ export const OrderPage: FC = () => {
 
   return (
     <UiPage maxWidth="sm">
-      <Typography variant="h4" component="h1" fontWeight={400}>
-        {`Order ${shortenHash(hash, 6, 5)}`}
-      </Typography>
+      <Tooltip title={hash}>
+        <Typography variant="h4" component="h1" fontWeight={400}>
+          {`Order ${shortenHash(hash, 6, 5)}`}
+        </Typography>
+      </Tooltip>
       <Stack mt={4} spacing={2}>
         <IdenaOrderInfoBlock title="Idena chain" order={orderRD.data} secretHash={hash}>
           {renderOrderContent()}
@@ -70,6 +100,42 @@ export const OrderPage: FC = () => {
         >
           {renderConfirmedOrderInfo()}
         </ConfirmedOrderInfoBlock>
+      </Stack>
+      <Stack mt={4} spacing={2}>
+        <Box>
+          <Grid container spacing={1}>
+            {!isOwner && (
+              <>
+                <Grid item xs={12} sm={8}>
+                  <TextField
+                    {...register('secret')}
+                    error={Boolean(errors.secret)}
+                    helperText={errors.secret?.message}
+                    placeholder="Secret code"
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <UiSubmitButton
+                    fullWidth
+                    sx={{ height: '40px' }}
+                    variant="outlined"
+                    onClick={handleSubmit(({ secret }) => {
+                      if (getSecretHash(secret) === hash) {
+                        setIsOwner(true);
+                      } else {
+                        setError('secret', { message: 'This is not a secret code of this order.' });
+                      }
+                    })}
+                  >
+                    Manage as owner
+                  </UiSubmitButton>
+                </Grid>
+              </>
+            )}
+          </Grid>
+        </Box>
       </Stack>
     </UiPage>
   );
