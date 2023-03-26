@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import React, { FC } from 'react';
 
-import { Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import { Stack } from '@mui/system';
 
 import { FCC } from '../types/FCC';
@@ -21,11 +21,32 @@ export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState & { id: string }>> = 
     <UiInfoBlockContent mt={2}>
       <UiInfoBlockRow title="Id:" value={id} />
       <UiInfoBlockRow title="Owner:" value={owner} />
-      <UiInfoBlockRow title="Sell:" value={`${amountDna} iDNA`} />
-      <UiInfoBlockRow title="Receive:" value={`${amountXdai} xDAI`} />
+      <UiInfoBlockRow
+        title="Exchange:"
+        value={
+          <Box component="span">
+            <Box fontWeight="600" component="span">
+              {amountDna}
+            </Box>{' '}
+            iDNA for{' '}
+            <Box fontWeight="600" component="span">
+              {amountXdai}
+            </Box>{' '}
+            xDAI{' '}
+          </Box>
+        }
+      />
       <UiInfoBlockRow
         title="Rate:"
-        value={`iDNA = ${(Number(amountXdai) / Number(amountDna)).toFixed(3)} xDAI`}
+        value={
+          <Box component="span">
+            iDNA ={' '}
+            <Box fontWeight="600" component="span">
+              {(Number(amountXdai) / Number(amountDna)).toFixed(3)}
+            </Box>{' '}
+            xDAI
+          </Box>
+        }
       />
       <UiInfoBlockRow title="Expire time:" value={dayjs(expirationAt).format(DATE_TIME_FORMAT)} />
     </UiInfoBlockContent>
