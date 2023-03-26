@@ -3,6 +3,15 @@
   font-family: 'Noto Sans', 'Source Sans Pro', 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+  cursor: pointer;
+}
+
 html {
   font-size: 16px;
 }
