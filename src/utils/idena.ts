@@ -11,7 +11,7 @@ import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
 import { keccak256 } from 'ethers/lib/utils.js';
 
-export type IdnaOrderState = Awaited<ReturnType<typeof getIdnaOrderState>>;
+export type IdnaOrderState = NonNullable<Awaited<ReturnType<typeof getIdnaOrderState>>>;
 
 const MAX_FEE = '3';
 const IDENA_CONF = APP_CONFIG.idena;

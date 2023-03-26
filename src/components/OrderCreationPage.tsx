@@ -60,7 +60,7 @@ export const OrderCreationPage: FC = () => {
     rData: [securityDepositRD],
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
-  const idenaOrderRDState = useRemoteData<IdnaOrderState>(null);
+  const idenaOrderRDState = useRemoteData<IdnaOrderState | null>(null);
   const [idenaOrderRD] = idenaOrderRDState;
   const isOrderSuccessfullyCreated = Boolean(rData.isSuccess(idenaOrderRD) && idenaOrderRD.data);
   // const [secret] = useState(generateRandomSecret);

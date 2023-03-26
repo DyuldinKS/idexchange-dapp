@@ -20,7 +20,7 @@ const log = debug('XdaiOrderConfirmation');
 
 export const XdaiOrderConfirmation: FC<{
   secretHash: string;
-  idenaOrder: NonNullable<IdnaOrderState>;
+  idenaOrder: IdnaOrderState;
 }> = ({ secretHash, idenaOrder }) => {
   const [orderRD, orderRDM] = useRemoteData<XdaiConfirmedOrder>(null);
   const [{ chainId, address }] = useWeb3Store();

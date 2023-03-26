@@ -24,7 +24,7 @@ import { Transaction } from 'idena-sdk-js';
 const log = debug('IdenaOrderCreation');
 
 export const IdenaOrderCreation: FC<{
-  idenaOrderRDState: UseRemoteDataReturn<IdnaOrderState>;
+  idenaOrderRDState: UseRemoteDataReturn<IdnaOrderState | null>;
   form: UseFormReturn<OrderCreationFormSchema>;
   secretHash: string;
 }> = ({ idenaOrderRDState: [idenaOrderRD, idenaOrderRDM], form: { handleSubmit }, secretHash }) => {

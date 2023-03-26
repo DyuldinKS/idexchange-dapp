@@ -25,7 +25,7 @@ export type XdaiConfirmedOrder = Omit<
   'matcher' | 'matchDeadline' | 'executionDeadline'
 > & {
   matcher: Address | null;
-  matchDeadline: number | null; // ms
+  matchDeadline: number; // ms
   executionDeadline: number | null; // ms
 };
 
@@ -41,13 +41,13 @@ export const readXdaiConfirmedOrder = async (secretHash: string) => {
       ...CONTRACT_INFO,
       functionName: 'orders',
       args: [hexToUint8Array(secretHash)],
-    }) as Promise<XdaiRawConfirmedOrder>
+    }) as Promise<XdaiRawConfirmedOrder | null>
   ).then(
     (res) =>
-      (console.log('res', res) as any) || {
+      res && {
         ...res,
         matcher: isAddrEqual(res.matcher, ZERO_ADDRESS) ? null : res.matcher,
-        matchDeadline: res.matchDeadline.eq(0) ? null : res.matchDeadline.toNumber() * 1000,
+        matchDeadline: res.matchDeadline.toNumber() * 1000,
         executionDeadline: res.executionDeadline.eq(0)
           ? null
           : res.executionDeadline.toNumber() * 1000,
