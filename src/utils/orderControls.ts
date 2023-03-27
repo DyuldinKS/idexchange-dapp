@@ -1,12 +1,12 @@
 import { gnosis } from '@wagmi/core/chains';
 import { formatUnits } from 'ethers/lib/utils.js';
-import { IDENA_BLOCK_DURATION_MS, IdnaOrderState } from './idena';
+import { IDENA_BLOCK_DURATION_MS, IdenaOrderState } from './idena';
 import { XdaiConfirmedOrder } from './xdai';
 
 const NETWORK_TIME_ERROR = 5000;
 
 export const isOrderConfirmationValid = (
-  order: IdnaOrderState | null,
+  order: IdenaOrderState | null,
   confirmedOrder: XdaiConfirmedOrder | null,
 ) => {
   if (!order || !confirmedOrder) return null;

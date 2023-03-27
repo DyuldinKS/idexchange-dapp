@@ -5,7 +5,7 @@ import debug from 'debug';
 import { FC, ReactNode, useEffect } from 'react';
 import { useRemoteData } from '../hooks/useRemoteData';
 import { useWeb3Store } from '../providers/store/StoreProvider';
-import { IdnaOrderState } from '../utils/idena';
+import { IdenaOrderState } from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { isChainSupported } from '../utils/web3Modal';
@@ -20,7 +20,7 @@ const log = debug('XdaiOrderConfirmation');
 
 export const XdaiOrderConfirmation: FC<{
   secretHash: string;
-  idenaOrder: IdnaOrderState;
+  idenaOrder: IdenaOrderState;
 }> = ({ secretHash, idenaOrder }) => {
   const [orderRD, orderRDM] = useRemoteData<XdaiConfirmedOrder>(null);
   const [{ chainId, address }] = useWeb3Store();
@@ -35,7 +35,7 @@ export const XdaiOrderConfirmation: FC<{
   const renderOrderBlock = (children: ReactNode) => {
     return (
       <UiBlock>
-        <UiBlockTitle>Order to receive xDAI</UiBlockTitle>
+        <UiBlockTitle>Gnosis chain</UiBlockTitle>
         {children && (
           <Stack mt={2} alignItems="stretch">
             {children}
@@ -70,9 +70,11 @@ export const XdaiOrderConfirmation: FC<{
 
   return renderOrderBlock(
     <Stack alignItems="stretch">
-      <Typography color={getColor.textGrey(theme)}>Create an order to receive xDai:</Typography>
+      <Typography color={getColor.textGrey(theme)}>
+        Confirm your order to be able to receive xDai:
+      </Typography>
       <UiSubmitButton sx={{ mt: 1 }} onClick={confirmOrder} disabled={rData.isLoading(orderRD)}>
-        Create order in Gnosis Chain
+        Confirm order
       </UiSubmitButton>
     </Stack>,
   );

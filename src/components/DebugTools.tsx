@@ -29,7 +29,9 @@ export default function DebugTools() {
     (window as any).dex = {
       APP_CONFIG,
       env: process.env,
-      web3: () => web3Ref.current,
+      get web3() {
+        return web3Ref.current;
+      },
       getStore: () => storeRef.current[0],
       setStore: storeRef.current[1],
     };

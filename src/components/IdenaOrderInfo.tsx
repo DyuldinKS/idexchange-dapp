@@ -5,12 +5,12 @@ import { Box } from '@mui/material';
 import { Stack } from '@mui/system';
 
 import { FCC } from '../types/FCC';
-import { IdnaOrderState } from '../utils/idena';
+import { IdenaOrderState } from '../utils/idena';
 import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow } from './ui';
 
 export const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm Z';
 
-export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState & { id: string }>> = ({
+export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> = ({
   id,
   owner,
   amountDna,
@@ -55,7 +55,7 @@ export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState & { id: string }>> = 
 
 export const IdenaOrderInfoBlock: FCC<{
   title: string;
-  order?: IdnaOrderState | null;
+  order?: IdenaOrderState | null;
   secretHash: string;
 }> = ({ title, order, children, secretHash }) => {
   return (

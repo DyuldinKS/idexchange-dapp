@@ -10,8 +10,8 @@ import { mapRejected } from '../utils/async';
 import {
   buildCreateIdenaOrderTx,
   getIdenaLinkToSignTx,
-  getIdnaOrderState,
-  IdnaOrderState,
+  getIdenaOrderState,
+  IdenaOrderState,
   openIdenaAppToSignTx,
 } from '../utils/idena';
 import { rData } from '../utils/remoteData';
@@ -23,8 +23,8 @@ import { UiError, UiSubmitButton } from './ui';
 const log = debug('IdenaOrderCreation');
 
 export const IdenaOrderCreation: FC<{
-  idenaOrderRD: UseRemoteDataReturn<IdnaOrderState | null>[0];
-  idenaOrderRDM: UseRemoteDataReturn<IdnaOrderState | null>[1];
+  idenaOrderRD: UseRemoteDataReturn<IdenaOrderState | null>[0];
+  idenaOrderRDM: UseRemoteDataReturn<IdenaOrderState | null>[1];
   form: UseFormReturn<OrderCreationFormSchema>;
   secretHash: string;
 }> = ({ idenaOrderRD, idenaOrderRDM, form: { handleSubmit }, secretHash }) => {
@@ -38,7 +38,7 @@ export const IdenaOrderCreation: FC<{
 
   const reloadOrderState = async () => {
     idenaOrderRDM.track(
-      getIdnaOrderState(secretHash).catch(
+      getIdenaOrderState(secretHash).catch(
         mapRejected((err: any) => {
           console.error('Failed to load order state:', err);
           return err;

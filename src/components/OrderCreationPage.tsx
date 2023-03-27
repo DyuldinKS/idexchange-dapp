@@ -17,7 +17,7 @@ import { useWeb3Store } from '../providers/store/StoreProvider';
 import {
   generateRandomSecret,
   getSecretHash,
-  IdnaOrderState,
+  IdenaOrderState,
   MIN_IDNA_AMOUNT_TO_SELL,
 } from '../utils/idena';
 import { rData } from '../utils/remoteData';
@@ -60,7 +60,7 @@ export const OrderCreationPage: FC = () => {
     rData: [securityDepositRD],
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
-  const [idenaOrderRD, idenaOrderRDM] = useRemoteData<IdnaOrderState | null>(null);
+  const [idenaOrderRD, idenaOrderRDM] = useRemoteData<IdenaOrderState | null>(null);
   const navigate = useNavigate();
   const [secret] = useState(generateRandomSecret);
   const [secretHash] = useState(() => getSecretHash(secret));

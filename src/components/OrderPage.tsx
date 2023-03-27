@@ -23,9 +23,9 @@ import { mapRejected } from '../utils/async';
 import {
   buildBurnIdenaOrderTx,
   getIdenaLinkToSignTx,
-  getIdnaOrderState,
+  getIdenaOrderState,
   getSecretHash,
-  IdnaOrderState,
+  IdenaOrderState,
   openIdenaAppToSignTx,
 } from '../utils/idena';
 import { isOrderConfirmationValid } from '../utils/orderControls';
@@ -38,6 +38,7 @@ import { SecurityDeposit } from './SecurityDeposit';
 import { UiError, UiPage, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
+import { useContractsStaticInfo } from '../hooks/useContractsStaticInfo';
 
 const log = debug('OrderPage');
 
@@ -61,8 +62,9 @@ export const OrderPage: FC = () => {
     rData: [securityDepositRD],
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
-  const [orderRD, orderRDM] = useRemoteData<IdnaOrderState | null>(null);
+  const [orderRD, orderRDM] = useRemoteData<IdenaOrderState | null>(null);
   const [confirmedOrderRD, confirmedOrderRDM] = useRemoteData<XdaiConfirmedOrder | null>(null);
+  const contractsInfoRD = useContractsStaticInfo();
 
   // owner part
   const form = useForm<SecretSchema>({
@@ -79,7 +81,7 @@ export const OrderPage: FC = () => {
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
-    orderRDM.track(getIdnaOrderState(hash));
+    orderRDM.track(getIdenaOrderState(hash));
     confirmedOrderRDM.track(readXdaiConfirmedOrder(hash));
   }, [hash]);
 
@@ -173,8 +175,8 @@ export const OrderPage: FC = () => {
 
 export const OrderOwnerView: FC<{
   secretHash: string;
-  orderRD: RemoteData<IdnaOrderState | null>;
-  idenaOrderRDM: UseRemoteDataReturn<IdnaOrderState | null>[1];
+  orderRD: RemoteData<IdenaOrderState | null>;
+  idenaOrderRDM: UseRemoteDataReturn<IdenaOrderState | null>[1];
   confirmedOrderRD: RemoteData<XdaiConfirmedOrder | null>;
   confirmedOrderRDM: UseRemoteDataReturn<XdaiConfirmedOrder | null>[1];
 }> = ({ secretHash, orderRD, idenaOrderRDM, confirmedOrderRD, confirmedOrderRDM }) => {
@@ -213,7 +215,7 @@ export const OrderOwnerView: FC<{
 
     const reloadOrderState = async () => {
       idenaOrderRDM.track(
-        getIdnaOrderState(secretHash).catch(
+        getIdenaOrderState(secretHash).catch(
           mapRejected((err: any) => {
             console.error('Failed to load order state:', err);
             return err;

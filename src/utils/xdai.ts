@@ -4,6 +4,7 @@ import debug from 'debug';
 import { BigNumber } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils.js';
 import { hexToUint8Array } from 'idena-sdk-js';
+import { zipObj } from 'ramda';
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
 import { isAddrEqual, ZERO_ADDRESS } from './address';
@@ -19,6 +20,8 @@ export type XdaiRawConfirmedOrder = {
   matchDeadline: BigNumber;
   executionDeadline: BigNumber;
 };
+
+export type XdaiContractStaticInfo = Awaited<ReturnType<typeof readXdaiContractInfo>>;
 
 export type XdaiConfirmedOrder = Omit<
   XdaiRawConfirmedOrder,
@@ -83,4 +86,27 @@ export const burnXdaiOrder = async (secretHash: string) => {
     functionName: 'burnOrder',
     args,
   }).then(writeContract);
+};
+
+export const readXdaiContractInfo = async () => {
+  const funcNames = [
+    'ownerClaimPeriod',
+    'minOrderTTL',
+    'securityDepositAmount',
+    'protocolPenaltyFee',
+  ] as const;
+  const rawRes = await Promise.all(
+    funcNames.map((functionName) =>
+      readContract({
+        ...CONTRACT_INFO,
+        functionName,
+      }),
+    ),
+  );
+  const res = zipObj(funcNames, rawRes) as Record<typeof funcNames[number], BigNumber>;
+  return {
+    ...res,
+    minOrderTTL: res.minOrderTTL.toNumber() * 1000,
+    ownerClaimPeriod: res.ownerClaimPeriod.toNumber() * 1000,
+  };
 };

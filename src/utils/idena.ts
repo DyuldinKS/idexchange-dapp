@@ -11,7 +11,8 @@ import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
 import { keccak256 } from 'ethers/lib/utils.js';
 
-export type IdnaOrderState = NonNullable<Awaited<ReturnType<typeof getIdnaOrderState>>>;
+export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof getIdenaOrderState>>>;
+export type IdenaContractStaticInfo = Awaited<ReturnType<typeof readIdenaContractInfo>>;
 
 const MAX_FEE = '3';
 const IDENA_CONF = APP_CONFIG.idena;
@@ -36,7 +37,7 @@ const handleNilData =
     throw err;
   };
 
-export async function getIdnaOrderState(secretHash: string) {
+export async function getIdenaOrderState(secretHash: string) {
   const { Contract } = idenaProvider;
   const res = await Promise.all([
     Contract.readMap(contractAddress, 'getOwner', secretHash, CAF.Hex),
@@ -50,7 +51,7 @@ export async function getIdnaOrderState(secretHash: string) {
       lastBlock,
       timestamp: Date.now(),
     })),
-  ] as const).catch(handleNilData('getIdnaOrderState'));
+  ] as const).catch(handleNilData('getIdenaOrderState'));
 
   if (!res) return null;
 
@@ -150,4 +151,21 @@ export const getSecretHash = (secret: string) => keccak256(secret);
 
 export const openIdenaAppToSignTx = (tx: Transaction) => {
   window.open(getIdenaLinkToSignTx(tx), '_blank')?.focus();
+};
+
+export const readIdenaContractInfo = async () => {
+  const { Contract } = idenaProvider;
+  const res = await Promise.all([
+    Contract.readData(contractAddress, 'minAmount', CAF.Bigint),
+    Contract.readData(contractAddress, 'minOrderTTLInBlocks', CAF.Uint64),
+    Contract.readData(contractAddress, 'fulfillPeriodInBlocks', CAF.Uint64),
+    Contract.readData(contractAddress, 'requiredSecurityDepositAmount', CAF.Uint64),
+  ] as const);
+
+  return {
+    minAmount: res[0],
+    minOrderTTLInBlocks: res[1],
+    fulfillPeriodInBlocks: res[2],
+    requiredSecurityDepositAmount: res[3],
+  };
 };
