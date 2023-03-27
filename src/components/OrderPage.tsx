@@ -38,6 +38,7 @@ import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
 import { Transaction } from 'idena-sdk-js';
 import { getColor } from '../utils/theme';
 import { mapRejected } from '../utils/async';
+import { tap } from 'ramda';
 
 const log = debug('OrderPage');
 
@@ -203,8 +204,9 @@ export const OrderOwnerView: FC<{
     if (!order) return 'Order not found.';
 
     const buildCancelTxAndSign = async () => {
-      const tx = await buildBurnIdenaOrderTx(order.owner, secretHash);
-      openIdenaAppToSignTx(tx);
+      cancelOrderTxRDM.track(
+        buildBurnIdenaOrderTx(order.owner, secretHash).then(tap(openIdenaAppToSignTx)),
+      );
     };
 
     const reloadOrderState = async () => {
@@ -223,11 +225,15 @@ export const OrderOwnerView: FC<{
       !confirmedOrderRD.data &&
       !rData.isLoading(cancelOrderTxRD);
 
+    console.log(cancelOrderTxRD);
+
     return (
       <Stack spacing={2}>
-        <UiSubmitButton disabled={!canBeCancelled} onClick={buildCancelTxAndSign}>
-          Cancel order
-        </UiSubmitButton>
+        {!rData.isSuccess(cancelOrderTxRD) && (
+          <UiSubmitButton disabled={!canBeCancelled && false} onClick={buildCancelTxAndSign}>
+            Cancel order
+          </UiSubmitButton>
+        )}
         {rData.isSuccess(cancelOrderTxRD) && (
           <>
             <Typography color={getColor.textGrey(theme)}>
@@ -236,7 +242,7 @@ export const OrderOwnerView: FC<{
                 this link
               </Link>{' '}
               if Idena App did not open automatically. Wait for the transaction to complete, then
-              load the order data to continue.
+              reload order state.
             </Typography>
             <UiSubmitButton sx={{ mt: 2 }} onClick={reloadOrderState}>
               Check order status
