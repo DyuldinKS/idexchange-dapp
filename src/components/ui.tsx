@@ -18,7 +18,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { FCC } from '../types/FCC';
 
 export const UiSubmitButton = (props: ButtonProps) => (
-  <Button size="large" variant="contained" {...props} />
+  <Button size="medium" variant="contained" {...props} />
 );
 
 export const UiLogo = () => (
@@ -149,7 +149,7 @@ export const UiInfoBlockRow: FC<{ title: ReactNode; value?: ReactNode } & Typogr
 };
 
 export const UiInfoBlockContent: FCC<StackProps> = (props) => {
-  return <Stack {...props} spacing={1} />;
+  return <Stack mt={2} spacing={1} {...props} />;
 };
 
 export const UiSpan: FCC<TypographyProps> = (props) => {

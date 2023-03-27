@@ -40,36 +40,40 @@ export const MainPage = () => {
 
   return (
     <UiPage maxWidth="sm">
-      <Stack spacing={1}>
-        <Typography>Create new order to exchange iDNA for xDAI</Typography>
-        <UiSubmitButton LinkComponent={Link} {...{ to: '/order/new' }}>
-          Create order
-        </UiSubmitButton>
-        <Typography>Or find existing order by id</Typography>
-        <Box>
-          <Grid container spacing={1}>
-            <Grid item xs={12} sm={8}>
-              <TextField
-                {...register('orderId')}
-                error={Boolean(errors.orderId)}
-                helperText={errors.orderId?.message}
-                placeholder="Secret or hash"
-                fullWidth
-                size="small"
-              />
+      <Stack>
+        <Stack spacing={1}>
+          <Typography>Create new order to exchange iDNA for xDAI</Typography>
+          <UiSubmitButton size="large" LinkComponent={Link} {...{ to: '/order/new' }}>
+            Create order
+          </UiSubmitButton>
+        </Stack>
+        <Stack mt={2} spacing={1}>
+          <Typography>Or find existing order by id</Typography>
+          <Box>
+            <Grid container spacing={1}>
+              <Grid item xs={12} sm={8}>
+                <TextField
+                  {...register('orderId')}
+                  error={Boolean(errors.orderId)}
+                  helperText={errors.orderId?.message}
+                  placeholder="Secret or hash"
+                  fullWidth
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <UiSubmitButton
+                  fullWidth
+                  sx={{ height: '40px' }}
+                  variant="outlined"
+                  onClick={handleFindOrder}
+                >
+                  Find order
+                </UiSubmitButton>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <UiSubmitButton
-                fullWidth
-                sx={{ height: '40px' }}
-                variant="outlined"
-                onClick={handleFindOrder}
-              >
-                Find order
-              </UiSubmitButton>
-            </Grid>
-          </Grid>
-        </Box>
+          </Box>
+        </Stack>
       </Stack>
     </UiPage>
   );
