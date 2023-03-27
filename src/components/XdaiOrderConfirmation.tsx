@@ -37,7 +37,7 @@ export const XdaiOrderConfirmation: FC<{
       <UiBlock>
         <UiBlockTitle>Order to receive xDAI</UiBlockTitle>
         {children && (
-          <Stack mt="2" alignItems="stretch">
+          <Stack mt={2} alignItems="stretch">
             {children}
           </Stack>
         )}

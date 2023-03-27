@@ -42,16 +42,17 @@ export const readXdaiConfirmedOrder = async (secretHash: string) => {
       functionName: 'orders',
       args: [hexToUint8Array(secretHash)],
     }) as Promise<XdaiRawConfirmedOrder | null>
-  ).then(
-    (res) =>
-      res && {
-        ...res,
-        matcher: isAddrEqual(res.matcher, ZERO_ADDRESS) ? null : res.matcher,
-        matchDeadline: res.matchDeadline.toNumber() * 1000,
-        executionDeadline: res.executionDeadline.eq(0)
-          ? null
-          : res.executionDeadline.toNumber() * 1000,
-      },
+  ).then((res) =>
+    res && !isAddrEqual(res.owner, ZERO_ADDRESS)
+      ? {
+          ...res,
+          matcher: isAddrEqual(res.matcher, ZERO_ADDRESS) ? null : res.matcher,
+          matchDeadline: res.matchDeadline.toNumber() * 1000,
+          executionDeadline: res.executionDeadline.eq(0)
+            ? null
+            : res.executionDeadline.toNumber() * 1000,
+        }
+      : null,
   ) as Promise<XdaiConfirmedOrder>;
 };
 
@@ -75,7 +76,7 @@ export const createXdaiConfirmedOrder = async (
   }).then(writeContract);
 };
 
-export const burnOrder = async (secretHash: string) => {
+export const burnXdaiOrder = async (secretHash: string) => {
   const args = [hexToUint8Array(secretHash)];
   return prepareWriteContract({
     ...CONTRACT_INFO,

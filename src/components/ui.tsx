@@ -41,10 +41,14 @@ export const UiPage = styled(Container)({
   alignItems: 'stretch',
 });
 
-export const UiError: FC<TypographyProps & { msg: ReactNode }> = ({ msg, ...typProps }) =>
-  msg ? (
+export const UiError: FC<TypographyProps & { err?: { message?: string }; msg?: ReactNode }> = ({
+  msg,
+  err,
+  ...typProps
+}) =>
+  err || msg ? (
     <Typography color="error" {...typProps}>
-      {msg}
+      {err ? err.message || String(err) : msg}
     </Typography>
   ) : null;
 
@@ -146,4 +150,8 @@ export const UiInfoBlockRow: FC<{ title: ReactNode; value?: ReactNode } & Typogr
 
 export const UiInfoBlockContent: FCC<StackProps> = (props) => {
   return <Stack {...props} spacing={1} />;
+};
+
+export const UiSpan: FCC<TypographyProps> = (props) => {
+  return <Typography component="span" {...props} />;
 };
