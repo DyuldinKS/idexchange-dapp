@@ -33,7 +33,7 @@ export const ConfirmedOrderInfoBlock: FCC<{
         )}
       </UiBlockTitle>
       {order && (
-        <UiInfoBlockContent mt={2}>
+        <UiInfoBlockContent>
           <UiInfoBlockRow title="Owner:" value={String(order.owner)} />
           <UiInfoBlockRow
             title="Amount:"

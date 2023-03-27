@@ -18,7 +18,7 @@ export const IdenaOrderInfo: FC<NonNullable<IdnaOrderState & { id: string }>> = 
   expirationAt,
 }) => {
   return (
-    <UiInfoBlockContent mt={2}>
+    <UiInfoBlockContent>
       <UiInfoBlockRow title="Id:" value={id} />
       <UiInfoBlockRow title="Owner:" value={owner} />
       <UiInfoBlockRow
