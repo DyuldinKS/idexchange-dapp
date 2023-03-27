@@ -251,7 +251,7 @@ export const OrderOwnerView: FC<{
             </UiSubmitButton>
           </>
         )}
-        {rData.isFailure(cancelOrderTxRD) && <UiError msg={cancelOrderTxRD.error} />}
+        {rData.isFailure(cancelOrderTxRD) && <UiError err={cancelOrderTxRD.error} />}
       </Stack>
     );
   };

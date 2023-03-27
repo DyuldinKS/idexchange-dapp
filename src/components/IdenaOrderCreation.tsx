@@ -53,7 +53,7 @@ export const IdenaOrderCreation: FC<{
   const renderIdenaOrderInfo = (children: ReactNode) => (
     <IdenaOrderInfoBlock title="Order in Idena chain" order={orderInfo} secretHash={secretHash}>
       {children}
-      {error && <UiError msg={error?.message || String(error)} />}
+      {error && <UiError err={error} />}
     </IdenaOrderInfoBlock>
   );
 

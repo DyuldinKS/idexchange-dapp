@@ -41,7 +41,7 @@ export const XdaiOrderConfirmation: FC<{
             {children}
           </Stack>
         )}
-        {error && <UiError msg={error.message || String(error)}>{error}</UiError>}
+        {error && <UiError err={error} />}
       </UiBlock>
     );
   };

@@ -40,7 +40,7 @@ export const SecurityDeposit: FC<{
   const renderDepositInfo = (children: ReactNode) => (
     <SecurityDepositInfoBlock {...securityDepositRD.data}>
       {children}
-      {error && <UiError msg={error?.message || String(error)} />}
+      {error && <UiError err={error} />}
     </SecurityDepositInfoBlock>
   );
 
