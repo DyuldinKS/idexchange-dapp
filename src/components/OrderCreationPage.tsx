@@ -22,8 +22,9 @@ import {
 } from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { IdenaOrderCreation } from './IdenaOrderCreation';
+import { SecretCodeBlock } from './SecretCode';
 import { SecurityDeposit } from './SecurityDeposit';
-import { UiLabel, UiPage } from './ui';
+import { UiPage } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
@@ -61,10 +62,11 @@ export const OrderCreationPage: FC = () => {
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
   const [idenaOrderRD, idenaOrderRDM] = useRemoteData<IdnaOrderState | null>(null);
   const navigate = useNavigate();
-
-  const isOrderSuccessfullyCreated = Boolean(rData.isSuccess(idenaOrderRD) && idenaOrderRD.data);
   const [secret] = useState(generateRandomSecret);
   const [secretHash] = useState(() => getSecretHash(secret));
+  const [isSecretSaved, setIsSecretSaved] = useState(false);
+
+  const isOrderSuccessfullyCreated = Boolean(rData.isSuccess(idenaOrderRD) && idenaOrderRD.data);
 
   useEffect(() => {
     if (rData.isSuccess(idenaOrderRD) && idenaOrderRD.data) {
@@ -106,46 +108,38 @@ export const OrderCreationPage: FC = () => {
           size="small"
         />
       </Stack>
+      <SecretCodeBlock
+        secret={secret}
+        secretHash={secretHash}
+        isSaved={isSecretSaved}
+        setIsSaved={setIsSecretSaved}
+      />
       <Stack>
-        <UiLabel
-          mt={4}
-          label="Secret code"
-          tooltip="A secret code has been automatically generated for your order, which you must copy and
-          securely store. Losing this code would prevent you from either completing or canceling
-          your order, resulting in the loss of your funds."
-        >
-          <TextField
-            disabled={true} // prevent auto-generated secret from changing
-            variant="outlined"
-            placeholder="A secret code to identify the order"
-            size="small"
-            multiline={true}
-            value={secret}
-          />
-        </UiLabel>
-        <Stack alignItems="stretch" mt={4}>
-          {renderWalletRoutineIfNeeded(web3Store) || (
-            <>
-              {
-                <SecurityDeposit
-                  state={securityDepositRD}
-                  reloadSecurityDeposit={reloadSecurityDeposit}
-                  isWithdrawDisabled={isOrderSuccessfullyCreated}
-                />
-              }
-              {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
-                <Stack alignItems="stretch" mt={2}>
-                  <IdenaOrderCreation
-                    idenaOrderRD={idenaOrderRD}
-                    idenaOrderRDM={idenaOrderRDM}
-                    form={form}
-                    secretHash={secretHash}
+        {isSecretSaved && (
+          <Stack alignItems="stretch" mt={4}>
+            {renderWalletRoutineIfNeeded(web3Store) || (
+              <>
+                {
+                  <SecurityDeposit
+                    state={securityDepositRD}
+                    reloadSecurityDeposit={reloadSecurityDeposit}
+                    isWithdrawDisabled={isOrderSuccessfullyCreated}
                   />
-                </Stack>
-              )}
-            </>
-          )}
-        </Stack>
+                }
+                {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
+                  <Stack alignItems="stretch" mt={2}>
+                    <IdenaOrderCreation
+                      idenaOrderRD={idenaOrderRD}
+                      idenaOrderRDM={idenaOrderRDM}
+                      form={form}
+                      secretHash={secretHash}
+                    />
+                  </Stack>
+                )}
+              </>
+            )}
+          </Stack>
+        )}
       </Stack>
     </UiPage>
   );
