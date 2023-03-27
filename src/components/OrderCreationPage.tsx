@@ -1,12 +1,12 @@
 import debug from 'debug';
 import { ethers } from 'ethers';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Container, Stack, TextField, Typography } from '@mui/material';
-import { switchNetwork } from '@wagmi/core';
+import { Stack, TextField, Typography } from '@mui/material';
 import { gnosis } from '@wagmi/core/chains';
 
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
@@ -21,11 +21,9 @@ import {
   MIN_IDNA_AMOUNT_TO_SELL,
 } from '../utils/idena';
 import { rData } from '../utils/remoteData';
-import { DEFAULT_CHAIN_ID, isChainSupported, web3Modal } from '../utils/web3Modal';
 import { IdenaOrderCreation } from './IdenaOrderCreation';
 import { SecurityDeposit } from './SecurityDeposit';
-import { UiPage, UiLabel, UiSubmitButton } from './ui';
-import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
+import { UiLabel, UiPage } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
@@ -55,22 +53,24 @@ export const OrderCreationPage: FC = () => {
     },
     mode: 'onChange',
   });
-  const { handleSubmit, register, formState } = form;
-  const { errors, isSubmitting, isSubmitSuccessful, isValid } = formState;
-  const [{ chainId, address }] = useWeb3Store();
+  const { register, formState } = form;
+  const { errors, isSubmitting } = formState;
   const {
     rData: [securityDepositRD],
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
-  const idenaOrderRDState = useRemoteData<IdnaOrderState | null>(null);
-  const [idenaOrderRD] = idenaOrderRDState;
+  const [idenaOrderRD, idenaOrderRDM] = useRemoteData<IdnaOrderState | null>(null);
+  const navigate = useNavigate();
+
   const isOrderSuccessfullyCreated = Boolean(rData.isSuccess(idenaOrderRD) && idenaOrderRD.data);
-  // const [secret] = useState(generateRandomSecret);
-  const secret = '0x1c3b15b9f7aeaea2b9b66d4d6de4d0e1a05f2e248b705c18';
+  const [secret] = useState(generateRandomSecret);
   const [secretHash] = useState(() => getSecretHash(secret));
-  console.log('>>> secret', secret, secretHash);
-  // const secretHash = '0x933e53cd11087d89871cb9fff4382aa409014d4ff708333e69ac220b3c123e0c
-  // const secretHash = '0xb7df2e05d1d74fa58fb5888f93343373d1d58987156254d58fcc9c61601eca42';
+
+  useEffect(() => {
+    if (rData.isSuccess(idenaOrderRD) && idenaOrderRD.data) {
+      navigate(`/order/${secretHash}`);
+    }
+  }, [idenaOrderRD]);
 
   return (
     <UiPage maxWidth="sm">
@@ -136,16 +136,11 @@ export const OrderCreationPage: FC = () => {
               {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (
                 <Stack alignItems="stretch" mt={2}>
                   <IdenaOrderCreation
-                    // TODO: split list to RD and RDM props to prevent updates
-                    idenaOrderRDState={idenaOrderRDState}
+                    idenaOrderRD={idenaOrderRD}
+                    idenaOrderRDM={idenaOrderRDM}
                     form={form}
                     secretHash={secretHash}
                   />
-                </Stack>
-              )}
-              {rData.isSuccess(idenaOrderRD) && idenaOrderRD.data && (
-                <Stack alignItems="stretch" mt={2}>
-                  <XdaiOrderConfirmation secretHash={secretHash} idenaOrder={idenaOrderRD.data} />
                 </Stack>
               )}
             </>

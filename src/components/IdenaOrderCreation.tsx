@@ -1,17 +1,16 @@
 import debug from 'debug';
+import { Transaction } from 'idena-sdk-js';
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
-import { Button, Link, Stack, Typography } from '@mui/material';
+import { Link, Stack, Typography } from '@mui/material';
 
 import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
 import { mapRejected } from '../utils/async';
 import {
   buildCreateIdenaOrderTx,
-  buildBurnIdenaOrderTx,
   getIdenaLinkToSignTx,
   getIdnaOrderState,
-  getSecretHash,
   IdnaOrderState,
   openIdenaAppToSignTx,
 } from '../utils/idena';
@@ -20,18 +19,16 @@ import { getColor, theme } from '../utils/theme';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderCreationFormSchema } from './OrderCreationPage';
 import { UiError, UiSubmitButton } from './ui';
-import { Transaction } from 'idena-sdk-js';
 
 const log = debug('IdenaOrderCreation');
 
 export const IdenaOrderCreation: FC<{
-  idenaOrderRDState: UseRemoteDataReturn<IdnaOrderState | null>;
+  idenaOrderRD: UseRemoteDataReturn<IdnaOrderState | null>[0];
+  idenaOrderRDM: UseRemoteDataReturn<IdnaOrderState | null>[1];
   form: UseFormReturn<OrderCreationFormSchema>;
   secretHash: string;
-}> = ({ idenaOrderRDState: [idenaOrderRD, idenaOrderRDM], form: { handleSubmit }, secretHash }) => {
+}> = ({ idenaOrderRD, idenaOrderRDM, form: { handleSubmit }, secretHash }) => {
   const [createOrderTxRD, createOrderTxRDM] = useRemoteData<Transaction>(null);
-  const [burnOrderTxRD, burnOrderTxRDM] = useRemoteData<Transaction>(null);
-  const [isIdenaTxLinkClicked, setIsIdenaTxLinkClicked] = useState(false);
   const error = idenaOrderRD.error || createOrderTxRD.error;
   const orderInfo = idenaOrderRD.data;
 
@@ -60,7 +57,6 @@ export const IdenaOrderCreation: FC<{
   const buildCreateOrderTx = (evt: React.BaseSyntheticEvent): Promise<Transaction | null> => {
     idenaOrderRDM.setNotAsked();
     return new Promise((resolve) => {
-      setIsIdenaTxLinkClicked(false);
       handleSubmit((values) => {
         log('generate tx link to create order', values);
         const { idenaAddress, amountToSell, amountToReceive } = values;
@@ -106,7 +102,7 @@ export const IdenaOrderCreation: FC<{
           disabled={rData.isLoading(createOrderTxRD)}
           onClick={buildOrderTxAndSign}
         >
-          Create order in Idena chain
+          Create order
         </UiSubmitButton>
       </>,
     );
