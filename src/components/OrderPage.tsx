@@ -18,7 +18,7 @@ import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { shortenHash } from '../utils/address';
 import { getIdenaOrderState, getSecretHash, IdenaOrderState } from '../utils/idena';
-import { isOrderConfirmationValid } from '../utils/orderControls';
+import { isCnfOrderValid } from '../utils/orderControls';
 import { rData } from '../utils/remoteData';
 import { readXdaiConfirmedOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
@@ -116,7 +116,7 @@ export const OrderPage: FC = () => {
             <ConfirmedOrderInfoBlock
               isValid={
                 contractsAttrs &&
-                isOrderConfirmationValid(orderRD.data, cnfOrderRD.data, contractsAttrs.xdai)
+                isCnfOrderValid(orderRD.data, cnfOrderRD.data, contractsAttrs.xdai)
               }
               title="Confirmation in Gnosis chain"
               order={cnfOrderRD.data}

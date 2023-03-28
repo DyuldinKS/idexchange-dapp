@@ -28,7 +28,7 @@ export const getOrderMinTTL = (
     ),
   );
 
-export const isOrderConfirmationValid = (
+export const isCnfOrderValid = (
   order: IdenaOrderState | null,
   cnfOrder: XdaiConfirmedOrder | null,
   cnfContract: XdaiContractAttributes,
@@ -38,12 +38,10 @@ export const isOrderConfirmationValid = (
 
   return (
     formatUnits(cnfOrder.amountXDAI, gnosis.nativeCurrency.decimals) === order.amountXdai &&
-    Math.abs(calcCnfOrderMatchDeadline(order, cnfContract) - cnfOrder.matchDeadline) <
-      IDENA_BLOCK_DURATION_MS + NETWORK_ERR
+    Math.abs(calcCnfOrderMatchDeadline(order, cnfContract) - cnfOrder.matchDeadline) <=
+      IDENA_BLOCK_DURATION_MS
   );
 };
-
-
 
 export const isOrderMatchable = (
   order: IdenaOrderState,
@@ -53,26 +51,21 @@ export const isOrderMatchable = (
 ) => {
   if (!order || !cnfOrder) return null;
 
-  if (bignumberishToBigInt(cnfOrder.amountXDAI) !== dnaToBigInt(order.amountXdai)) return false
-  if (BigInt(cnfOrder.payoutAddress) !== BigInt(order.payoutAddress)) return false
+  if (bignumberishToBigInt(cnfOrder.amountXDAI) !== dnaToBigInt(order.amountXdai)) return false;
+  if (BigInt(cnfOrder.payoutAddress) !== BigInt(order.payoutAddress)) return false;
 
-  if (currentTimestamp + NETWORK_ERR + minTimeForIdena > order.expireAt) return false
-  if (currentTimestamp + NETWORK_ERR > cnfOrder.matchDeadline) return false
+  if (currentTimestamp + NETWORK_ERR + minTimeForIdena > order.expireAt) return false;
+  if (currentTimestamp + NETWORK_ERR > cnfOrder.matchDeadline) return false;
 
-  if (order.matcher === null) return true
+  if (order.matcher === null) return true;
 
-  return currentTimestamp > (order.matchExpireAt as number)
+  return currentTimestamp > (order.matchExpireAt as number);
 };
 
 export const calcCnfOrderMatchDeadline = (
   order: IdenaOrderState,
   cnfContract: XdaiContractAttributes,
-) =>
-  (console.log('calcCnfOrderMatchDeadline', {
-    expireAt: order.expireAt,
-    ownerClaimPeriod: cnfContract.ownerClaimPeriod,
-    GAP_AFTER_MAX_EXECUTION_DEADLINE,
-  }) as any) || order.expireAt - cnfContract.ownerClaimPeriod - GAP_AFTER_MAX_EXECUTION_DEADLINE;
+) => order.expireAt - cnfContract.ownerClaimPeriod - GAP_AFTER_MAX_EXECUTION_DEADLINE;
 
 export const canCancelCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
   Boolean(

@@ -20,11 +20,7 @@ import {
   IdenaOrderState,
   openIdenaAppToSignTx,
 } from '../utils/idena';
-import {
-  canCancelCnfOrder,
-  isOrderConfirmationValid,
-  minTimeForIdena,
-} from '../utils/orderControls';
+import { isCnfOrderValid, minTimeForIdena, canCancelCnfOrder } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiConfirmedOrder, XdaiConfirmedOrder } from '../utils/xdai';
@@ -89,9 +85,10 @@ export const OrderOwnerView: FC<{
     };
 
     const canBeCancelled =
-      Date.now() > order.expireAt - minTimeForIdena &&
+      Date.now() > order.expireAt &&
       !cnfOrderRD.data &&
-      !rData.isLoading(cancelOrderTxRD);
+      !rData.isLoading(cancelOrderTxRD) &&
+      !rData.isLoading(cnfOrderRD);
 
     return (
       <Stack spacing={2}>
@@ -182,7 +179,7 @@ export const OrderOwnerView: FC<{
             <ConfirmedOrderInfoBlock
               isValid={
                 contractsAttrs &&
-                isOrderConfirmationValid(orderRD.data, cnfOrderRD.data, contractsAttrs.xdai)
+                isCnfOrderValid(orderRD.data, cnfOrderRD.data, contractsAttrs.xdai)
               }
               title="Confirmation in Gnosis chain"
               order={cnfOrderRD.data}

@@ -51,7 +51,13 @@ export const OrderListPage: FC = () => {
           Active orders
         </Typography>
       </Tooltip>
-      <IdenaOrderList currentTimestamp={idenaLastBlock.timestamp} orders={orderListRD.data} xdaiContractProps={contractsAttrs && contractsAttrs.xdai}>{renderOrderListError()}</IdenaOrderList>
+      <IdenaOrderList
+        currentTimestamp={idenaLastBlock.timestamp}
+        orders={orderListRD.data}
+        xdaiContractProps={contractsAttrs && contractsAttrs.xdai}
+      >
+        {renderOrderListError()}
+      </IdenaOrderList>
     </UiPage>
   );
 };

@@ -5,12 +5,12 @@ import {
   ContractArgument,
   Transaction,
   toHexString,
+  JsonBlock,
 } from 'idena-sdk-js';
 import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
 import { keccak256, parseUnits } from 'ethers/lib/utils.js';
 import debug from 'debug';
-import { idenaLastBlock } from './idenaBlock';
 import idenaProvider from '../providers/idenaProvider';
 
 export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof getIdenaOrderState>>>;
@@ -50,13 +50,15 @@ export async function getIdenaOrderState(secretHash: string) {
     Contract.readMap(contractAddress, 'getExpirationBlock', secretHash, CAF.Uint64),
     safeReadMapNils(contractAddress, 'getMatcher', secretHash, CAF.Hex),
     safeReadMapNils(contractAddress, 'getMatchExpirationBlock', secretHash, CAF.Uint64),
-    idenaLastBlock.promise,
+    idenaProvider.Blockchain.lastBlock() as Promise<JsonBlock & { timestamp: number }>,
   ] as const).catch(handleNilData('getIdenaOrderState'));
 
   if (!res) return null;
 
+  const lastBlock = res[7];
+
   const getExpireTime = (block: string) =>
-    (Number(block) - idenaLastBlock.number) * IDENA_BLOCK_DURATION_MS + idenaLastBlock.timestamp;
+    (Number(block) - lastBlock.height) * IDENA_BLOCK_DURATION_MS + lastBlock.timestamp * 1000;
 
   const expirationBlock = res[4];
   const matchExpirationBlock = res[6];
