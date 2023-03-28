@@ -38,7 +38,10 @@ export const SecurityDeposit: FC<{
   const { isInUse } = securityDepositRD.data;
 
   const renderDepositInfo = (children: ReactNode) => (
-    <SecurityDepositInfoBlock {...securityDepositRD.data}>
+    <SecurityDepositInfoBlock
+      securityDeposit={securityDepositRD.data}
+      nativeCurrency={gnosis.nativeCurrency}
+    >
       {children}
       {error && <UiError err={error} />}
     </SecurityDepositInfoBlock>
@@ -64,9 +67,7 @@ export const SecurityDeposit: FC<{
   };
 
   if (rData.isLoading(depositChangeRD))
-    return (
-      <>{renderDepositInfo(<UiSubmitButton disabled>Updating xDAI deposit...</UiSubmitButton>)}</>
-    );
+    return renderDepositInfo(<UiSubmitButton disabled>Updating xDAI deposit...</UiSubmitButton>);
 
   if (!securityDepositRD.data?.isValid)
     return (

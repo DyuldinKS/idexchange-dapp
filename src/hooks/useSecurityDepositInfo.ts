@@ -31,6 +31,7 @@ export const useGetSecurityDepositInfo = (contractToReceiveTokens: Address, abi:
       abi,
     };
 
+    // move to xdai utils
     const load = Promise.all([
       readContract({
         ...contractInfo,
@@ -42,6 +43,7 @@ export const useGetSecurityDepositInfo = (contractToReceiveTokens: Address, abi:
         functionName: 'securityDepositInUse',
         args: [address],
       }),
+      // TOOO: replace with useContractsAttributes
       readContract({
         ...contractInfo,
         functionName: 'securityDepositAmount',

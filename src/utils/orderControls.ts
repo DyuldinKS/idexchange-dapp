@@ -17,13 +17,13 @@ export const minTimeForIdena = 3_600 * 1000; // 1h
 const minTimeForGnosis = minTimeForIdena / 2; // 30min
 
 export const getOrderMinTTL = (
-  contract: IdenaContractStaticInfo,
+  saleContract: IdenaContractStaticInfo,
   cnfContract: XdaiContractAttributes,
 ) =>
   Math.max(
     ORDER_MIN_TTL,
     Math.max(
-      contract.minOrderTTL,
+      saleContract.minOrderTTL,
       cnfContract.minOrderTTL + cnfContract.ownerClaimPeriod + GAP_AFTER_MAX_EXECUTION_DEADLINE,
     ),
   );
@@ -39,7 +39,7 @@ export const isCnfOrderValid = (
   return (
     formatUnits(cnfOrder.amountXDAI, gnosis.nativeCurrency.decimals) === order.amountXdai &&
     Math.abs(calcCnfOrderMatchDeadline(order, cnfContract) - cnfOrder.matchDeadline) <=
-      IDENA_BLOCK_DURATION_MS
+      IDENA_BLOCK_DURATION_MS * 2
   );
 };
 
@@ -74,3 +74,22 @@ export const canCancelCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
         ? cnfOrder.executionDeadline < Date.now()
         : cnfOrder.matchDeadline < Date.now()),
   );
+
+// export const canBuyOrder = (order: IdenaOrderState | null, cnfOrder: XdaiConfirmedOrder | null, cnfContract: XdaiContractAttributes | null) => {
+//   return Boolean(order && cnfOrder && cnfContract ? order)
+// }
+
+export const canMatchOrder = (
+  order: IdenaOrderState | null,
+  cnfOrder: XdaiConfirmedOrder | null,
+  saleContract: IdenaContractStaticInfo,
+) => {
+  return (
+    order &&
+    !order.matcher &&
+    Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt &&
+    cnfOrder &&
+    !cnfOrder.matcher &&
+    Date.now() < cnfOrder.matchDeadline
+  );
+};

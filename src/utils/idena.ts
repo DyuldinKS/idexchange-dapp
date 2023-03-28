@@ -9,7 +9,7 @@ import {
 } from 'idena-sdk-js';
 import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
-import { keccak256, parseUnits } from 'ethers/lib/utils.js';
+import { formatUnits, keccak256, parseUnits } from 'ethers/lib/utils.js';
 import debug from 'debug';
 import idenaProvider from '../providers/idenaProvider';
 
@@ -22,7 +22,16 @@ const MAX_FEE = '3';
 const IDENA_CONF = APP_CONFIG.idena;
 export const MIN_IDNA_AMOUNT_TO_SELL = 100;
 export const IDENA_BLOCK_DURATION_MS = 20000;
-const IDENA_DECIMALS = 18;
+export const IDENA_DECIMALS = 18;
+
+export const IDENA_CHAIN = {
+  name: 'Idena',
+  nativeCurrency: {
+    decimals: IDENA_DECIMALS,
+    name: 'Idena',
+    symbol: 'iDNA',
+  },
+};
 
 // TODO: make idena-sdk-js fix PR
 // idena-sdk-js uses wrong case of writeBigUInt64LE method. It is supported by nodejs, but not supported by browsers.
@@ -173,4 +182,39 @@ export const readIdenaContractInfo = () => {
     fulfilPeriodInBlocks: 3600 / 20,
     requiredSecurityDepositAmount: parseUnits('10.0', IDENA_DECIMALS),
   };
+};
+
+export async function readIdenaSecurityDeposit(address: string) {
+  const [amount, isInUse] = await Promise.all([
+    safeReadMapNils(contractAddress, 'getDeposit', address, CAF.Dna),
+    safeReadMapNils(contractAddress, 'isDepositInUse', address, CAF.String),
+  ] as const);
+
+  const amountBN = parseUnits(amount || '0', IDENA_DECIMALS);
+  const { requiredSecurityDepositAmount } = readIdenaContractInfo();
+
+  return {
+    amount: amountBN,
+    isInUse: Boolean(isInUse),
+    isValid: Boolean(amount && requiredSecurityDepositAmount.eq(amountBN)),
+    requiredAmount: requiredSecurityDepositAmount,
+  };
+}
+
+export const buildTopUpIdenaSecurityDepositTx = async (from: string) => {
+  const createOrderCallPayload = new CallContractAttachment({
+    method: 'submitSecurityDeposit',
+    args: [],
+  });
+  const txData = {
+    from,
+    to: contractAddress,
+    type: TransactionType.CallContractTx,
+    amount: formatUnits(readIdenaContractInfo().requiredSecurityDepositAmount, IDENA_DECIMALS),
+    payload: createOrderCallPayload.toBytes(),
+    maxFee: MAX_FEE,
+  };
+  const tx = await idenaProvider.Blockchain.buildTx(txData);
+  await estimateWriteTx(tx, from);
+  return tx;
 };

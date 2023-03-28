@@ -17,7 +17,7 @@ import { FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FCC } from '../types/FCC';
 
-export const UiSubmitButton = (props: ButtonProps) => (
+export const UiSubmitButton: FC<ButtonProps> = (props) => (
   <Button size="medium" variant="contained" {...props} />
 );
 
