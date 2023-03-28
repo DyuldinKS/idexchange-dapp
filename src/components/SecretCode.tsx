@@ -49,7 +49,7 @@ export const SecretCodeBlock: FC<{
       </UiBlockTitle>
       <UiInfoBlockContent>
         <UiInfoBlockRow label="Secret:" value={secret} />
-        <UiInfoBlockRow label={<span>Order id:</span>} value={secretHash} />
+        <UiInfoBlockRow label={<span>Order&nbsp;id:</span>} value={secretHash} />
       </UiInfoBlockContent>
       {!isSaved && (
         <Stack mt={2} direction="row" spacing={1}>

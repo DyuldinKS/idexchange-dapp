@@ -54,7 +54,7 @@ export const ConfirmedOrderInfoBlock: FCC<{
           />
           <UiInfoBlockRow label="Matcher:" value={order.matcher || 'None'} />
           <UiInfoBlockRow
-            label="xDAI depositing deadline:"
+            label="Order completion deadline"
             value={
               order.executionDeadline
                 ? dayjs(order.executionDeadline).format(DATE_TIME_FORMAT)
