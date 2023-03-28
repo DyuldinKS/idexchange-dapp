@@ -1,20 +1,22 @@
+import debug from 'debug';
+import { FC, ReactNode } from 'react';
+
 import { Typography, useTheme } from '@mui/material';
 import { Stack } from '@mui/system';
 import { waitForTransaction } from '@wagmi/core';
-import debug from 'debug';
-import { FC, ReactNode, useEffect } from 'react';
+
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
-import { useRemoteData } from '../hooks/useRemoteData';
+import { UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { IdenaOrderState } from '../utils/idena';
 import { calcCnfOrderMatchDeadline } from '../utils/orderControls';
-import { rData } from '../utils/remoteData';
+import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { isChainSupported } from '../utils/web3Modal';
 import {
   createXdaiConfirmedOrder,
-  XdaiConfirmedOrder,
   readXdaiConfirmedOrder,
+  XdaiConfirmedOrder,
 } from '../utils/xdai';
 import { UiBlock, UiBlockTitle, UiError, UiSubmitButton } from './ui';
 
@@ -22,17 +24,14 @@ const log = debug('XdaiOrderConfirmation');
 
 export const XdaiOrderConfirmation: FC<{
   secretHash: string;
-  idenaOrder: IdenaOrderState;
-}> = ({ secretHash, idenaOrder }) => {
-  const [orderRD, orderRDM] = useRemoteData<XdaiConfirmedOrder>(null);
+  order: IdenaOrderState;
+  cnfOrderRD: RemoteData<XdaiConfirmedOrder | null>;
+  cnfOrderRDM: UseRemoteDataMethods<XdaiConfirmedOrder | null>;
+}> = ({ secretHash, order, cnfOrderRD, cnfOrderRDM }) => {
   const [{ chainId, address }] = useWeb3Store();
   const contractsAttrs = useContractsAttributes();
   const theme = useTheme();
-  const error = orderRD.error;
-
-  useEffect(() => {
-    orderRDM.track(readXdaiConfirmedOrder(secretHash));
-  }, [secretHash]);
+  const error = cnfOrderRD.error;
 
   const renderOrderBlock = (children: ReactNode) => {
     return (
@@ -52,13 +51,13 @@ export const XdaiOrderConfirmation: FC<{
     // TODO: add loader in case of contractsInfo loading
     if (!address || !isChainSupported(chainId) || !contractsAttrs.data) return;
 
-    const matchDeadline = calcCnfOrderMatchDeadline(idenaOrder, contractsAttrs.data.xdai);
-    log('confirmOrder', { idenaOrder, matchDeadline });
+    const matchDeadline = calcCnfOrderMatchDeadline(order, contractsAttrs.data.xdai);
+    log('confirmOrder', { order, matchDeadline });
 
     const processTx = async () => {
       const tx = await createXdaiConfirmedOrder(
         secretHash,
-        idenaOrder.amountXdai,
+        order.amountXdai,
         address,
         matchDeadline,
       );
@@ -67,10 +66,10 @@ export const XdaiOrderConfirmation: FC<{
       return res;
     };
 
-    return orderRDM.track(processTx().then(() => readXdaiConfirmedOrder(secretHash)));
+    return cnfOrderRDM.track(processTx().then(() => readXdaiConfirmedOrder(secretHash)));
   };
 
-  if (rData.isLoading(orderRD)) {
+  if (rData.isLoading(cnfOrderRD)) {
     return renderOrderBlock(<UiSubmitButton disabled={true}>Loading...</UiSubmitButton>);
   }
 
@@ -79,7 +78,7 @@ export const XdaiOrderConfirmation: FC<{
       <Typography color={getColor.textGrey(theme)}>
         Confirm your order to be able to receive xDai:
       </Typography>
-      <UiSubmitButton sx={{ mt: 1 }} onClick={confirmOrder} disabled={rData.isLoading(orderRD)}>
+      <UiSubmitButton sx={{ mt: 1 }} onClick={confirmOrder} disabled={rData.isLoading(cnfOrderRD)}>
         Confirm order
       </UiSubmitButton>
     </Stack>,
