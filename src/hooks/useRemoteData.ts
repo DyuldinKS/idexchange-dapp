@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { rData, RemoteData } from '../utils/remoteData';
 
-type UseRemoteDataApi<SuccessData, InitialData = null, Err = any> = {
+export type UseRemoteDataMethods<SuccessData, InitialData = null, Err = any> = {
   getState: () => RemoteData<SuccessData, InitialData, Err>;
   setState: React.Dispatch<React.SetStateAction<RemoteData<SuccessData, InitialData, Err>>>;
   setNotAsked: (data?: InitialData) => void;
@@ -13,7 +13,7 @@ type UseRemoteDataApi<SuccessData, InitialData = null, Err = any> = {
 
 export type UseRemoteDataReturn<SuccessData, InitialData = null, Err = any> = [
   rData: RemoteData<SuccessData, InitialData, Err>,
-  api: UseRemoteDataApi<SuccessData, InitialData, Err>,
+  rDataMethods: UseRemoteDataMethods<SuccessData, InitialData, Err>,
 ];
 
 /**
