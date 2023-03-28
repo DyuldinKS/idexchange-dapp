@@ -73,3 +73,11 @@ export const calcCnfOrderMatchDeadline = (
     ownerClaimPeriod: cnfContract.ownerClaimPeriod,
     GAP_AFTER_MAX_EXECUTION_DEADLINE,
   }) as any) || order.expireAt - cnfContract.ownerClaimPeriod - GAP_AFTER_MAX_EXECUTION_DEADLINE;
+
+export const canCancelCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
+  Boolean(
+    cnfOrder &&
+      (cnfOrder.executionDeadline
+        ? cnfOrder.executionDeadline < Date.now()
+        : cnfOrder.matchDeadline < Date.now()),
+  );

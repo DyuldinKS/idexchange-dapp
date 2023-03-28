@@ -20,7 +20,11 @@ import {
   IdenaOrderState,
   openIdenaAppToSignTx,
 } from '../utils/idena';
-import { isOrderConfirmationValid, minTimeForIdena } from '../utils/orderControls';
+import {
+  canCancelCnfOrder,
+  isOrderConfirmationValid,
+  minTimeForIdena,
+} from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiConfirmedOrder, XdaiConfirmedOrder } from '../utils/xdai';
@@ -85,7 +89,9 @@ export const OrderOwnerView: FC<{
     };
 
     const canBeCancelled =
-      Date.now() > (order.expireAt - minTimeForIdena) && !cnfOrderRD.data && !rData.isLoading(cancelOrderTxRD);
+      Date.now() > order.expireAt - minTimeForIdena &&
+      !cnfOrderRD.data &&
+      !rData.isLoading(cancelOrderTxRD);
 
     return (
       <Stack spacing={2}>
@@ -139,25 +145,17 @@ export const OrderOwnerView: FC<{
       await cnfOrderRDM.track(readXdaiConfirmedOrder(secretHash));
     };
 
-    if (
-      cnfOrder.executionDeadline
-        ? cnfOrder.executionDeadline < Date.now()
-        : cnfOrder.matchDeadline < Date.now()
-    ) {
-      return (
-        <>
-          <UiSubmitButton
-            disabled={rData.isLoading(burnConfirmedOrderRD)}
-            onClick={burnConfirmedOrder}
-          >
-            Cancel order
-          </UiSubmitButton>
-          <UiError mt={1} err={burnConfirmedOrderRD.error} />
-        </>
-      );
-    }
-
-    return null;
+    return (
+      <>
+        <UiSubmitButton
+          disabled={rData.isLoading(burnConfirmedOrderRD) || !canCancelCnfOrder(cnfOrder)}
+          onClick={burnConfirmedOrder}
+        >
+          Cancel order
+        </UiSubmitButton>
+        <UiError mt={1} err={burnConfirmedOrderRD.error} />
+      </>
+    );
   };
 
   return (
