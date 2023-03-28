@@ -10,44 +10,41 @@ import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
  */
 const GAP_AFTER_MAX_EXECUTION_DEADLINE = 10 * 60 * 1000; // 10 min
 const ORDER_MIN_TTL = 4 * 60 * 60 * 1000; // 4h
+const NETWORK_ERR = 30 * 1000;
 
 export const getOrderMinTTL = (
   contract: IdenaContractStaticInfo,
-  cnfmContract: XdaiContractAttributes,
+  cnfContract: XdaiContractAttributes,
 ) =>
   Math.max(
     ORDER_MIN_TTL,
     Math.max(
       contract.minOrderTTL,
-      cnfmContract.minOrderTTL + cnfmContract.ownerClaimPeriod + GAP_AFTER_MAX_EXECUTION_DEADLINE,
+      cnfContract.minOrderTTL + cnfContract.ownerClaimPeriod + GAP_AFTER_MAX_EXECUTION_DEADLINE,
     ),
   );
 
 export const isOrderConfirmationValid = (
   order: IdenaOrderState | null,
-  cnfmOrder: XdaiConfirmedOrder | null,
-  cnfmContract: XdaiContractAttributes,
+  cnfOrder: XdaiConfirmedOrder | null,
+  cnfContract: XdaiContractAttributes,
 ) => {
   // TOOD: move outside
-  if (!order || !cnfmOrder) return null;
+  if (!order || !cnfOrder) return null;
 
   return (
-    formatUnits(cnfmOrder.amountXDAI, gnosis.nativeCurrency.decimals) === order.amountXdai &&
-    order.expireAt - 2 * IDENA_BLOCK_DURATION_MS < cnfmOrder.matchDeadline &&
-    cnfmOrder.matchDeadline <
-      order.expireAt +
-        IDENA_BLOCK_DURATION_MS - // as possible time error when casting blocks to milliseconds
-        cnfmContract.ownerClaimPeriod -
-        GAP_AFTER_MAX_EXECUTION_DEADLINE
+    formatUnits(cnfOrder.amountXDAI, gnosis.nativeCurrency.decimals) === order.amountXdai &&
+    Math.abs(calcCnfOrderMatchDeadline(order, cnfContract) - cnfOrder.matchDeadline) <
+      IDENA_BLOCK_DURATION_MS + NETWORK_ERR
   );
 };
 
 export const calcCnfOrderMatchDeadline = (
   order: IdenaOrderState,
-  cnfmContract: XdaiContractAttributes,
+  cnfContract: XdaiContractAttributes,
 ) =>
   (console.log('calcCnfOrderMatchDeadline', {
     expireAt: order.expireAt,
-    ownerClaimPeriod: cnfmContract.ownerClaimPeriod,
+    ownerClaimPeriod: cnfContract.ownerClaimPeriod,
     GAP_AFTER_MAX_EXECUTION_DEADLINE,
-  }) as any) || order.expireAt - cnfmContract.ownerClaimPeriod - GAP_AFTER_MAX_EXECUTION_DEADLINE;
+  }) as any) || order.expireAt - cnfContract.ownerClaimPeriod - GAP_AFTER_MAX_EXECUTION_DEADLINE;
