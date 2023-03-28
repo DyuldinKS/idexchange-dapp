@@ -48,8 +48,8 @@ export const SecretCodeBlock: FC<{
         Secret code
       </UiBlockTitle>
       <UiInfoBlockContent>
-        <UiInfoBlockRow title="Secret:" value={secret} />
-        <UiInfoBlockRow title={<UiSpan>Order&nbsp;id:</UiSpan>} value={secretHash} />
+        <UiInfoBlockRow label="Secret:" value={secret} />
+        <UiInfoBlockRow label={<span>Order id:</span>} value={secretHash} />
       </UiInfoBlockContent>
       {!isSaved && (
         <Stack mt={2} direction="row" spacing={1}>

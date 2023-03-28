@@ -34,9 +34,9 @@ export const ConfirmedOrderInfoBlock: FCC<{
       </UiBlockTitle>
       {order && (
         <UiInfoBlockContent>
-          <UiInfoBlockRow title="Owner:" value={String(order.owner)} />
+          <UiInfoBlockRow label="Owner:" value={String(order.owner)} />
           <UiInfoBlockRow
-            title="Amount:"
+            label="Amount:"
             value={
               <Box component="span">
                 <Box component="span" fontWeight={600}>
@@ -47,14 +47,14 @@ export const ConfirmedOrderInfoBlock: FCC<{
             }
           />
           <UiInfoBlockRow
-            title="Response deadline:"
+            label="Response deadline:"
             value={
               order.matchDeadline ? dayjs(order.matchDeadline).format(DATE_TIME_FORMAT) : 'None'
             }
           />
-          <UiInfoBlockRow title="Matcher:" value={order.matcher || 'None'} />
+          <UiInfoBlockRow label="Matcher:" value={order.matcher || 'None'} />
           <UiInfoBlockRow
-            title="xDAI depositing deadline:"
+            label="xDAI depositing deadline:"
             value={
               order.executionDeadline
                 ? dayjs(order.executionDeadline).format(DATE_TIME_FORMAT)

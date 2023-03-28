@@ -19,10 +19,10 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
 }) => {
   return (
     <UiInfoBlockContent>
-      <UiInfoBlockRow title="Id:" value={id} />
-      <UiInfoBlockRow title="Owner:" value={owner} />
+      <UiInfoBlockRow label="Id:" value={id} />
+      <UiInfoBlockRow label="Owner:" value={owner} />
       <UiInfoBlockRow
-        title="Exchange:"
+        label="Exchange:"
         value={
           <Box component="span">
             <Box fontWeight="600" component="span">
@@ -37,7 +37,7 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
         }
       />
       <UiInfoBlockRow
-        title="Rate:"
+        label="Rate:"
         value={
           <Box component="span">
             iDNA ={' '}
@@ -48,7 +48,7 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
           </Box>
         }
       />
-      <UiInfoBlockRow title="Expire time:" value={dayjs(expirationAt).format(DATE_TIME_FORMAT)} />
+      <UiInfoBlockRow label="Expire time:" value={dayjs(expirationAt).format(DATE_TIME_FORMAT)} />
     </UiInfoBlockContent>
   );
 };

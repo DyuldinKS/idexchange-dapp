@@ -19,7 +19,7 @@ export const SecurityDepositInfoBlock: FCC<Pick<SecurityDepositInfoType, 'amount
       <UiBlockTitle>Security deposit</UiBlockTitle>
       <UiInfoBlockContent>
         <UiInfoBlockRow
-          title="Current security deposit:"
+          label="Current security deposit:"
           value={`${formatUnits(amount, gnosis.nativeCurrency.decimals)} xDAI`}
         />
         {isInUse && (

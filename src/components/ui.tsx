@@ -132,8 +132,8 @@ export const UiBlockTitle: FCC<{ tooltip?: ReactNode }> = ({ tooltip, children }
   );
 };
 
-export const UiInfoBlockRow: FC<{ title: ReactNode; value?: ReactNode } & TypographyProps> = ({
-  title,
+export const UiInfoBlockRow: FC<{ label: ReactNode; value?: ReactNode } & TypographyProps> = ({
+  label,
   value,
   ...props
 }) => {
@@ -141,7 +141,7 @@ export const UiInfoBlockRow: FC<{ title: ReactNode; value?: ReactNode } & Typogr
   return (
     <Typography {...props} sx={{ wordWrap: 'break-word' }}>
       <Box component="span" mr={1} color={theme.palette.grey[700]}>
-        {title}
+        {label}
       </Box>
       {value && <Box component="span">{value}</Box>}
     </Typography>
