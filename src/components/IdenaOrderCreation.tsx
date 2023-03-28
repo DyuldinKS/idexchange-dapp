@@ -19,6 +19,8 @@ import { getColor, theme } from '../utils/theme';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderCreationFormSchema } from './OrderCreationPage';
 import { UiError, UiSubmitButton } from './ui';
+import { getOrderMinTTL } from '../utils/orderControls';
+import { useContractsAttributes } from '../hooks/useContractsAttributes';
 
 const log = debug('IdenaOrderCreation');
 
@@ -29,7 +31,8 @@ export const IdenaOrderCreation: FC<{
   secretHash: string;
 }> = ({ idenaOrderRD, idenaOrderRDM, form: { handleSubmit }, secretHash }) => {
   const [createOrderTxRD, createOrderTxRDM] = useRemoteData<Transaction>(null);
-  const error = idenaOrderRD.error || createOrderTxRD.error;
+  const contractsAttrsRD = useContractsAttributes();
+  const error = idenaOrderRD.error || createOrderTxRD.error || contractsAttrsRD.error;
   const orderInfo = idenaOrderRD.data;
 
   useEffect(() => {
@@ -57,14 +60,19 @@ export const IdenaOrderCreation: FC<{
   const buildCreateOrderTx = (evt: React.BaseSyntheticEvent): Promise<Transaction | null> => {
     idenaOrderRDM.setNotAsked();
     return new Promise((resolve) => {
+      if (!contractsAttrsRD.data) return null;
+
       handleSubmit((values) => {
         log('generate tx link to create order', values);
         const { idenaAddress, amountToSell, amountToReceive } = values;
+        const orderMinTTL = getOrderMinTTL(contractsAttrsRD.data.idena, contractsAttrsRD.data.xdai);
+        log('handleSubmit', values, { orderMinTTL });
         const txPromise = buildCreateIdenaOrderTx(
           idenaAddress,
           amountToSell,
           amountToReceive,
           secretHash,
+          orderMinTTL,
         );
         createOrderTxRDM.track(txPromise);
         resolve(txPromise);
@@ -108,7 +116,7 @@ export const IdenaOrderCreation: FC<{
     );
   }
 
-  if (rData.isLoading(idenaOrderRD)) {
+  if (rData.isLoading(idenaOrderRD) || rData.isLoading(contractsAttrsRD)) {
     return renderIdenaOrderInfo(
       <UiSubmitButton disabled={true}>Loading order info...</UiSubmitButton>,
     );

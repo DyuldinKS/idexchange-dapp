@@ -4,7 +4,7 @@ import { Transaction } from 'idena-sdk-js';
 import { tap } from 'ramda';
 import { FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +15,7 @@ import { gnosis } from '@wagmi/core/chains';
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
+import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
 import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
 import { useWeb3Store } from '../providers/store/StoreProvider';
@@ -38,7 +39,6 @@ import { SecurityDeposit } from './SecurityDeposit';
 import { UiError, UiPage, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
-import { useContractsStaticInfo } from '../hooks/useContractsStaticInfo';
 
 const log = debug('OrderPage');
 
@@ -57,14 +57,16 @@ const secretSchema = z.object({
 
 export const OrderPage: FC = () => {
   const { hash } = useParams() as { hash: string };
+  const [searchParams] = useSearchParams();
   const [{ chainId, address }] = useWeb3Store();
   const {
     rData: [securityDepositRD],
     reloadSecurityDeposit,
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
   const [orderRD, orderRDM] = useRemoteData<IdenaOrderState | null>(null);
-  const [confirmedOrderRD, confirmedOrderRDM] = useRemoteData<XdaiConfirmedOrder | null>(null);
-  const contractsInfoRD = useContractsStaticInfo();
+  const [cnfOrderRD, cnfOrderRDM] = useRemoteData<XdaiConfirmedOrder | null>(null);
+  const contractsAttrsRD = useContractsAttributes();
+  const contractsAttrs = contractsAttrsRD.data;
 
   // owner part
   const form = useForm<SecretSchema>({
@@ -78,11 +80,11 @@ export const OrderPage: FC = () => {
     formState: { errors },
     setError,
   } = form;
-  const [isOwner, setIsOwner] = useState(false);
+  const [isOwner, setIsOwner] = useState(searchParams.get('viewAs') === 'owner');
 
   useEffect(() => {
     orderRDM.track(getIdenaOrderState(hash));
-    confirmedOrderRDM.track(readXdaiConfirmedOrder(hash));
+    cnfOrderRDM.track(readXdaiConfirmedOrder(hash));
   }, [hash]);
 
   const renderOrder = () => {
@@ -92,10 +94,16 @@ export const OrderPage: FC = () => {
   };
 
   const renderConfirmedOrder = () => {
-    if (rData.isNotAsked(confirmedOrderRD) || rData.isLoading(confirmedOrderRD))
+    const error = cnfOrderRD.error || contractsAttrsRD.error;
+    if (
+      rData.isNotAsked(cnfOrderRD) ||
+      rData.isLoading(cnfOrderRD) ||
+      rData.isLoading(contractsAttrsRD)
+    )
       return 'Loading...';
-    if (rData.isFailure(confirmedOrderRD)) return <UiError err={confirmedOrderRD.error} />;
-    return confirmedOrderRD.data ? null : 'Order confirmation not found.';
+    if (error) return <UiError err={error} />;
+
+    return cnfOrderRD.data ? null : 'Order confirmation not found.';
   };
 
   return (
@@ -109,9 +117,9 @@ export const OrderPage: FC = () => {
         <OrderOwnerView
           secretHash={hash}
           orderRD={orderRD}
-          idenaOrderRDM={orderRDM}
-          confirmedOrderRD={confirmedOrderRD}
-          confirmedOrderRDM={confirmedOrderRDM}
+          orderRDM={orderRDM}
+          cnfOrderRD={cnfOrderRD}
+          cnfOrderRDM={cnfOrderRDM}
         />
       )) || (
         <Stack mt={4}>
@@ -120,14 +128,17 @@ export const OrderPage: FC = () => {
               {renderOrder()}
             </IdenaOrderInfoBlock>
             <ConfirmedOrderInfoBlock
-              isValid={isOrderConfirmationValid(orderRD.data, confirmedOrderRD.data)}
+              isValid={
+                contractsAttrs &&
+                isOrderConfirmationValid(orderRD.data, cnfOrderRD.data, contractsAttrs.xdai)
+              }
               title="Confirmation in Gnosis chain"
-              order={confirmedOrderRD.data}
+              order={cnfOrderRD.data}
             >
               {renderConfirmedOrder()}
             </ConfirmedOrderInfoBlock>
           </Stack>
-          {(orderRD.data || confirmedOrderRD.data) && (
+          {(orderRD.data || cnfOrderRD.data) && (
             <Stack mt={2} spacing={2}>
               <Box>
                 <Grid container spacing={1}>
@@ -176,10 +187,10 @@ export const OrderPage: FC = () => {
 export const OrderOwnerView: FC<{
   secretHash: string;
   orderRD: RemoteData<IdenaOrderState | null>;
-  idenaOrderRDM: UseRemoteDataReturn<IdenaOrderState | null>[1];
-  confirmedOrderRD: RemoteData<XdaiConfirmedOrder | null>;
-  confirmedOrderRDM: UseRemoteDataReturn<XdaiConfirmedOrder | null>[1];
-}> = ({ secretHash, orderRD, idenaOrderRDM, confirmedOrderRD, confirmedOrderRDM }) => {
+  orderRDM: UseRemoteDataReturn<IdenaOrderState | null>[1];
+  cnfOrderRD: RemoteData<XdaiConfirmedOrder | null>;
+  cnfOrderRDM: UseRemoteDataReturn<XdaiConfirmedOrder | null>[1];
+}> = ({ secretHash, orderRD, orderRDM, cnfOrderRD, cnfOrderRDM }) => {
   const [web3Store] = useWeb3Store();
   const {
     rData: [securityDepositRD],
@@ -187,16 +198,18 @@ export const OrderOwnerView: FC<{
   } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
   const order = orderRD.data;
   // if the order is still without confirmation
-  const isConfirmedOrderNotFound = rData.isSuccess(confirmedOrderRD) && !confirmedOrderRD.data;
+  const isConfirmedOrderNotFound = rData.isSuccess(cnfOrderRD) && !cnfOrderRD.data;
   const canConfirmOrder =
     order &&
-    // TODO: take into account minOrderTTL <= (idena.expirationAt - gnosis.deadline),
+    // TODO: take into account minOrderTTL <= (idena.expireAt - gnosis.deadline),
     // because there's no need to create confirmation for order that could'n be matched.
-    // Should be replaced with: (order.expirationAt - gnosis.minOrderTTL > Date.now())
-    order.expirationAt > Date.now() &&
+    // Should be replaced with: (order.expireAt - gnosis.minOrderTTL > Date.now())
+    order.expireAt > Date.now() &&
     isConfirmedOrderNotFound;
   const [cancelOrderTxRD, cancelOrderTxRDM] = useRemoteData<Transaction>(null);
   const [burnConfirmedOrderRD, burnConfirmedOrderRDM] = useRemoteData(null);
+  const contractsAttrsRD = useContractsAttributes();
+  const contractsAttrs = contractsAttrsRD.data;
   const theme = useTheme();
   // TODO: get owner from events in case of order already burned, but confirmed order is still exists.
 
@@ -214,7 +227,7 @@ export const OrderOwnerView: FC<{
     };
 
     const reloadOrderState = async () => {
-      idenaOrderRDM.track(
+      orderRDM.track(
         getIdenaOrderState(secretHash).catch(
           mapRejected((err: any) => {
             console.error('Failed to load order state:', err);
@@ -225,11 +238,7 @@ export const OrderOwnerView: FC<{
     };
 
     const canBeCancelled =
-      Date.now() > order.expirationAt &&
-      !confirmedOrderRD.data &&
-      !rData.isLoading(cancelOrderTxRD);
-
-    console.log(cancelOrderTxRD);
+      Date.now() > order.expireAt && !cnfOrderRD.data && !rData.isLoading(cancelOrderTxRD);
 
     return (
       <Stack spacing={2}>
@@ -259,19 +268,18 @@ export const OrderOwnerView: FC<{
   };
 
   const renderConfirmedOrder = () => {
-    if (rData.isNotAsked(confirmedOrderRD) || rData.isLoading(confirmedOrderRD))
-      return 'Loading...';
-    if (rData.isFailure(confirmedOrderRD)) return <UiError err={confirmedOrderRD.error} />;
+    if (rData.isNotAsked(cnfOrderRD) || rData.isLoading(cnfOrderRD)) return 'Loading...';
+    if (rData.isFailure(cnfOrderRD)) return <UiError err={cnfOrderRD.error} />;
 
-    const confirmedOrder = confirmedOrderRD.data;
-    if (!confirmedOrder) return 'Order confirmation not found.';
-    if (web3Store.address !== confirmedOrder.owner)
+    const cnfOrder = cnfOrderRD.data;
+    if (!cnfOrder) return 'Order confirmation not found.';
+    if (web3Store.address !== cnfOrder.owner)
       return (
         <UiError
           msg={
             <UiSpan>
               You are not an owner of this order. Switch account to{' '}
-              <UiSpan fontWeight={600}>{confirmedOrder.owner}</UiSpan>
+              <UiSpan fontWeight={600}>{cnfOrder.owner}</UiSpan>
             </UiSpan>
           }
         />
@@ -281,13 +289,13 @@ export const OrderOwnerView: FC<{
       await burnConfirmedOrderRDM.track(
         burnXdaiOrder(secretHash).then((tx) => waitForTransaction({ hash: tx.hash })),
       );
-      await confirmedOrderRDM.track(readXdaiConfirmedOrder(secretHash));
+      await cnfOrderRDM.track(readXdaiConfirmedOrder(secretHash));
     };
 
     if (
-      confirmedOrder.executionDeadline
-        ? confirmedOrder.executionDeadline < Date.now()
-        : confirmedOrder.matchDeadline < Date.now()
+      cnfOrder.executionDeadline
+        ? cnfOrder.executionDeadline < Date.now()
+        : cnfOrder.matchDeadline < Date.now()
     ) {
       return (
         <>
@@ -307,33 +315,32 @@ export const OrderOwnerView: FC<{
 
   return (
     <Stack alignItems="stretch" mt={4}>
-      {renderWalletRoutineIfNeeded(web3Store) || (
-        <>
-          <Stack spacing={2}>
-            <IdenaOrderInfoBlock title="Idena chain" order={orderRD.data} secretHash={secretHash}>
-              {renderOrder()}
-            </IdenaOrderInfoBlock>
-            {canConfirmOrder ? (
-              <Stack alignItems="stretch" mt={2} spacing={2}>
-                <SecurityDeposit
-                  state={securityDepositRD}
-                  reloadSecurityDeposit={reloadSecurityDeposit}
-                />
-                <XdaiOrderConfirmation secretHash={secretHash} idenaOrder={order} />
-              </Stack>
-            ) : (
-              <ConfirmedOrderInfoBlock
-                isValid={isOrderConfirmationValid(orderRD.data, confirmedOrderRD.data)}
-                title="Confirmation in Gnosis chain"
-                order={confirmedOrderRD.data}
-              >
-                {renderConfirmedOrder()}
-              </ConfirmedOrderInfoBlock>
-            )}
-          </Stack>
-        </>
-      )}
+      <Stack spacing={2}>
+        <IdenaOrderInfoBlock title="Idena chain" order={orderRD.data} secretHash={secretHash}>
+          {renderOrder()}
+        </IdenaOrderInfoBlock>
+        {renderWalletRoutineIfNeeded(web3Store) ||
+          (canConfirmOrder ? (
+            <Stack alignItems="stretch" mt={2} spacing={2}>
+              <SecurityDeposit
+                state={securityDepositRD}
+                reloadSecurityDeposit={reloadSecurityDeposit}
+              />
+              <XdaiOrderConfirmation secretHash={secretHash} idenaOrder={order} />
+            </Stack>
+          ) : (
+            <ConfirmedOrderInfoBlock
+              isValid={
+                contractsAttrs &&
+                isOrderConfirmationValid(orderRD.data, cnfOrderRD.data, contractsAttrs.xdai)
+              }
+              title="Confirmation in Gnosis chain"
+              order={cnfOrderRD.data}
+            >
+              {renderConfirmedOrder()}
+            </ConfirmedOrderInfoBlock>
+          ))}
+      </Stack>
     </Stack>
   );
-  return null;
 };

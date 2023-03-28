@@ -9,15 +9,19 @@ import {
 } from 'idena-sdk-js';
 import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
-import { keccak256 } from 'ethers/lib/utils.js';
+import { keccak256, parseUnits } from 'ethers/lib/utils.js';
+import debug from 'debug';
 
 export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof getIdenaOrderState>>>;
 export type IdenaContractStaticInfo = Awaited<ReturnType<typeof readIdenaContractInfo>>;
+
+const log = debug('utils:idena');
 
 const MAX_FEE = '3';
 const IDENA_CONF = APP_CONFIG.idena;
 export const MIN_IDNA_AMOUNT_TO_SELL = 100;
 export const IDENA_BLOCK_DURATION_MS = 20000;
+const IDENA_DECIMALS = 18;
 
 // TODO: make idena-sdk-js fix PR
 // idena-sdk-js uses wrong case of writeBigUInt64LE method. It is supported by nodejs, but not supported by browsers.
@@ -56,7 +60,13 @@ export async function getIdenaOrderState(secretHash: string) {
   if (!res) return null;
 
   const { lastBlock, timestamp } = res[7];
-  const expirationBlock = Number(res[4]);
+
+  const getExpireTime = (block: string) =>
+    (Number(block) - lastBlock.height) * IDENA_BLOCK_DURATION_MS + timestamp;
+
+  const expirationBlock = res[4];
+  const matchExpirationBlock = res[6];
+
   return {
     owner: res[0],
     payoutAddress: res[1],
@@ -64,8 +74,9 @@ export async function getIdenaOrderState(secretHash: string) {
     amountXdai: res[3],
     expirationBlock,
     matcher: res[5],
-    matchExpirationBlock: res[6],
-    expirationAt: (expirationBlock - lastBlock.height) * IDENA_BLOCK_DURATION_MS + timestamp,
+    matchExpirationBlock,
+    expireAt: getExpireTime(expirationBlock),
+    matchExpireAt: matchExpirationBlock && getExpireTime(matchExpirationBlock),
   };
 }
 
@@ -89,22 +100,23 @@ export const buildCreateIdenaOrderTx = async (
   idnaAmount: string,
   xDaiAmount: string,
   secretHashHex: string,
+  ttlMs: number,
 ) => {
   const lastBlock = await idenaProvider.Blockchain.lastBlock();
-  const deadline = Number(lastBlock.height) + 600;
+  const deadline = Number(lastBlock.height) + Math.ceil(ttlMs / IDENA_BLOCK_DURATION_MS);
 
   const createOrderCallPayload = new CallContractAttachment({
     method: 'createOrder',
     args: [],
   });
-  createOrderCallPayload.setArgs(
-    buildContractArgs([
-      { format: CAF.Dna, value: xDaiAmount },
-      { format: CAF.Uint64, value: String(deadline) },
-      { format: CAF.Hex, value: from },
-      { format: CAF.Hex, value: secretHashHex },
-    ]),
-  );
+  const args = [
+    { format: CAF.Dna, value: xDaiAmount },
+    { format: CAF.Uint64, value: String(deadline) },
+    { format: CAF.Hex, value: from },
+    { format: CAF.Hex, value: secretHashHex },
+  ];
+  log('buildCreateIdenaOrderTx lastBlock', lastBlock, 'args', args);
+  createOrderCallPayload.setArgs(buildContractArgs(args));
 
   const txData = {
     from,
@@ -150,22 +162,19 @@ export const generateRandomSecret = () => {
 export const getSecretHash = (secret: string) => keccak256(secret);
 
 export const openIdenaAppToSignTx = (tx: Transaction) => {
-  window.open(getIdenaLinkToSignTx(tx), '_blank')?.focus();
+  window.open(getIdenaLinkToSignTx(tx), '_blank', 'noopener,noreferrer')?.focus();
 };
 
-export const readIdenaContractInfo = async () => {
-  const { Contract } = idenaProvider;
-  const res = await Promise.all([
-    Contract.readData(contractAddress, 'minAmount', CAF.Bigint),
-    Contract.readData(contractAddress, 'minOrderTTLInBlocks', CAF.Uint64),
-    Contract.readData(contractAddress, 'fulfillPeriodInBlocks', CAF.Uint64),
-    Contract.readData(contractAddress, 'requiredSecurityDepositAmount', CAF.Uint64),
-  ] as const);
+export const readIdenaContractInfo = () => {
+  // it is impossible to read idena contract attributes
+  const minOrderTTL = 3 * 60 * 60; // 3h
+  const minOrderTTLInBlocks = minOrderTTL / IDENA_BLOCK_DURATION_MS;
 
   return {
-    minAmount: res[0],
-    minOrderTTLInBlocks: res[1],
-    fulfillPeriodInBlocks: res[2],
-    requiredSecurityDepositAmount: res[3],
+    minOrderTTL,
+    minOrderTTLInBlocks,
+    minAmount: parseUnits('100.0', IDENA_DECIMALS),
+    fulfilPeriodInBlocks: 3600 / 20,
+    requiredSecurityDepositAmount: parseUnits('10.0', IDENA_DECIMALS),
   };
 };

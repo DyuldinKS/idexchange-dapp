@@ -70,7 +70,7 @@ export const OrderCreationPage: FC = () => {
 
   useEffect(() => {
     if (rData.isSuccess(idenaOrderRD) && idenaOrderRD.data) {
-      navigate(`/order/${secretHash}`);
+      navigate(`/order/${secretHash}?viewAs=owner`);
     }
   }, [idenaOrderRD]);
 

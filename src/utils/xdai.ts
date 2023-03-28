@@ -21,7 +21,7 @@ export type XdaiRawConfirmedOrder = {
   executionDeadline: BigNumber;
 };
 
-export type XdaiContractStaticInfo = Awaited<ReturnType<typeof readXdaiContractInfo>>;
+export type XdaiContractAttributes = Awaited<ReturnType<typeof readXdaiContractInfo>>;
 
 export type XdaiConfirmedOrder = Omit<
   XdaiRawConfirmedOrder,

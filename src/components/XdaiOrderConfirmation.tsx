@@ -3,9 +3,11 @@ import { Stack } from '@mui/system';
 import { waitForTransaction } from '@wagmi/core';
 import debug from 'debug';
 import { FC, ReactNode, useEffect } from 'react';
+import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData } from '../hooks/useRemoteData';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { IdenaOrderState } from '../utils/idena';
+import { calcCnfOrderMatchDeadline } from '../utils/orderControls';
 import { rData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { isChainSupported } from '../utils/web3Modal';
@@ -24,8 +26,8 @@ export const XdaiOrderConfirmation: FC<{
 }> = ({ secretHash, idenaOrder }) => {
   const [orderRD, orderRDM] = useRemoteData<XdaiConfirmedOrder>(null);
   const [{ chainId, address }] = useWeb3Store();
+  const contractsAttrs = useContractsAttributes();
   const theme = useTheme();
-  console.log('>>> orderRD', orderRD);
   const error = orderRD.error;
 
   useEffect(() => {
@@ -47,14 +49,18 @@ export const XdaiOrderConfirmation: FC<{
   };
 
   const confirmOrder = () => {
-    if (!address || !isChainSupported(chainId)) return;
+    // TODO: add loader in case of contractsInfo loading
+    if (!address || !isChainSupported(chainId) || !contractsAttrs.data) return;
+
+    const matchDeadline = calcCnfOrderMatchDeadline(idenaOrder, contractsAttrs.data.xdai);
+    log('confirmOrder', { idenaOrder, matchDeadline });
 
     const processTx = async () => {
       const tx = await createXdaiConfirmedOrder(
         secretHash,
         idenaOrder.amountXdai,
         address,
-        idenaOrder.expirationAt,
+        matchDeadline,
       );
       const res = await waitForTransaction({ hash: tx.hash });
       log('successfully confirmed');

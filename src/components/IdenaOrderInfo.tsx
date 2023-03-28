@@ -15,7 +15,7 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
   owner,
   amountDna,
   amountXdai,
-  expirationAt,
+  expireAt,
 }) => {
   return (
     <UiInfoBlockContent>
@@ -48,7 +48,7 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
           </Box>
         }
       />
-      <UiInfoBlockRow label="Expire time:" value={dayjs(expirationAt).format(DATE_TIME_FORMAT)} />
+      <UiInfoBlockRow label="Expire time:" value={dayjs(expireAt).format(DATE_TIME_FORMAT)} />
     </UiInfoBlockContent>
   );
 };
