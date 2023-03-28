@@ -48,7 +48,7 @@ export const UiError: FC<TypographyProps & { err?: { message?: string }; msg?: R
 }) =>
   err?.message || msg ? (
     <Typography color="error" {...typProps}>
-      {(typeof err === 'object' && err.message) || String(err)}
+      {(typeof err === 'object' && err.message) || msg}
     </Typography>
   ) : null;
 
