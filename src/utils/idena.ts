@@ -233,3 +233,19 @@ export const buildMatchIdenaOrderTx = async (from: string, secretHashHex: string
   await estimateWriteTx(tx, from);
   return tx;
 };
+
+export const buildCompleteOrderTx = async (from: string, secret: string) => {
+  const createOrderCallPayload = new CallContractAttachment({
+    method: 'completeOrder',
+    args: [],
+  });
+  createOrderCallPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secret }]));
+  const txData = {
+    ...BASE_TX_PROPS,
+    from,
+    payload: createOrderCallPayload.toBytes(),
+  };
+  const tx = await idenaProvider.Blockchain.buildTx(txData);
+  await estimateWriteTx(tx, from);
+  return tx;
+};

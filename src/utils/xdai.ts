@@ -110,3 +110,27 @@ export const readXdaiContractInfo = async () => {
     ownerClaimPeriod: res.ownerClaimPeriod.toNumber() * 1000,
   };
 };
+
+export const matchXdaiCnfOrder = (secretHash: string, amount: BigNumber) => {
+  const args = [hexToUint8Array(secretHash)];
+  log('matchCnfOrder args:', args);
+  return prepareWriteContract({
+    ...CONTRACT_INFO,
+    functionName: 'matchOrder',
+    args,
+    overrides: {
+      value: amount,
+    },
+  }).then(writeContract);
+};
+
+export const completeXdaiCnfOrder = (secret: string) => {
+  const args = [hexToUint8Array(secret)];
+  // TODO: remove and decorate prepareWriteContract with logging
+  log('completeXdaiCnfOrder args:', args);
+  return prepareWriteContract({
+    ...CONTRACT_INFO,
+    functionName: 'completeOrder',
+    args,
+  }).then(writeContract);
+};
