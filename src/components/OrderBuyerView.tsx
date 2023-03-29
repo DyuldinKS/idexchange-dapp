@@ -4,13 +4,19 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack, TextField } from '@mui/material';
+import { Link, Stack, TextField, Typography, useTheme } from '@mui/material';
 
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useIdenaSecurityDeposit } from '../hooks/useIdenaSecurityDeposit';
-import { UseRemoteDataReturn } from '../hooks/useRemoteData';
+import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
 import { useWeb3Store } from '../providers/store/StoreProvider';
-import { IdenaOrderState } from '../utils/idena';
+import {
+  buildMatchIdenaOrderTx,
+  getIdenaLinkToSignTx,
+  readIdenaOrderState,
+  IdenaOrderState,
+  openIdenaAppToSignTx,
+} from '../utils/idena';
 import { canMatchOrder, isCnfOrderValid } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { XdaiConfirmedOrder } from '../utils/xdai';
@@ -19,6 +25,8 @@ import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { IdenaSecurityDeposit } from './IdenaSecurityDeposit';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
+import { Transaction } from 'idena-sdk-js';
+import { getColor } from '../utils/theme';
 
 export type AddressSchema = z.infer<typeof addressSchema>;
 
@@ -40,6 +48,7 @@ export const OrderBuyerView: FC<{
   const contractsAttrs = contractsAttrsRD.data;
   const order = orderRD.data;
   const cnfOrder = cnfOrderRD.data;
+  const [matchIdenaOrderTxRD, matchIdenaOrderTxRDM] = useRemoteData<Transaction>(null);
 
   const form = useForm<AddressSchema>({
     resolver: zodResolver(addressSchema),
@@ -56,6 +65,8 @@ export const OrderBuyerView: FC<{
   const address = watch('address');
   const [securityDepositRD, securityDepositRDM] = useIdenaSecurityDeposit(address);
 
+  const theme = useTheme();
+
   const renderOrder = () => {
     if (rData.isNotAsked(orderRD) || rData.isLoading(orderRD) || !contractsAttrs)
       return 'Loading...';
@@ -63,8 +74,60 @@ export const OrderBuyerView: FC<{
 
     if (!order) return 'Order not found.';
 
-    if (canMatchOrder(order, cnfOrder, contractsAttrs.idena)) {
-      return <UiSubmitButton onClick={() => {}}>Match order</UiSubmitButton>;
+    const buildMatchOrderTx = async (
+      evt: React.BaseSyntheticEvent,
+    ): Promise<Transaction | null> => {
+      return new Promise((resolve) => {
+        form
+          .handleSubmit(({ address }) => {
+            const txPromise = buildMatchIdenaOrderTx(address, secretHash);
+            matchIdenaOrderTxRDM.track(txPromise);
+            resolve(txPromise);
+          })(evt)
+          .catch((err) => {
+            console.warn('buildMatchOrderTx caught', err);
+            resolve(null);
+          });
+      });
+    };
+
+    const buildMatchOrderTxAndSign = async (evt: React.BaseSyntheticEvent) => {
+      return buildMatchOrderTx(evt).then((tx) => tx && openIdenaAppToSignTx(tx));
+    };
+
+    if (!order.matcher) {
+      if (!rData.isSuccess(matchIdenaOrderTxRD)) {
+        return (
+          <UiSubmitButton
+            disabled={!canMatchOrder(order, cnfOrder, contractsAttrs.idena, securityDepositRD.data)}
+            onClick={buildMatchOrderTxAndSign}
+          >
+            Book order
+          </UiSubmitButton>
+        );
+      }
+
+      return (
+        // TODO: move to IdenaTxLinkRoutine component
+        <>
+          <Typography color={getColor.textGrey(theme)}>
+            Click{' '}
+            <Link href={getIdenaLinkToSignTx(matchIdenaOrderTxRD.data)} target="_blank">
+              this link
+            </Link>{' '}
+            if Idena App did not open automatically. Wait for the transaction to complete, then
+            reload order state.
+          </Typography>
+          <UiSubmitButton
+            sx={{ mt: 2 }}
+            onClick={() => {
+              orderRDM.track(readIdenaOrderState(secretHash));
+            }}
+          >
+            Reload order
+          </UiSubmitButton>
+        </>
+      );
     }
 
     return null;

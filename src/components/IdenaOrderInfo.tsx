@@ -16,6 +16,8 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
   amountDna,
   amountXdai,
   expireAt,
+  matcher,
+  matchExpireAt,
 }) => {
   return (
     <UiInfoBlockContent>
@@ -49,6 +51,11 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
         }
       />
       <UiInfoBlockRow label="Expire time:" value={dayjs(expireAt).format(DATE_TIME_FORMAT)} />
+      <UiInfoBlockRow label="iDNA taker:" value={matcher || 'None'} />
+      <UiInfoBlockRow
+        label="iDNA claim deadline for buyer:"
+        value={matchExpireAt ? dayjs(matchExpireAt).format(DATE_TIME_FORMAT) : 'None'}
+      />
     </UiInfoBlockContent>
   );
 };

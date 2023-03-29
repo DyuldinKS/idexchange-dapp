@@ -28,8 +28,7 @@ export const IdenaSecurityDeposit: FC<{
   form: UseFormReturn<AddressSchema>;
   isWithdrawDisabled?: boolean;
 }> = ({ securityDepositRD, securityDepositRDM, form, isWithdrawDisabled }) => {
-  const [depositChangeRD, depositChangeRDM] = useRemoteData(null);
-  const error = securityDepositRD.error || depositChangeRD.error;
+  const error = securityDepositRD.error;
   const [topUpDepositTxRD, topUpDepositTxRDM] = useRemoteData<Transaction>(null);
   const theme = useTheme();
 
@@ -52,9 +51,6 @@ export const IdenaSecurityDeposit: FC<{
   if (deposit.isValid) return renderDepositInfo(null);
   // handled by SecurityDepositInfoBlock
   if (deposit.isInUse) return renderDepositInfo(null);
-
-  if (rData.isLoading(depositChangeRD))
-    return renderDepositInfo(<UiSubmitButton disabled>Updating iDNA deposit...</UiSubmitButton>);
 
   const buildTopUpDepositTx = async (
     evt: React.BaseSyntheticEvent,

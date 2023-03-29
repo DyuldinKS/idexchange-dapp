@@ -18,7 +18,7 @@ import { useRevision } from '../hooks/useRevision';
 import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { shortenHash } from '../utils/address';
-import { getIdenaOrderState, getSecretHash, IdenaOrderState } from '../utils/idena';
+import { readIdenaOrderState, getSecretHash, IdenaOrderState } from '../utils/idena';
 import { isCnfOrderValid } from '../utils/orderControls';
 import { rData } from '../utils/remoteData';
 import { readXdaiConfirmedOrder, XdaiConfirmedOrder } from '../utils/xdai';
@@ -71,7 +71,7 @@ export const OrderPage: FC = () => {
   const isBuyer = viewAs === 'buyer';
 
   useEffect(() => {
-    orderRDM.track(getIdenaOrderState(hash));
+    orderRDM.track(readIdenaOrderState(hash));
     cnfOrderRDM.track(readXdaiConfirmedOrder(hash));
   }, [hash]);
 

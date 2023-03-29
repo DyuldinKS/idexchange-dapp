@@ -1,5 +1,6 @@
 import { gnosis } from '@wagmi/core/chains';
 import { formatUnits } from 'ethers/lib/utils.js';
+import { SecurityDepositInfoType } from '../hooks/useSecurityDepositInfo';
 import { IDENA_BLOCK_DURATION_MS, IdenaOrderState, IdenaContractStaticInfo } from './idena';
 import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
 import dnaToBigInt from './dnaToBigInt';
@@ -83,13 +84,16 @@ export const canMatchOrder = (
   order: IdenaOrderState | null,
   cnfOrder: XdaiConfirmedOrder | null,
   saleContract: IdenaContractStaticInfo,
+  securityDeposit: Pick<SecurityDepositInfoType, 'isValid'> | null,
 ) => {
-  return (
+  return Boolean(
     order &&
-    !order.matcher &&
-    Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt &&
-    cnfOrder &&
-    !cnfOrder.matcher &&
-    Date.now() < cnfOrder.matchDeadline
+      // if prev match expired
+      (order.matchExpireAt ? order.matchExpireAt < Date.now() : true) &&
+      Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt &&
+      cnfOrder &&
+      !cnfOrder.matcher &&
+      Date.now() < cnfOrder.matchDeadline &&
+      securityDeposit?.isValid,
   );
 };

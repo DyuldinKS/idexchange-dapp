@@ -1,4 +1,4 @@
-import idenaProvider from '../providers/idenaProvider';
+import { idenaProvider } from '../providers/idenaProvider';
 
 export const idenaLastBlock: {
   number: number;

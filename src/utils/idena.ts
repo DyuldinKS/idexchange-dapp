@@ -11,9 +11,9 @@ import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
 import { formatUnits, keccak256, parseUnits } from 'ethers/lib/utils.js';
 import debug from 'debug';
-import idenaProvider from '../providers/idenaProvider';
+import { idenaProvider } from '../providers/idenaProvider';
 
-export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof getIdenaOrderState>>>;
+export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof readIdenaOrderState>>>;
 export type IdenaContractStaticInfo = Awaited<ReturnType<typeof readIdenaContractInfo>>;
 
 const log = debug('utils:idena');
@@ -33,11 +33,16 @@ export const IDENA_CHAIN = {
   },
 };
 
+const contractAddress = CONTRACTS.idena.sellIdna;
+const BASE_TX_PROPS = {
+  to: contractAddress,
+  type: TransactionType.CallContractTx,
+  maxFee: MAX_FEE,
+};
+
 // TODO: make idena-sdk-js fix PR
 // idena-sdk-js uses wrong case of writeBigUInt64LE method. It is supported by nodejs, but not supported by browsers.
 globalThis.Buffer.prototype.writeBigUint64LE = Buffer.prototype.writeBigUInt64LE;
-
-const contractAddress = CONTRACTS.idena.sellIdna;
 
 export const isNilData = (err: any) => /data is nil/.test(err?.message || String(err));
 
@@ -49,7 +54,7 @@ export const handleNilData =
     throw err;
   };
 
-export async function getIdenaOrderState(secretHash: string) {
+export async function readIdenaOrderState(secretHash: string) {
   const { Contract } = idenaProvider;
   const res = await Promise.all([
     Contract.readMap(contractAddress, 'getOwner', secretHash, CAF.Hex),
@@ -60,7 +65,7 @@ export async function getIdenaOrderState(secretHash: string) {
     safeReadMapNils(contractAddress, 'getMatcher', secretHash, CAF.Hex),
     safeReadMapNils(contractAddress, 'getMatchExpirationBlock', secretHash, CAF.Uint64),
     idenaProvider.Blockchain.lastBlock() as Promise<JsonBlock & { timestamp: number }>,
-  ] as const).catch(handleNilData('getIdenaOrderState'));
+  ] as const).catch(handleNilData('readIdenaOrderState'));
 
   if (!res) return null;
 
@@ -124,12 +129,10 @@ export const buildCreateIdenaOrderTx = async (
   createOrderCallPayload.setArgs(buildContractArgs(args));
 
   const txData = {
+    ...BASE_TX_PROPS,
     from,
-    to: contractAddress,
-    type: TransactionType.CallContractTx,
     amount: idnaAmount,
     payload: createOrderCallPayload.toBytes(),
-    maxFee: MAX_FEE,
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
   await estimateWriteTx(tx, from);
@@ -143,11 +146,9 @@ export const buildBurnIdenaOrderTx = async (from: string, secretHashHex: string)
   });
   createOrderCallPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secretHashHex }]));
   const txData = {
+    ...BASE_TX_PROPS,
     from,
-    to: contractAddress,
-    type: TransactionType.CallContractTx,
     payload: createOrderCallPayload.toBytes(),
-    maxFee: MAX_FEE,
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
   await estimateWriteTx(tx, from);
@@ -196,7 +197,7 @@ export async function readIdenaSecurityDeposit(address: string) {
   return {
     amount: amountBN,
     isInUse: Boolean(isInUse),
-    isValid: Boolean(amount && requiredSecurityDepositAmount.eq(amountBN)),
+    isValid: !isInUse && Boolean(amount && requiredSecurityDepositAmount.eq(amountBN)),
     requiredAmount: requiredSecurityDepositAmount,
   };
 }
@@ -207,12 +208,26 @@ export const buildTopUpIdenaSecurityDepositTx = async (from: string) => {
     args: [],
   });
   const txData = {
+    ...BASE_TX_PROPS,
     from,
-    to: contractAddress,
-    type: TransactionType.CallContractTx,
     amount: formatUnits(readIdenaContractInfo().requiredSecurityDepositAmount, IDENA_DECIMALS),
     payload: createOrderCallPayload.toBytes(),
-    maxFee: MAX_FEE,
+  };
+  const tx = await idenaProvider.Blockchain.buildTx(txData);
+  await estimateWriteTx(tx, from);
+  return tx;
+};
+
+export const buildMatchIdenaOrderTx = async (from: string, secretHashHex: string) => {
+  const createOrderCallPayload = new CallContractAttachment({
+    method: 'matchOrder',
+    args: [],
+  });
+  createOrderCallPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secretHashHex }]));
+  const txData = {
+    ...BASE_TX_PROPS,
+    from,
+    payload: createOrderCallPayload.toBytes(),
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
   await estimateWriteTx(tx, from);

@@ -10,7 +10,7 @@ import { mapRejected } from '../utils/async';
 import {
   buildCreateIdenaOrderTx,
   getIdenaLinkToSignTx,
-  getIdenaOrderState,
+  readIdenaOrderState,
   IdenaOrderState,
   openIdenaAppToSignTx,
 } from '../utils/idena';
@@ -41,7 +41,7 @@ export const IdenaOrderCreation: FC<{
 
   const reloadOrderState = async () => {
     idenaOrderRDM.track(
-      getIdenaOrderState(secretHash).catch(
+      readIdenaOrderState(secretHash).catch(
         mapRejected((err: any) => {
           console.error('Failed to load order state:', err);
           return err;
