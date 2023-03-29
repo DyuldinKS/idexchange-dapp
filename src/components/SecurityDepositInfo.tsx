@@ -3,22 +3,25 @@ import { formatUnits } from 'ethers/lib/utils.js';
 import { Stack, Typography } from '@mui/material';
 import { Chain } from '@wagmi/core/chains';
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { SecurityDepositType } from '../types/contracts';
 import { FCC } from '../types/FCC';
-import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow } from './ui';
+import { UiBlock, UiBlockTitle, UiBlockTitleProps, UiInfoBlockContent, UiInfoBlockRow } from './ui';
 
 export const SecurityDepositInfoBlock: FCC<{
   securityDeposit: Pick<SecurityDepositType, 'amount' | 'isInUse'> | null;
   nativeCurrency: Chain['nativeCurrency'];
-}> = ({ securityDeposit, nativeCurrency, children }) => {
+  description?: ReactNode;
+  title?: ReactNode;
+}> = ({ securityDeposit, nativeCurrency, title, description, children }) => {
   return (
     <UiBlock alignItems="start">
-      <UiBlockTitle>Security deposit</UiBlockTitle>
+      {title || <UiBlockTitle>Security deposit</UiBlockTitle>}
       {securityDeposit && (
         <UiInfoBlockContent>
+          {description && <UiInfoBlockRow label={description} />}
           <UiInfoBlockRow
-            label="Current security deposit:"
+            label="Deposited:"
             value={`${formatUnits(securityDeposit.amount, nativeCurrency.decimals)} ${
               nativeCurrency.symbol
             }`}

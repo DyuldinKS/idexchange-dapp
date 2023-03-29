@@ -1,5 +1,6 @@
 import {
   Box,
+  BoxProps,
   Breakpoint,
   Button,
   ButtonProps,
@@ -13,7 +14,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { StackProps } from '@mui/system';
-import { FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
+import { ComponentProps, FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FCC } from '../types/FCC';
 
@@ -119,6 +120,8 @@ export const UiBlock = styled(Stack)(({ theme }) => ({
   alignItems: 'stretch',
 }));
 
+export type UiBlockTitleProps = ComponentProps<typeof UiBlockTitle>;
+
 export const UiBlockTitle: FCC<{ tooltip?: ReactNode }> = ({ tooltip, children }) => {
   return (
     <Typography variant="h3" fontSize="1.25rem" display="flex" alignItems="center" fontWeight={500}>
@@ -132,19 +135,19 @@ export const UiBlockTitle: FCC<{ tooltip?: ReactNode }> = ({ tooltip, children }
   );
 };
 
-export const UiInfoBlockRow: FC<{ label: ReactNode; value?: ReactNode } & TypographyProps> = ({
+export const UiInfoBlockRow: FC<{ label: ReactNode; value?: ReactNode } & BoxProps> = ({
   label,
   value,
   ...props
 }) => {
   const theme = useTheme();
   return (
-    <Typography {...props} sx={{ wordWrap: 'break-word' }}>
+    <Box component="span" {...props} sx={{ wordWrap: 'break-word' }}>
       <Box component="span" mr={1} color={theme.palette.grey[700]}>
         {label}
       </Box>
       {value && <Box component="span">{value}</Box>}
-    </Typography>
+    </Box>
   );
 };
 

@@ -3,7 +3,7 @@ import { Transaction } from 'idena-sdk-js';
 import { FC, ReactNode } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
-import { Link, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Link, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { SecurityDepositType } from '../types/contracts';
 import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
@@ -19,7 +19,7 @@ import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { AddressSchema } from './OrderBuyerView';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
-import { UiError, UiSubmitButton } from './ui';
+import { UiBlockTitle, UiError, UiInputTooltipBtn, UiSpan, UiSubmitButton } from './ui';
 
 export const IdenaSecurityDeposit: FC<{
   securityDepositRD: RemoteData<SecurityDepositType>;
@@ -36,6 +36,12 @@ export const IdenaSecurityDeposit: FC<{
     <SecurityDepositInfoBlock
       securityDeposit={securityDepositRD.data}
       nativeCurrency={IDENA_CHAIN.nativeCurrency}
+      title={
+        <UiBlockTitle tooltip="The existence of a deposit incentivizes the buyer to fulfill their obligation in the transaction. For instance, if a buyer books an order on Idena network and subsequently fails to pay xDAI on Gnosis network, their deposit will be transferred to the owner of the order as compensation  for the time the order was frozen.">
+          iDNA security deposit
+        </UiBlockTitle>
+      }
+      description="In order to guarantee the reliability of the exchange, it is essential to make a deposit of iDNA. After the exchange is completed, the iDNA can be withdrawn from the protocol back to your wallet."
     >
       {children}
       {error && <UiError err={error} />}
