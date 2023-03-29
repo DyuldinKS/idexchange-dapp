@@ -2,6 +2,8 @@ import { gnosis } from '@wagmi/core/chains';
 import { formatUnits } from 'ethers/lib/utils.js';
 import { IDENA_BLOCK_DURATION_MS, IdenaOrderState, IdenaContractStaticInfo } from './idena';
 import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
+import dnaToBigInt from './dnaToBigInt';
+import bignumberishToBigInt from './bignumberishToBigInt';
 
 /**
  * A gap between idena.expireAt and xdai.matchDeadline + xdai.ownerClaimPeriod,
@@ -11,6 +13,8 @@ import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
 const GAP_AFTER_MAX_EXECUTION_DEADLINE = 10 * 60 * 1000; // 10 min
 const ORDER_MIN_TTL = 4 * 60 * 60 * 1000; // 4h
 const NETWORK_ERR = 30 * 1000;
+export const minTimeForIdena = 3_600 * 1000; // 1h
+const minTimeForGnosis = minTimeForIdena / 2; // 30min
 
 export const getOrderMinTTL = (
   contract: IdenaContractStaticInfo,
@@ -37,6 +41,27 @@ export const isOrderConfirmationValid = (
     Math.abs(calcCnfOrderMatchDeadline(order, cnfContract) - cnfOrder.matchDeadline) <
       IDENA_BLOCK_DURATION_MS + NETWORK_ERR
   );
+};
+
+
+
+export const isOrderMatchable = (
+  order: IdenaOrderState,
+  cnfOrder: XdaiConfirmedOrder,
+  cnfContract: XdaiContractAttributes,
+  currentTimestamp: number,
+) => {
+  if (!order || !cnfOrder) return null;
+
+  if (bignumberishToBigInt(cnfOrder.amountXDAI) !== dnaToBigInt(order.amountXdai)) return false
+  if (BigInt(cnfOrder.payoutAddress) !== BigInt(order.payoutAddress)) return false
+
+  if (currentTimestamp + NETWORK_ERR + minTimeForIdena > order.expireAt) return false
+  if (currentTimestamp + NETWORK_ERR > cnfOrder.matchDeadline) return false
+
+  if (order.matcher === null) return true
+
+  return currentTimestamp > (order.matchExpireAt as number)
 };
 
 export const calcCnfOrderMatchDeadline = (

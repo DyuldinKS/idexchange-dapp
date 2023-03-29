@@ -1,12 +1,15 @@
 {
   "name": "idena-atomic-dex-dapp",
+  "homepage": "https://idexchange.tech",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --force",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@emotion/react": "^11.10.6",
@@ -35,6 +38,7 @@
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@vitejs/plugin-react-swc": "^3.0.0",
+    "gh-pages": "^5.0.0",
     "typescript": "^4.9.3",
     "vite": "^4.2.0"
   }

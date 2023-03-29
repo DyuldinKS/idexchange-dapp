@@ -12,6 +12,7 @@ import { rData } from '../utils/remoteData';
 import { getIdenaOrderListState, IdenaOrderListState } from '../utils/orderList';
 import { UiError, UiPage } from './ui';
 import { IdenaOrderList } from './IdenaOrderList';
+import { idenaLastBlock } from '../utils/idenaBlock';
 
 const log = debug('OrderListPage');
 
@@ -37,7 +38,7 @@ export const OrderListPage: FC = () => {
     orderListRDM.track(getIdenaOrderListState());
   }, []);
 
-  const renderOrderList = () => {
+  const renderOrderListError = () => {
     if (rData.isNotAsked(orderListRD) || rData.isLoading(orderListRD)) return 'Loading...';
     if (rData.isFailure(orderListRD)) return <UiError err={orderListRD.error} />;
     return orderListRD.data ? null : 'No active orders found.';
@@ -50,7 +51,7 @@ export const OrderListPage: FC = () => {
           Active orders
         </Typography>
       </Tooltip>
-      <IdenaOrderList orders={orderListRD.data} xdaiContractProps={contractsAttrs && contractsAttrs.xdai}>{renderOrderList()}</IdenaOrderList>
+      <IdenaOrderList currentTimestamp={idenaLastBlock.timestamp} orders={orderListRD.data} xdaiContractProps={contractsAttrs && contractsAttrs.xdai}>{renderOrderListError()}</IdenaOrderList>
     </UiPage>
   );
 };

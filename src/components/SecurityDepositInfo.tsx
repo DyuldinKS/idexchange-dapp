@@ -25,7 +25,7 @@ export const SecurityDepositInfoBlock: FCC<Pick<SecurityDepositInfoType, 'amount
         {isInUse && (
           <Typography color="error">
             This deposit is already being used to confirm another order. You have to wait until your
-            previous order is complete or use a different account to create a new order.
+            previous order is complete/expired or use a different account to create a new order.
           </Typography>
         )}
       </UiInfoBlockContent>

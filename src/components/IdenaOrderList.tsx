@@ -1,25 +1,33 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { UiBlock } from './ui';
-import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { IdenaOrderListState } from '../utils/orderList';
 import { Stack } from '@mui/system';
-import { ShortOrderInfoBlock } from './ShortOrderInfo';
-import { XdaiContractAttributes } from '../utils/xdai';
-import { isOrderConfirmationValid } from '../utils/orderControls';
+import { XdaiConfirmedOrder, XdaiContractAttributes } from '../utils/xdai';
+import { isOrderMatchable } from '../utils/orderControls';
+import { IdenaOrderState } from '../utils/idena';
+import { FCC } from '../types/FCC';
+import { ShortOrderInfo } from './ShortOrderInfo';
 
-export const IdenaOrderList: FC<NonNullable<{ orders: IdenaOrderListState | null, xdaiContractProps: XdaiContractAttributes }>> = ({ orders, children, xdaiContractProps }) => {
-  const validOrders = orders && orders.filter(x => isOrderConfirmationValid(x.dnaState, x.xdaiState, xdaiContractProps))
+export const IdenaOrderList: FCC<{ orders: IdenaOrderListState | null, xdaiContractProps: XdaiContractAttributes | null, currentTimestamp: number }> = ({ orders, children, xdaiContractProps, currentTimestamp }) => {
+  const validOrders = orders && xdaiContractProps &&
+    (orders as { xdaiState: XdaiConfirmedOrder, dnaState: IdenaOrderState }[])
+      .filter(({ xdaiState, dnaState }) => isOrderMatchable(dnaState, xdaiState, xdaiContractProps, currentTimestamp))
+
   return (
     <UiBlock>
-          {validOrders && validOrders.map(x =>
+      {
+        validOrders &&
+        (validOrders as { xdaiState: XdaiConfirmedOrder, dnaState: IdenaOrderState, hash: string }[])
+          .map(x =>
             <Stack mt={4}>
               <Stack spacing={2}>
-                <ShortOrderInfoBlock
-                  title={x.hash} order={x}>
-                </ShortOrderInfoBlock>
+                <ShortOrderInfo
+                  id={x.hash} dnaState={x.dnaState} xdaiState={x.xdaiState}>
+                </ShortOrderInfo>
               </Stack>
             </Stack>
-          )}
+          )
+      }
       {React.Children.toArray(children).filter(Boolean).length > 0 && (
         <Stack mt={2} alignItems="stretch">
           {children}

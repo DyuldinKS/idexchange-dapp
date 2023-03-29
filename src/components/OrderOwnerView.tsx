@@ -20,7 +20,7 @@ import {
   IdenaOrderState,
   openIdenaAppToSignTx,
 } from '../utils/idena';
-import { isOrderConfirmationValid } from '../utils/orderControls';
+import { isOrderConfirmationValid, minTimeForIdena } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiConfirmedOrder, XdaiConfirmedOrder } from '../utils/xdai';
@@ -85,7 +85,7 @@ export const OrderOwnerView: FC<{
     };
 
     const canBeCancelled =
-      Date.now() > order.expireAt && !cnfOrderRD.data && !rData.isLoading(cancelOrderTxRD);
+      Date.now() > (order.expireAt - minTimeForIdena) && !cnfOrderRD.data && !rData.isLoading(cancelOrderTxRD);
 
     return (
       <Stack spacing={2}>

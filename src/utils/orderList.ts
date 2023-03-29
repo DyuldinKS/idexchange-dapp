@@ -1,7 +1,8 @@
 import { ContractArgumentFormat as CAF } from 'idena-sdk-js';
-import { getIdenaOrderState, handleNilData, idenaProvider } from './idena';
+import { getIdenaOrderState, handleNilData, IdenaOrderState } from './idena';
 import { CONTRACTS } from '../constants/contracts';
-import { readXdaiConfirmedOrder } from './xdai';
+import { readXdaiConfirmedOrder, XdaiConfirmedOrder } from './xdai';
+import idenaProvider from '../providers/idenaProvider';
 
 export type IdenaOrderListState = NonNullable<Awaited<ReturnType<typeof getIdenaOrderListState>>>;
 
@@ -18,12 +19,12 @@ export async function getIdenaOrderListState() {
 
   const [dnaStates, xdaiStates] = await Promise.all([Promise.all(results.map(getIdenaOrderState)), Promise.all(results.map(readXdaiConfirmedOrder))])
 
-  const orders = []
+  const orders: { dnaState: IdenaOrderState, xdaiState: XdaiConfirmedOrder, hash: string }[] = []
 
   results.forEach((hash, i) => {
     if (!dnaStates[i]) return
     if (!xdaiStates[i]) return
-    orders.push({ dnaState: dnaStates[i], xdaiState: xdaiStates[i], hash })
+    orders.push({ dnaState: (dnaStates[i] as IdenaOrderState), xdaiState: (xdaiStates[i] as XdaiConfirmedOrder), hash })
   })
 
   console.log(orders)
@@ -32,5 +33,5 @@ export async function getIdenaOrderListState() {
 }
 
 function numToHex(num: number) {
-  return `0x${num.toString(16).padStart(8, '0').match(/../g).reverse().join('')}`
+  return `0x${(num.toString(16).padStart(8, '0').match(/../g) as string[]).reverse().join('')}`
 }

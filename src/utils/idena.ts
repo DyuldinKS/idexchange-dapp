@@ -1,7 +1,6 @@
 import {
   ContractArgumentFormat as CAF,
   TransactionType,
-  IdenaProvider,
   CallContractAttachment,
   ContractArgument,
   Transaction,
@@ -11,6 +10,8 @@ import { APP_CONFIG } from '../app.config';
 import { CONTRACTS } from '../constants/contracts';
 import { keccak256, parseUnits } from 'ethers/lib/utils.js';
 import debug from 'debug';
+import { idenaLastBlock } from './idenaBlock';
+import idenaProvider from '../providers/idenaProvider';
 
 export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof getIdenaOrderState>>>;
 export type IdenaContractStaticInfo = Awaited<ReturnType<typeof readIdenaContractInfo>>;
@@ -26,8 +27,6 @@ const IDENA_DECIMALS = 18;
 // TODO: make idena-sdk-js fix PR
 // idena-sdk-js uses wrong case of writeBigUInt64LE method. It is supported by nodejs, but not supported by browsers.
 globalThis.Buffer.prototype.writeBigUint64LE = Buffer.prototype.writeBigUInt64LE;
-
-export const idenaProvider = IdenaProvider.create(IDENA_CONF.rpcUrl, IDENA_CONF.apiKey);
 
 const contractAddress = CONTRACTS.idena.sellIdna;
 
@@ -51,18 +50,13 @@ export async function getIdenaOrderState(secretHash: string) {
     Contract.readMap(contractAddress, 'getExpirationBlock', secretHash, CAF.Uint64),
     safeReadMapNils(contractAddress, 'getMatcher', secretHash, CAF.Hex),
     safeReadMapNils(contractAddress, 'getMatchExpirationBlock', secretHash, CAF.Uint64),
-    idenaProvider.Blockchain.lastBlock().then((lastBlock) => ({
-      lastBlock,
-      timestamp: Date.now(),
-    })),
+    idenaLastBlock.promise,
   ] as const).catch(handleNilData('getIdenaOrderState'));
 
   if (!res) return null;
 
-  const { lastBlock, timestamp } = res[7];
-
   const getExpireTime = (block: string) =>
-    (Number(block) - lastBlock.height) * IDENA_BLOCK_DURATION_MS + timestamp;
+    (Number(block) - idenaLastBlock.number) * IDENA_BLOCK_DURATION_MS + idenaLastBlock.timestamp;
 
   const expirationBlock = res[4];
   const matchExpirationBlock = res[6];

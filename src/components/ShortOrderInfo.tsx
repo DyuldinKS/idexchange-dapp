@@ -1,17 +1,17 @@
 import dayjs from 'dayjs';
-import React, { FC } from 'react';
+import React from 'react';
 
-import { Box } from '@mui/material';
-import { Stack } from '@mui/system';
+import { Box, Grid } from '@mui/material';
 
 import { FCC } from '../types/FCC';
 import { IdenaOrderState } from '../utils/idena';
-import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow } from './ui';
+import { UiInfoBlockContent, UiInfoBlockRow, UiSubmitButton } from './ui';
 import { XdaiConfirmedOrder } from '../utils/xdai';
+import { Link } from 'react-router-dom';
 
 export const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm Z';
 
-export const ShortOrderInfo: FC<NonNullable<{ dnaState: IdenaOrderState, xdaiState: XdaiConfirmedOrder } & { id: string }>> = ({
+export const ShortOrderInfo: FCC<NonNullable<{ dnaState: IdenaOrderState, xdaiState: XdaiConfirmedOrder } & { id: string }>> = ({
   id,
   dnaState,
   xdaiState,
@@ -47,22 +47,11 @@ export const ShortOrderInfo: FC<NonNullable<{ dnaState: IdenaOrderState, xdaiSta
         }
       />
       <UiInfoBlockRow label="Expire time:" value={dayjs(dnaState.expireAt).format(DATE_TIME_FORMAT)} />
+      <Grid item xs={12} sm={4}>
+        <UiSubmitButton size="large" LinkComponent={Link} {...{ to: `/order/${id}` }}>
+          Go to order
+        </UiSubmitButton>
+      </Grid>
     </UiInfoBlockContent>
-  );
-};
-
-export const ShortOrderInfoBlock: FCC<{
-  title: string;
-  order?: { xdaiState: XdaiConfirmedOrder, dnaState: IdenaOrderState, hash: string } | null;
-}> = ({ title, order, children }) => {
-  return (
-    <UiBlock alignItems="start">
-      {order && <ShortOrderInfo id={order.hash} xdaiState={order.xdaiState} dnaState={order.dnaState} />}
-      {React.Children.toArray(children).filter(Boolean).length > 0 && (
-        <Stack mt={2} alignItems="stretch">
-          {children}
-        </Stack>
-      )}
-    </UiBlock>
   );
 };
