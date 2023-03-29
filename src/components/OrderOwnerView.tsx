@@ -23,7 +23,7 @@ import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
-import { SecurityDeposit } from './SecurityDeposit';
+import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
@@ -161,7 +161,7 @@ export const OrderOwnerView: FC<{
         {renderWalletRoutineIfNeeded(web3Store) ||
           (canConfirmOrder ? (
             <Stack alignItems="stretch" mt={2} spacing={2}>
-              <SecurityDeposit
+              <XdaiSecurityDeposit
                 address={web3Store.address}
                 securityDepositRD={securityDepositRD}
                 securityDepositRDM={securityDepositRDM}

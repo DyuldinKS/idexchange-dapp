@@ -15,7 +15,7 @@ import { readXdaiSecurityDeposit } from '../utils/xdai';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
 import { UiError, UiSubmitButton } from './ui';
 
-const log = debug('SecurityDeposit');
+const log = debug('XdaiSecurityDeposit');
 
 const contractInfo = {
   chainId: gnosis.id,
@@ -23,11 +23,10 @@ const contractInfo = {
   abi: abiToReceiveXdai,
 };
 
-export const SecurityDeposit: FC<{
+export const XdaiSecurityDeposit: FC<{
   address: string | null;
   securityDepositRD: RemoteData<SecurityDepositType>;
   securityDepositRDM: UseRemoteDataMethods<SecurityDepositType>;
-  // reloadSecurityDeposit: () => Promise<SecurityDepositType | null>;
   isWithdrawDisabled?: boolean;
 }> = ({ address, securityDepositRD, securityDepositRDM, isWithdrawDisabled }) => {
   const { data: contractsAttrs } = useContractsAttributes();
