@@ -15,6 +15,7 @@ import { idenaProvider } from '../providers/idenaProvider';
 
 export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof readIdenaOrderState>>>;
 export type IdenaContractStaticInfo = Awaited<ReturnType<typeof readIdenaContractInfo>>;
+export type SecurityDepositType = Awaited<ReturnType<typeof readIdenaSecurityDeposit>>;
 
 const log = debug('utils:idena');
 

@@ -4,26 +4,23 @@ import { FC } from 'react';
 
 import { Link, Stack, Typography, useTheme } from '@mui/material';
 import { waitForTransaction } from '@wagmi/core';
-import { gnosis } from '@wagmi/core/chains';
 
-import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
-import { CONTRACTS } from '../constants/contracts';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
-import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
+import { useXdaiSecurityDeposit } from '../hooks/useXdaiSecurityDeposit';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { mapRejected } from '../utils/async';
 import {
   buildBurnIdenaOrderTx,
   getIdenaLinkToSignTx,
-  readIdenaOrderState,
   IdenaOrderState,
   openIdenaAppToSignTx,
+  readIdenaOrderState,
 } from '../utils/idena';
 import { isCnfOrderValid, minTimeForIdena, canCancelCnfOrder } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
-import { burnXdaiOrder, readXdaiConfirmedOrder, XdaiConfirmedOrder } from '../utils/xdai';
+import { burnXdaiOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { SecurityDeposit } from './SecurityDeposit';
@@ -39,10 +36,7 @@ export const OrderOwnerView: FC<{
   cnfOrderRDM: UseRemoteDataReturn<XdaiConfirmedOrder | null>[1];
 }> = ({ secretHash, orderRD, orderRDM, cnfOrderRD, cnfOrderRDM }) => {
   const [web3Store] = useWeb3Store();
-  const {
-    rData: [securityDepositRD],
-    reloadSecurityDeposit,
-  } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
+  const [securityDepositRD, securityDepositRDM] = useXdaiSecurityDeposit();
   const order = orderRD.data;
   // if the order is still without confirmation
   const isConfirmedOrderNotFound = rData.isSuccess(cnfOrderRD) && !cnfOrderRD.data;
@@ -139,7 +133,7 @@ export const OrderOwnerView: FC<{
       await burnConfirmedOrderRDM.track(
         burnXdaiOrder(secretHash).then((tx) => waitForTransaction({ hash: tx.hash })),
       );
-      await cnfOrderRDM.track(readXdaiConfirmedOrder(secretHash));
+      await cnfOrderRDM.track(readXdaiCnfOrder(secretHash));
     };
 
     return (
@@ -155,6 +149,9 @@ export const OrderOwnerView: FC<{
     );
   };
 
+  // TODO: handle contract attributes loading and
+  if (!contractsAttrs) return null;
+
   return (
     <Stack alignItems="stretch" mt={4}>
       <Stack spacing={2}>
@@ -165,8 +162,9 @@ export const OrderOwnerView: FC<{
           (canConfirmOrder ? (
             <Stack alignItems="stretch" mt={2} spacing={2}>
               <SecurityDeposit
-                state={securityDepositRD}
-                reloadSecurityDeposit={reloadSecurityDeposit}
+                address={web3Store.address}
+                securityDepositRD={securityDepositRD}
+                securityDepositRDM={securityDepositRDM}
               />
               <XdaiOrderConfirmation
                 secretHash={secretHash}

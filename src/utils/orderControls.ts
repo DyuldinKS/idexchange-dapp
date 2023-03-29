@@ -1,7 +1,7 @@
 import { gnosis } from '@wagmi/core/chains';
 import { formatUnits } from 'ethers/lib/utils.js';
-import { SecurityDepositInfoType } from '../hooks/useSecurityDepositInfo';
-import { IDENA_BLOCK_DURATION_MS, IdenaOrderState, IdenaContractStaticInfo } from './idena';
+import { SecurityDepositType } from '../types/contracts';
+import { IdenaContractStaticInfo, IdenaOrderState, IDENA_BLOCK_DURATION_MS } from './idena';
 import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
 import dnaToBigInt from './dnaToBigInt';
 import bignumberishToBigInt from './bignumberishToBigInt';
@@ -84,7 +84,7 @@ export const canMatchOrder = (
   order: IdenaOrderState | null,
   cnfOrder: XdaiConfirmedOrder | null,
   saleContract: IdenaContractStaticInfo,
-  securityDeposit: Pick<SecurityDepositInfoType, 'isValid'> | null,
+  securityDeposit: Pick<SecurityDepositType, 'isValid'> | null,
 ) => {
   return Boolean(
     order &&

@@ -7,21 +7,17 @@ import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, Grid, Stack, TextField, Tooltip, Typography } from '@mui/material';
-import { gnosis } from '@wagmi/core/chains';
 
-import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { APP_CONFIG } from '../app.config';
-import { CONTRACTS } from '../constants/contracts';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData } from '../hooks/useRemoteData';
 import { useRevision } from '../hooks/useRevision';
-import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { shortenHash } from '../utils/address';
-import { readIdenaOrderState, getSecretHash, IdenaOrderState } from '../utils/idena';
+import { getSecretHash, IdenaOrderState, readIdenaOrderState } from '../utils/idena';
 import { isCnfOrderValid } from '../utils/orderControls';
 import { rData } from '../utils/remoteData';
-import { readXdaiConfirmedOrder, XdaiConfirmedOrder } from '../utils/xdai';
+import { readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderBuyerView } from './OrderBuyerView';
@@ -42,10 +38,6 @@ export const OrderPage: FC = () => {
   const { hash } = useParams() as { hash: string };
   const [searchParams, setSearchParams] = useSearchParams();
   const [{ chainId, address }] = useWeb3Store();
-  const {
-    rData: [securityDepositRD],
-    reloadSecurityDeposit,
-  } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
   const [orderRD, orderRDM] = useRemoteData<IdenaOrderState | null>(null);
   const [cnfOrderRD, cnfOrderRDM] = useRemoteData<XdaiConfirmedOrder | null>(null);
   const contractsAttrsRD = useContractsAttributes();
@@ -72,7 +64,7 @@ export const OrderPage: FC = () => {
 
   useEffect(() => {
     orderRDM.track(readIdenaOrderState(hash));
-    cnfOrderRDM.track(readXdaiConfirmedOrder(hash));
+    cnfOrderRDM.track(readXdaiCnfOrder(hash));
   }, [hash]);
 
   const renderOrder = () => {

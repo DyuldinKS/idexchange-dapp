@@ -5,7 +5,7 @@ import { UseFormReturn } from 'react-hook-form';
 
 import { Link, Stack, Typography, useTheme } from '@mui/material';
 
-import { IdenaSecurityDepositState } from '../hooks/useIdenaSecurityDeposit';
+import { SecurityDepositType } from '../types/contracts';
 import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
 import {
   buildTopUpIdenaSecurityDepositTx,
@@ -22,8 +22,8 @@ import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
 import { UiError, UiSubmitButton } from './ui';
 
 export const IdenaSecurityDeposit: FC<{
-  securityDepositRD: RemoteData<IdenaSecurityDepositState>;
-  securityDepositRDM: UseRemoteDataMethods<IdenaSecurityDepositState>;
+  securityDepositRD: RemoteData<SecurityDepositType>;
+  securityDepositRDM: UseRemoteDataMethods<SecurityDepositType>;
   // TODO: replace with onTopUpHandler
   form: UseFormReturn<AddressSchema>;
   isWithdrawDisabled?: boolean;
@@ -43,7 +43,7 @@ export const IdenaSecurityDeposit: FC<{
   );
 
   if (rData.isNotAsked(securityDepositRD))
-    return renderDepositInfo('Idena address is not provided.');
+    return renderDepositInfo('Cannot load security deposit.');
   if (rData.isLoading(securityDepositRD)) return renderDepositInfo('Loading...');
   if (rData.isFailure(securityDepositRD)) return renderDepositInfo(null);
 

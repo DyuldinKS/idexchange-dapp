@@ -1,16 +1,15 @@
 import debug from 'debug';
 import { isAddress } from 'ethers/lib/utils.js';
 import { useEffect } from 'react';
+import { SecurityDepositType } from '../types/contracts';
 
 import { readIdenaSecurityDeposit } from '../utils/idena';
 import { useRemoteData } from './useRemoteData';
 
-export type IdenaSecurityDepositState = Awaited<ReturnType<typeof readIdenaSecurityDeposit>>;
-
 const log = debug('hooks:useIdenaSecurityDeposit');
 
 export const useIdenaSecurityDeposit = (idenaAddress: string) => {
-  const rd = useRemoteData<IdenaSecurityDepositState>(null, log);
+  const rd = useRemoteData<SecurityDepositType>(null, log);
   const [, rdMethods] = rd;
 
   useEffect(() => {

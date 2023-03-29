@@ -7,9 +7,11 @@ import { gnosis } from '@wagmi/core/chains';
 import debug from 'debug';
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
-import { useRemoteData } from '../hooks/useRemoteData';
-import { SecurityDepositInfoType } from '../hooks/useSecurityDepositInfo';
+import { useContractsAttributes } from '../hooks/useContractsAttributes';
+import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
+import { SecurityDepositType } from '../types/contracts';
 import { rData, RemoteData } from '../utils/remoteData';
+import { readXdaiSecurityDeposit } from '../utils/xdai';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
 import { UiError, UiSubmitButton } from './ui';
 
@@ -22,20 +24,15 @@ const contractInfo = {
 };
 
 export const SecurityDeposit: FC<{
-  state: RemoteData<SecurityDepositInfoType>;
-  reloadSecurityDeposit: () => Promise<SecurityDepositInfoType | null>;
+  address: string | null;
+  securityDepositRD: RemoteData<SecurityDepositType>;
+  securityDepositRDM: UseRemoteDataMethods<SecurityDepositType>;
+  // reloadSecurityDeposit: () => Promise<SecurityDepositType | null>;
   isWithdrawDisabled?: boolean;
-}> = ({ state: securityDepositRD, reloadSecurityDeposit, isWithdrawDisabled }) => {
+}> = ({ address, securityDepositRD, securityDepositRDM, isWithdrawDisabled }) => {
+  const { data: contractsAttrs } = useContractsAttributes();
   const [depositChangeRD, depositChangeRDM] = useRemoteData(null);
   const error = securityDepositRD.error || depositChangeRD.error;
-
-  if (rData.isNotAsked(securityDepositRD) || rData.isLoading(securityDepositRD))
-    return <UiSubmitButton disabled>Loading...</UiSubmitButton>;
-
-  if (!rData.isSuccess(securityDepositRD))
-    return <UiSubmitButton disabled>Error occurred</UiSubmitButton>;
-
-  const { isInUse } = securityDepositRD.data;
 
   const renderDepositInfo = (children: ReactNode) => (
     <SecurityDepositInfoBlock
@@ -47,9 +44,19 @@ export const SecurityDeposit: FC<{
     </SecurityDepositInfoBlock>
   );
 
-  if (isInUse) return renderDepositInfo(null);
+  if (rData.isNotAsked(securityDepositRD))
+    return renderDepositInfo('Cannot load security deposit.');
+  if (rData.isLoading(securityDepositRD)) return renderDepositInfo('Loading...');
+  if (rData.isFailure(securityDepositRD)) return renderDepositInfo(null);
+
+  const deposit = securityDepositRD.data;
+  if (deposit.isValid) return renderDepositInfo(null);
+  // handled by SecurityDepositInfoBlock
+  if (deposit.isInUse) return renderDepositInfo(null);
 
   const replenishDeposit = () => {
+    if (!address || !contractsAttrs) return;
+
     const processTx = async () => {
       const txConfig = await prepareWriteContract({
         ...contractInfo,
@@ -63,11 +70,10 @@ export const SecurityDeposit: FC<{
       return waitForTransaction({ hash: tx.hash });
     };
 
-    depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
+    depositChangeRDM
+      .track(processTx())
+      .then(() => securityDepositRDM.track(readXdaiSecurityDeposit(address, contractsAttrs.xdai)));
   };
-
-  if (rData.isLoading(depositChangeRD))
-    return renderDepositInfo(<UiSubmitButton disabled>Updating xDAI deposit...</UiSubmitButton>);
 
   if (!securityDepositRD.data?.isValid)
     return (

@@ -13,11 +13,7 @@ import { calcCnfOrderMatchDeadline } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { isChainSupported } from '../utils/web3Modal';
-import {
-  createXdaiConfirmedOrder,
-  readXdaiConfirmedOrder,
-  XdaiConfirmedOrder,
-} from '../utils/xdai';
+import { createXdaiCnfOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import { UiBlock, UiBlockTitle, UiError, UiSubmitButton } from './ui';
 
 const log = debug('XdaiOrderConfirmation');
@@ -55,18 +51,13 @@ export const XdaiOrderConfirmation: FC<{
     log('confirmOrder', { order, matchDeadline });
 
     const processTx = async () => {
-      const tx = await createXdaiConfirmedOrder(
-        secretHash,
-        order.amountXdai,
-        address,
-        matchDeadline,
-      );
+      const tx = await createXdaiCnfOrder(secretHash, order.amountXdai, address, matchDeadline);
       const res = await waitForTransaction({ hash: tx.hash });
       log('successfully confirmed');
       return res;
     };
 
-    return cnfOrderRDM.track(processTx().then(() => readXdaiConfirmedOrder(secretHash)));
+    return cnfOrderRDM.track(processTx().then(() => readXdaiCnfOrder(secretHash)));
   };
 
   if (rData.isLoading(cnfOrderRD)) {

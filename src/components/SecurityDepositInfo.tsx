@@ -1,15 +1,15 @@
 import { formatUnits } from 'ethers/lib/utils.js';
 
-import { Box, Stack, Tooltip, Typography, TypographyProps, useTheme } from '@mui/material';
-import { Chain, gnosis } from '@wagmi/core/chains';
+import { Stack, Typography } from '@mui/material';
+import { Chain } from '@wagmi/core/chains';
 
-import { SecurityDepositInfoType } from '../hooks/useSecurityDepositInfo';
-import React, { FC, ReactNode } from 'react';
-import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiInputTooltipBtn } from './ui';
+import React from 'react';
+import { SecurityDepositType } from '../types/contracts';
 import { FCC } from '../types/FCC';
+import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow } from './ui';
 
 export const SecurityDepositInfoBlock: FCC<{
-  securityDeposit: Pick<SecurityDepositInfoType, 'amount' | 'isInUse'> | null;
+  securityDeposit: Pick<SecurityDepositType, 'amount' | 'isInUse'> | null;
   nativeCurrency: Chain['nativeCurrency'];
 }> = ({ securityDeposit, nativeCurrency, children }) => {
   return (
