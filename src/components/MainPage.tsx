@@ -48,6 +48,12 @@ export const MainPage = () => {
           </UiSubmitButton>
         </Stack>
         <Stack mt={2} spacing={1}>
+          <Typography>Show available orders</Typography>
+          <UiSubmitButton size="large" LinkComponent={Link} {...{ to: '/list' }}>
+            Show orders
+          </UiSubmitButton>
+        </Stack>
+        <Stack mt={2} spacing={1}>
           <Typography>Or find existing order by id</Typography>
           <Box>
             <Grid container spacing={1}>

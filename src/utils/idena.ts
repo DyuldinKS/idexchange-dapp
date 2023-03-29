@@ -33,7 +33,7 @@ const contractAddress = CONTRACTS.idena.sellIdna;
 
 export const isNilData = (err: any) => /data is nil/.test(err?.message || String(err));
 
-const handleNilData =
+export const handleNilData =
   (prefix = '') =>
   (err: any) => {
     if (isNilData(err)) return null;
