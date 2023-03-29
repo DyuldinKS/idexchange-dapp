@@ -39,7 +39,7 @@ export const XdaiSecurityDeposit: FC<{
       nativeCurrency={gnosis.nativeCurrency}
     >
       {children}
-      {error && <UiError err={error} />}
+      {error && <UiError mt={1} err={error} />}
     </SecurityDepositInfoBlock>
   );
 

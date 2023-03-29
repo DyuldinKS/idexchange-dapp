@@ -25,6 +25,8 @@ import { OrderOwnerView } from './OrderOwnerView';
 import { UiError, UiPage } from './ui';
 
 const log = debug('OrderPage');
+const logOrderRD = (...args: any[]) => log('orderRD', ...args);
+const logCnfOrderRD = (...args: any[]) => log('cnfOrderRD', ...args);
 
 export type SecretSchema = z.infer<typeof secretSchema>;
 
@@ -38,8 +40,8 @@ export const OrderPage: FC = () => {
   const { hash } = useParams() as { hash: string };
   const [searchParams, setSearchParams] = useSearchParams();
   const [{ chainId, address }] = useWeb3Store();
-  const [orderRD, orderRDM] = useRemoteData<IdenaOrderState | null>(null);
-  const [cnfOrderRD, cnfOrderRDM] = useRemoteData<XdaiConfirmedOrder | null>(null);
+  const [orderRD, orderRDM] = useRemoteData<IdenaOrderState | null>(null, logOrderRD);
+  const [cnfOrderRD, cnfOrderRDM] = useRemoteData<XdaiConfirmedOrder | null>(null, logCnfOrderRD);
   const contractsAttrsRD = useContractsAttributes();
   const contractsAttrs = contractsAttrsRD.data;
 

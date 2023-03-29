@@ -38,7 +38,7 @@ export const XdaiOrderConfirmation: FC<{
             {children}
           </Stack>
         )}
-        {error && <UiError err={error} />}
+        {error && <UiError mt={1} err={error} />}
       </UiBlock>
     );
   };
@@ -61,15 +61,15 @@ export const XdaiOrderConfirmation: FC<{
   };
 
   if (rData.isLoading(cnfOrderRD)) {
-    return renderOrderBlock(<UiSubmitButton disabled={true}>Loading...</UiSubmitButton>);
+    return renderOrderBlock('Loading...');
   }
 
   return renderOrderBlock(
     <Stack alignItems="stretch">
       <Typography color={getColor.textGrey(theme)}>
-        Confirm your order to be able to receive xDai:
+        Confirm your order to be able to receive xDAI:
       </Typography>
-      <UiSubmitButton sx={{ mt: 1 }} onClick={confirmOrder} disabled={rData.isLoading(cnfOrderRD)}>
+      <UiSubmitButton sx={{ mt: 2 }} onClick={confirmOrder} disabled={rData.isLoading(cnfOrderRD)}>
         Confirm order
       </UiSubmitButton>
     </Stack>,

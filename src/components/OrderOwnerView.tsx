@@ -39,14 +39,15 @@ export const OrderOwnerView: FC<{
   const [securityDepositRD, securityDepositRDM] = useXdaiSecurityDeposit();
   const order = orderRD.data;
   // if the order is still without confirmation
-  const isConfirmedOrderNotFound = rData.isSuccess(cnfOrderRD) && !cnfOrderRD.data;
+  const isCnfOrderNotFound =
+    !rData.isSuccess(cnfOrderRD) || (rData.isSuccess(cnfOrderRD) && !cnfOrderRD.data);
   const canConfirmOrder =
     order &&
     // TODO: take into account minOrderTTL <= (idena.expireAt - gnosis.deadline),
     // because there's no need to create confirmation for order that could'n be matched.
     // Should be replaced with: (order.expireAt - gnosis.minOrderTTL > Date.now())
     order.expireAt > Date.now() &&
-    isConfirmedOrderNotFound;
+    isCnfOrderNotFound;
   const [cancelOrderTxRD, cancelOrderTxRDM] = useRemoteData<Transaction>(null);
   const [burnConfirmedOrderRD, burnConfirmedOrderRDM] = useRemoteData(null);
   const contractsAttrsRD = useContractsAttributes();

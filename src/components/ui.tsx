@@ -42,16 +42,18 @@ export const UiPage = styled(Container)({
   alignItems: 'stretch',
 });
 
-export const UiError: FC<TypographyProps & { err?: { message?: string }; msg?: ReactNode }> = ({
+export const UiError: FC<TypographyProps & { err?: any; msg?: ReactNode }> = ({
   msg,
   err,
   ...typProps
-}) =>
-  err?.message || msg ? (
+}) => {
+  const errText = err?.data?.message || err?.message || msg;
+  return errText ? (
     <Typography color="error" {...typProps}>
-      {(typeof err === 'object' && err.message) || msg}
+      {errText}
     </Typography>
   ) : null;
+};
 
 export const UiInputTooltipBtn = styled(Stack)(({ theme }) => ({
   backgroundColor: theme.palette.grey[200],
