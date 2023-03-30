@@ -25,7 +25,7 @@ export const UiSubmitButton: FC<ButtonProps> = (props) => (
 export const UiLogo = () => (
   <RouterLink to="/">
     <Typography
-      sx={{ textDecoration: 'none', fontSize: { sm: '2.4rem', xs: '1.8rem' } }}
+      sx={{ textDecoration: 'none', fontSize: { sm: '2rem', xs: '1.8rem' } }}
       variant="h2"
       color="#aaa"
       fontWeight={200}
