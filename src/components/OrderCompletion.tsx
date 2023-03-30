@@ -5,25 +5,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, TextField } from '@mui/material';
 import { waitForTransaction } from '@wagmi/core';
 
-import { canCompleteCnfOrder } from '../utils/orderControls';
+import { IdenaOrderState } from '../utils/idena';
+import { canCompleteOrder } from '../utils/orderControls';
 import { completeXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
+import { SecretSchema, secretSchema } from './CnfOrderCompletion';
 import { UiSubmitButton } from './ui';
-import { z } from 'zod';
-import { isHexString } from 'ethers/lib/utils.js';
-import { APP_CONFIG } from '../app.config';
 
-export type SecretSchema = z.infer<typeof secretSchema>;
-
-export const secretSchema = z.object({
-  secret: z.string().refine((val) => isHexString(val, APP_CONFIG.idena.secretBytesLength), {
-    message: "The order's secret expected to be a 40 bytes hex string.",
-  }),
-});
-
-const CnfOrderCompletion: FC<{ cnfOrder: XdaiConfirmedOrder; onComplete: () => void }> = ({
-  cnfOrder,
-  onComplete,
-}) => {
+export const OrderCompletion: FC<{
+  order: IdenaOrderState;
+  cnfOrder: XdaiConfirmedOrder | null;
+  idenaAddress: string;
+  onComplete: () => void;
+}> = ({ order, cnfOrder, idenaAddress, onComplete }) => {
   const form = useForm<SecretSchema>({
     resolver: zodResolver(secretSchema),
     defaultValues: { secret: '' },
@@ -46,7 +39,7 @@ const CnfOrderCompletion: FC<{ cnfOrder: XdaiConfirmedOrder; onComplete: () => v
         size="small"
       />
       <UiSubmitButton
-        disabled={!canCompleteCnfOrder(cnfOrder)}
+        disabled={!canCompleteOrder(order, cnfOrder, idenaAddress)}
         onClick={() => {
           handleSubmit(({ secret }) => {
             completeXdaiCnfOrder(secret)
@@ -55,9 +48,8 @@ const CnfOrderCompletion: FC<{ cnfOrder: XdaiConfirmedOrder; onComplete: () => v
           });
         }}
       >
-        Take xDAI and complete order
+        Take iDNA and complete order
       </UiSubmitButton>
     </Stack>
   );
 };
-export default CnfOrderCompletion;

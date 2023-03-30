@@ -111,3 +111,17 @@ export const canCompleteCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
   cnfOrder.matcher &&
   cnfOrder.executionDeadline &&
   Date.now() < cnfOrder.executionDeadline;
+
+export const canCompleteOrder = (
+  order: IdenaOrderState | null,
+  cnfOrder: XdaiConfirmedOrder | null,
+  idenaAddress: string,
+) => {
+  // confirmation order should be already completed
+  return (
+    !cnfOrder &&
+    order &&
+    Date.now() < order.expireAt &&
+    isAddrEqual(idenaAddress, order.payoutAddress)
+  );
+};

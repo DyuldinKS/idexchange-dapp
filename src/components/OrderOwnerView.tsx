@@ -22,7 +22,7 @@ import { canCancelCnfOrder, isCnfOrderValid } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
-import { CnfOrderCompletion } from './CnfOrderCompletion';
+import CnfOrderCompletion from './CnfOrderCompletion';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
@@ -122,7 +122,7 @@ export const OrderOwnerView: FC<{
 
     const cnfOrder = cnfOrderRD.data;
     if (!cnfOrder)
-      return 'The order confirmation has already been completed, cancelled, or never existed.';
+      return 'The confirmation order has already been completed, cancelled, or never existed.';
     if (isAddrEqual(web3Store.address || '', cnfOrder.owner))
       return (
         <UiError

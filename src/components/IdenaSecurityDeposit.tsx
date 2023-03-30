@@ -3,10 +3,10 @@ import { Transaction } from 'idena-sdk-js';
 import { FC, ReactNode } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
-import { Box, Link, Stack, Tooltip, Typography, useTheme } from '@mui/material';
+import { Link, Stack, Typography, useTheme } from '@mui/material';
 
-import { SecurityDepositType } from '../types/contracts';
 import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
+import { SecurityDepositType } from '../types/contracts';
 import {
   buildTopUpIdenaSecurityDepositTx,
   getIdenaLinkToSignTx,
@@ -19,7 +19,7 @@ import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { AddressSchema } from './OrderBuyerView';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
-import { UiBlockTitle, UiError, UiInputTooltipBtn, UiSpan, UiSubmitButton } from './ui';
+import { UiBlockTitle, UiError, UiSubmitButton } from './ui';
 
 export const IdenaSecurityDeposit: FC<{
   securityDepositRD: RemoteData<SecurityDepositType>;
@@ -41,7 +41,11 @@ export const IdenaSecurityDeposit: FC<{
           iDNA security deposit
         </UiBlockTitle>
       }
-      description="In order to guarantee the reliability of the exchange, it is essential to make a deposit of iDNA. After the exchange is completed, the iDNA can be withdrawn from the protocol back to your wallet."
+      description={
+        securityDepositRD.data?.amount.eq(0)
+          ? 'In order to guarantee the reliability of the exchange, it is essential to make a deposit of iDNA. After the exchange is completed, the iDNA can be withdrawn from the protocol back to your wallet.'
+          : undefined
+      }
     >
       {children}
       {error && <UiError err={error} />}
@@ -63,8 +67,8 @@ export const IdenaSecurityDeposit: FC<{
   ): Promise<Transaction | null> => {
     return new Promise((resolve) => {
       form
-        .handleSubmit(({ address }) => {
-          const txPromise = buildTopUpIdenaSecurityDepositTx(address);
+        .handleSubmit(({ idenaAddress }) => {
+          const txPromise = buildTopUpIdenaSecurityDepositTx(idenaAddress);
           topUpDepositTxRDM.track(txPromise);
           resolve(txPromise);
         })(evt)
@@ -106,7 +110,7 @@ export const IdenaSecurityDeposit: FC<{
           <UiSubmitButton
             sx={{ mt: 2 }}
             onClick={() => {
-              securityDepositRDM.track(readIdenaSecurityDeposit(form.getValues('address')));
+              securityDepositRDM.track(readIdenaSecurityDeposit(form.getValues('idenaAddress')));
             }}
           >
             Check deposit

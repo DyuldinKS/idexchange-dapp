@@ -29,12 +29,13 @@ import { Transaction } from 'idena-sdk-js';
 import { getColor } from '../utils/theme';
 import { waitForTransaction } from '@wagmi/core';
 import { isAddrEqual } from '../utils/address';
+import { OrderCompletion } from './OrderCompletion';
 
 export type AddressSchema = z.infer<typeof addressSchema>;
 
 const addressSchema = z.object({
-  address: z.string().refine((val) => isAddress(val), {
-    message: 'Invalid Idena address.',
+  idenaAddress: z.string().refine((val) => isAddress(val), {
+    message: 'Invalid Idena idenaAddress.',
   }),
 });
 
@@ -55,7 +56,7 @@ export const OrderBuyerView: FC<{
 
   const form = useForm<AddressSchema>({
     resolver: zodResolver(addressSchema),
-    defaultValues: { address: '' },
+    defaultValues: { idenaAddress: '' },
     mode: 'onChange',
   });
   const {
@@ -65,8 +66,8 @@ export const OrderBuyerView: FC<{
     watch,
   } = form;
 
-  const address = watch('address');
-  const [securityDepositRD, securityDepositRDM] = useIdenaSecurityDeposit(address);
+  const idenaAddress = watch('idenaAddress');
+  const [securityDepositRD, securityDepositRDM] = useIdenaSecurityDeposit(idenaAddress);
 
   const theme = useTheme();
 
@@ -75,15 +76,15 @@ export const OrderBuyerView: FC<{
       return 'Loading...';
     if (rData.isFailure(orderRD)) return <UiError err={orderRD.error} />;
 
-    if (!order) return 'Order not found.';
+    if (!order) return 'The order has already been completed, cancelled, or never existed.';
 
     const buildMatchOrderTx = async (
       evt: React.BaseSyntheticEvent,
     ): Promise<Transaction | null> => {
       return new Promise((resolve) => {
         form
-          .handleSubmit(({ address }) => {
-            const txPromise = buildMatchIdenaOrderTx(address, secretHash);
+          .handleSubmit(({ idenaAddress }) => {
+            const txPromise = buildMatchIdenaOrderTx(idenaAddress, secretHash);
             matchOrderTxRDM.track(txPromise);
             resolve(txPromise);
           })(evt)
@@ -137,7 +138,16 @@ export const OrderBuyerView: FC<{
       );
     }
 
-    return null;
+    return (
+      <OrderCompletion
+        order={order}
+        cnfOrder={cnfOrder}
+        idenaAddress={idenaAddress}
+        onComplete={() => {
+          orderRDM.track(readIdenaOrderState(secretHash));
+        }}
+      />
+    );
   };
 
   const renderCnfOrderControls = () => {
@@ -147,7 +157,8 @@ export const OrderBuyerView: FC<{
     const error = cnfOrderRD.error || matchCnfOrderTxRD.error;
     if (error) return <UiError err={error} />;
 
-    if (!cnfOrder) return 'Order confirmation not found.';
+    if (!cnfOrder)
+      return 'The order confirmation has already been completed, cancelled, or never existed.';
     if (!isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai))
       return <UiError>Invalid confirmation, it is impossible to buy iDNA.</UiError>;
 
@@ -195,10 +206,10 @@ export const OrderBuyerView: FC<{
     <Stack alignItems="stretch" mt={4}>
       <Stack spacing={2}>
         <TextField
-          {...register('address')}
-          error={Boolean(errors.address)}
-          helperText={errors.address?.message}
-          placeholder="Your Idena address"
+          {...register('idenaAddress')}
+          error={Boolean(errors.idenaAddress)}
+          helperText={errors.idenaAddress?.message}
+          placeholder="Your Idena idenaAddress"
           fullWidth
           size="small"
         />
