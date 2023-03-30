@@ -11,7 +11,7 @@ import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { SecurityDepositType } from '../types/contracts';
 import { rData, RemoteData } from '../utils/remoteData';
-import { readXdaiSecurityDeposit } from '../utils/xdai';
+import { readXdaiSecurityDeposit, submitXdaiSecutityDeposit } from '../utils/xdai';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
 import { UiError, UiSubmitButton } from './ui';
 
@@ -57,15 +57,7 @@ export const XdaiSecurityDeposit: FC<{
     if (!address || !contractsAttrs) return;
 
     const processTx = async () => {
-      const txConfig = await prepareWriteContract({
-        ...contractInfo,
-        functionName: 'submitSecurityDeposit',
-        overrides: {
-          value: securityDepositRD.data.requiredAmount,
-        },
-      });
-      log('replenishDeposit txConfig', txConfig);
-      const tx = await writeContract(txConfig);
+      const tx = await submitXdaiSecutityDeposit(securityDepositRD.data.requiredAmount);
       return waitForTransaction({ hash: tx.hash });
     };
 

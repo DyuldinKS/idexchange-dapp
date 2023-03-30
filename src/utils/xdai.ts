@@ -1,3 +1,8 @@
+import debug from 'debug';
+import { BigNumber } from 'ethers';
+import { hexToUint8Array } from 'idena-sdk-js';
+import { zipObj } from 'ramda';
+
 import {
   Address,
   prepareWriteContract as prepareWriteContractOriginal,
@@ -5,11 +10,7 @@ import {
   writeContract,
 } from '@wagmi/core';
 import { gnosis } from '@wagmi/core/chains';
-import debug from 'debug';
-import { BigNumber } from 'ethers';
-import { parseUnits } from 'ethers/lib/utils.js';
-import { hexToUint8Array } from 'idena-sdk-js';
-import { zipObj } from 'ramda';
+
 import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
 import { SecurityDepositType } from '../types/contracts';
@@ -119,17 +120,16 @@ const prepareWriteContract: typeof prepareWriteContractOriginal = (txConfig) => 
 
 export const createXdaiCnfOrder = async (
   secretHash: string,
-  amountXdai: string,
+  amountXdai: BigNumber,
   receiverAddress: string,
   deadlineMs: number,
 ) => {
   const args = [
     hexToUint8Array(secretHash),
-    parseUnits(amountXdai, gnosis.nativeCurrency.decimals),
+    amountXdai,
     receiverAddress,
     Math.floor(deadlineMs / 1000),
   ];
-  log('createXdaiCnfOrder args:', args);
   return prepareWriteContract({
     ...CONTRACT_INFO,
     functionName: 'confirmOrder',
@@ -146,9 +146,8 @@ export const burnXdaiOrder = async (secretHash: string) => {
   }).then(writeContract);
 };
 
-export const matchXdaiCnfOrder = (secretHash: string, amount: BigNumber) => {
+export const matchXdaiCnfOrder = async (secretHash: string, amount: BigNumber) => {
   const args = [hexToUint8Array(secretHash)];
-  log('matchCnfOrder args:', args);
   return prepareWriteContract({
     ...CONTRACT_INFO,
     functionName: 'matchOrder',
@@ -159,13 +158,21 @@ export const matchXdaiCnfOrder = (secretHash: string, amount: BigNumber) => {
   }).then(writeContract);
 };
 
-export const completeXdaiCnfOrder = (secret: string) => {
+export const completeXdaiCnfOrder = async (secret: string) => {
   const args = [hexToUint8Array(secret)];
-  // TODO: remove and decorate prepareWriteContract with logging
-  log('completeXdaiCnfOrder args:', args);
   return prepareWriteContract({
     ...CONTRACT_INFO,
     functionName: 'completeOrder',
     args,
+  }).then(writeContract);
+};
+
+export const submitXdaiSecutityDeposit = async (amount: BigNumber) => {
+  return prepareWriteContract({
+    ...CONTRACT_INFO,
+    functionName: 'submitSecurityDeposit',
+    overrides: {
+      value: amount,
+    },
   }).then(writeContract);
 };

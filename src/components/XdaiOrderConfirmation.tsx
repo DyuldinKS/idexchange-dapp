@@ -1,9 +1,11 @@
 import debug from 'debug';
+import { parseUnits } from 'ethers/lib/utils.js';
 import { FC, ReactNode } from 'react';
 
 import { Typography, useTheme } from '@mui/material';
 import { Stack } from '@mui/system';
 import { waitForTransaction } from '@wagmi/core';
+import { gnosis } from '@wagmi/core/chains';
 
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { UseRemoteDataMethods } from '../hooks/useRemoteData';
@@ -51,7 +53,12 @@ export const XdaiOrderConfirmation: FC<{
     log('confirmOrder', { order, matchDeadline });
 
     const processTx = async () => {
-      const tx = await createXdaiCnfOrder(secretHash, order.amountXdai, address, matchDeadline);
+      const tx = await createXdaiCnfOrder(
+        secretHash,
+        parseUnits(order.amountXdai, gnosis.nativeCurrency.decimals),
+        address,
+        matchDeadline,
+      );
       const res = await waitForTransaction({ hash: tx.hash });
       log('successfully confirmed');
       return res;
