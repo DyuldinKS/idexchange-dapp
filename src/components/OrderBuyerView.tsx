@@ -78,7 +78,6 @@ export const OrderBuyerView: FC<{
     mode: 'onChange',
   });
   const {
-    handleSubmit,
     register,
     formState: { errors },
     watch,
@@ -131,6 +130,8 @@ export const OrderBuyerView: FC<{
 
     if (!order) return 'The order has already been completed, cancelled, or never existed.';
 
+    // TODO: compare idenaAddress with order.owner
+
     const buildMatchOrderTx = async (
       evt: React.BaseSyntheticEvent,
     ): Promise<Transaction | null> => {
@@ -159,7 +160,8 @@ export const OrderBuyerView: FC<{
             disabled={
               !securityDepositRD.data?.isValid ||
               !canMatchOrder(order, cnfOrder, contractsAttrs.idena) ||
-              !isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai)
+              !isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai) ||
+              isAddrEqual(order.owner, idenaAddress)
             }
             onClick={buildMatchOrderTxAndSign}
           >
@@ -190,6 +192,8 @@ export const OrderBuyerView: FC<{
         </>
       );
     }
+
+    // TODO: compare idenaAddress with order.matcher
 
     return (
       <OrderCompletion

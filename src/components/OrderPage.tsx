@@ -1,20 +1,17 @@
 import debug from 'debug';
 import { isHexString } from 'ethers/lib/utils.js';
 import { FC, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Button, Grid, Stack, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Button, Grid, Stack, Typography, useTheme } from '@mui/material';
 
 import { APP_CONFIG } from '../app.config';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData } from '../hooks/useRemoteData';
 import { useRevision } from '../hooks/useRevision';
-import { useWeb3Store } from '../providers/store/StoreProvider';
 import { shortenHash } from '../utils/address';
-import { getSecretHash, IdenaOrderState, readIdenaOrderState } from '../utils/idena';
+import { IdenaOrderState, readIdenaOrderState } from '../utils/idena';
 import { isCnfOrderValid } from '../utils/orderControls';
 import { rData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
@@ -40,26 +37,12 @@ const secretSchema = z.object({
 export const OrderPage: FC = () => {
   const { hash } = useParams() as { hash: string };
   const [searchParams, setSearchParams] = useSearchParams();
-  const [{ chainId, address }] = useWeb3Store();
   const [orderRD, orderRDM] = useRemoteData<IdenaOrderState | null>(null, logOrderRD);
   const [cnfOrderRD, cnfOrderRDM] = useRemoteData<XdaiConfirmedOrder | null>(null, logCnfOrderRD);
   const contractsAttrsRD = useContractsAttributes();
   const contractsAttrs = contractsAttrsRD.data;
 
   const theme = useTheme();
-
-  // owner part
-  const form = useForm<SecretSchema>({
-    resolver: zodResolver(secretSchema),
-    defaultValues: { secret: '' },
-    mode: 'onChange',
-  });
-  const {
-    handleSubmit,
-    register,
-    formState: { errors },
-    setError,
-  } = form;
 
   const viewAs = searchParams.get('viewAs');
   const [, rerender] = useRevision();
@@ -140,39 +123,22 @@ export const OrderPage: FC = () => {
               <Stack mt={2} spacing={2}>
                 <Box>
                   <Grid container spacing={1}>
-                    <Grid item xs={12} sm={7}>
-                      <TextField
-                        {...register('secret')}
-                        error={Boolean(errors.secret)}
-                        helperText={errors.secret?.message}
-                        placeholder="Secret code"
-                        fullWidth
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={5}>
+                    <Grid item xs={6}>
                       <Button
                         fullWidth
                         size="large"
-                        sx={{ height: '40px' }}
                         variant="outlined"
-                        onClick={handleSubmit(({ secret }) => {
-                          if (getSecretHash(secret) === hash) {
-                            setSearchParams(new URLSearchParams({ viewAs: 'owner' }));
-                          } else {
-                            setError('secret', {
-                              message: 'This is not a secret code of this order.',
-                            });
-                          }
-                        })}
+                        onClick={() => {
+                          setSearchParams(new URLSearchParams({ viewAs: 'owner' }));
+                        }}
                       >
                         View as order owner
                       </Button>
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={6}>
                       <Button
                         size="large"
-                        variant="outlined"
+                        variant="contained"
                         fullWidth
                         onClick={() => {
                           setSearchParams(new URLSearchParams({ viewAs: 'buyer' }));
