@@ -28,6 +28,7 @@ import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { Transaction } from 'idena-sdk-js';
 import { getColor } from '../utils/theme';
 import { waitForTransaction } from '@wagmi/core';
+import { isAddrEqual } from '../utils/address';
 
 export type AddressSchema = z.infer<typeof addressSchema>;
 
@@ -150,7 +151,7 @@ export const OrderBuyerView: FC<{
     if (!isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai))
       return <UiError>Invalid confirmation, it is impossible to buy iDNA.</UiError>;
 
-    if (cnfOrder.matcher && web3Store.address !== cnfOrder.matcher)
+    if (cnfOrder.matcher && isAddrEqual(web3Store.address || '', cnfOrder.matcher))
       return (
         <UiError
           msg={

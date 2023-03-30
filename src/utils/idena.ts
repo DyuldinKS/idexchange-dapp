@@ -14,6 +14,7 @@ import debug from 'debug';
 import { idenaProvider } from '../providers/idenaProvider';
 import { o } from 'ramda';
 import { BigNumberish } from 'ethers';
+import { Address } from '@wagmi/core';
 
 export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof readIdenaOrderState>>>;
 export type IdenaContractStaticInfo = Awaited<ReturnType<typeof readIdenaContractInfo>>;
@@ -115,7 +116,7 @@ export const buildCreateIdenaOrderTx = async (
   from: string,
   idnaAmount: string,
   xDaiAmount: string,
-  payoutAddress: string,
+  payoutAddress: Address,
   secretHashHex: string,
   ttlMs: number,
 ) => {

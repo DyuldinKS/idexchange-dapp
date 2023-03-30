@@ -6,7 +6,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Button, Grid, Stack, TextField, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Button, Grid, Stack, TextField, Typography, useTheme } from '@mui/material';
 
 import { APP_CONFIG } from '../app.config';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
@@ -17,13 +17,13 @@ import { shortenHash } from '../utils/address';
 import { getSecretHash, IdenaOrderState, readIdenaOrderState } from '../utils/idena';
 import { isCnfOrderValid } from '../utils/orderControls';
 import { rData } from '../utils/remoteData';
+import { getColor } from '../utils/theme';
 import { readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderBuyerView } from './OrderBuyerView';
 import { OrderOwnerView } from './OrderOwnerView';
 import { UiError, UiPage } from './ui';
-import { getColor } from '../utils/theme';
 
 const log = debug('OrderPage');
 const logOrderRD = (...args: any[]) => log('orderRD', ...args);

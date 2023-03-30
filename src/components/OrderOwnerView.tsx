@@ -9,6 +9,7 @@ import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
 import { useXdaiSecurityDeposit } from '../hooks/useXdaiSecurityDeposit';
 import { useWeb3Store } from '../providers/store/StoreProvider';
+import { isAddrEqual } from '../utils/address';
 import { mapRejected } from '../utils/async';
 import {
   buildBurnIdenaOrderTx,
@@ -17,16 +18,17 @@ import {
   openIdenaAppToSignTx,
   readIdenaOrderState,
 } from '../utils/idena';
-import { isCnfOrderValid, canCancelCnfOrder } from '../utils/orderControls';
+import { canCancelCnfOrder, isCnfOrderValid } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
+import { CnfOrderCompletion } from './CnfOrderCompletion';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
-import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
+import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
 
 export const OrderOwnerView: FC<{
   secretHash: string;
@@ -112,13 +114,16 @@ export const OrderOwnerView: FC<{
     );
   };
 
+  const reloadCnfOrder = () => cnfOrderRDM.track(readXdaiCnfOrder(secretHash));
+
   const renderConfirmedOrder = () => {
     if (rData.isNotAsked(cnfOrderRD) || rData.isLoading(cnfOrderRD)) return 'Loading...';
     if (rData.isFailure(cnfOrderRD)) return <UiError err={cnfOrderRD.error} />;
 
     const cnfOrder = cnfOrderRD.data;
-    if (!cnfOrder) return 'Order confirmation not found.';
-    if (web3Store.address !== cnfOrder.owner)
+    if (!cnfOrder)
+      return 'The order confirmation has already been completed, cancelled, or never existed.';
+    if (isAddrEqual(web3Store.address || '', cnfOrder.owner))
       return (
         <UiError
           msg={
@@ -134,19 +139,20 @@ export const OrderOwnerView: FC<{
       await burnConfirmedOrderRDM.track(
         burnXdaiOrder(secretHash).then((tx) => waitForTransaction({ hash: tx.hash })),
       );
-      await cnfOrderRDM.track(readXdaiCnfOrder(secretHash));
+      await reloadCnfOrder();
     };
 
     return (
-      <>
+      <Stack spacing={2}>
         <UiSubmitButton
           disabled={rData.isLoading(burnConfirmedOrderRD) || !canCancelCnfOrder(cnfOrder)}
           onClick={burnConfirmedOrder}
         >
           Cancel order
         </UiSubmitButton>
-        <UiError mt={1} err={burnConfirmedOrderRD.error} />
-      </>
+        <CnfOrderCompletion cnfOrder={cnfOrder} onComplete={reloadCnfOrder} />
+        <UiError err={burnConfirmedOrderRD.error} />
+      </Stack>
     );
   };
 

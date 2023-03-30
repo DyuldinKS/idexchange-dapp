@@ -105,3 +105,9 @@ export const canMatchCnfOrder = (
       Date.now() < cnfOrder.matchDeadline,
   );
 };
+
+export const canCompleteCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
+  cnfOrder &&
+  cnfOrder.matcher &&
+  cnfOrder.executionDeadline &&
+  Date.now() < cnfOrder.executionDeadline;
