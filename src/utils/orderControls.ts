@@ -32,6 +32,8 @@ export const canCreateCnfOrder = (
   return Boolean(
     !cnfOrder &&
       order &&
+      // if order has matcher then it is already has the confirmation (or had)
+      !order.matcher &&
       order.expireAt &&
       Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt,
   );

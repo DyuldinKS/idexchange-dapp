@@ -183,7 +183,7 @@ export const OrderBuyerView: FC<{
     if (rData.isNotAsked(cnfOrderRD) || rData.isLoading(cnfOrderRD) || !contractsAttrs)
       return 'Loading...';
 
-    const error = cnfOrderRD.error || matchCnfOrderTxRD.error;
+    const error = cnfOrderRD.error;
     if (error) return <UiError err={error} />;
 
     if (!cnfOrder)
@@ -191,7 +191,7 @@ export const OrderBuyerView: FC<{
     if (!isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai))
       return <UiError>Invalid confirmation, it is impossible to buy iDNA.</UiError>;
 
-    if (cnfOrder.matcher && isAddrEqual(web3Store.address || '', cnfOrder.matcher))
+    if (cnfOrder.matcher && !isAddrEqual(web3Store.address || '', cnfOrder.matcher))
       return (
         <UiError
           msg={
@@ -205,7 +205,7 @@ export const OrderBuyerView: FC<{
 
     if (cnfOrder.matcher) {
       return (
-        <UiSpan color={theme.palette.secondary.main}>{`${formatEther(
+        <UiSpan color={theme.palette.secondary.dark}>{`${formatEther(
           cnfOrder.amountXDAI,
         )} xDAI deposited successfully! Wait for the owner to complete the order, after which you can proceed to withdraw iDNA.`}</UiSpan>
       );
@@ -221,13 +221,16 @@ export const OrderBuyerView: FC<{
         .then(() => cnfOrderRDM.track(readXdaiCnfOrder(secretHash)));
 
     return (
-      <UiSubmitButton
-        disabled={
-          !isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai) ||
-          !canMatchCnfOrder(order, cnfOrder, contractsAttrs.idena)
-        }
-        onClick={matchCnfOrderAndReload}
-      >{`Send ${formatEther(cnfOrder.amountXDAI)} xDAI`}</UiSubmitButton>
+      <>
+        <UiSubmitButton
+          disabled={
+            !isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai) ||
+            !canMatchCnfOrder(order, cnfOrder, contractsAttrs.idena)
+          }
+          onClick={matchCnfOrderAndReload}
+        >{`Send ${formatEther(cnfOrder.amountXDAI)} xDAI`}</UiSubmitButton>
+        <UiError mt={1} err={matchCnfOrderTxRD.error} />
+      </>
     );
   };
 

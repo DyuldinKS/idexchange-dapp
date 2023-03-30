@@ -162,7 +162,7 @@ export const OrderOwnerView: FC<{
           {renderOrder()}
         </IdenaOrderInfoBlock>
         {renderWalletRoutineIfNeeded(web3Store) ||
-          (canConfirmOrder ? (
+          (canConfirmOrder && rData.isSuccess(cnfOrderRD) ? (
             <Stack alignItems="stretch" mt={2} spacing={2}>
               <XdaiSecurityDeposit
                 address={web3Store.address}

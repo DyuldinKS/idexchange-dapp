@@ -49,9 +49,9 @@ export const UiError: FC<TypographyProps & { err?: any; msg?: ReactNode }> = ({
 }) => {
   const errText = err?.data?.message || err?.message || msg;
   return errText ? (
-    <Typography color="error" {...typProps}>
+    <UiSpan color="error" {...typProps}>
       {errText}
-    </Typography>
+    </UiSpan>
   ) : null;
 };
 

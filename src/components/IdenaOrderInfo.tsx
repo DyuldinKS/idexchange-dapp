@@ -1,12 +1,12 @@
 import dayjs from 'dayjs';
 import React, { FC } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { Stack } from '@mui/system';
 
 import { FCC } from '../types/FCC';
 import { IdenaOrderState } from '../utils/idena';
-import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow } from './ui';
+import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiSpan } from './ui';
 
 export const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm Z';
 
@@ -19,6 +19,8 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
   matcher,
   matchExpireAt,
 }) => {
+  const { palette } = useTheme();
+  const isMatchExpired = Boolean(matchExpireAt && matchExpireAt <= Date.now());
   return (
     <UiInfoBlockContent>
       <UiInfoBlockRow label="Id:" value={id} />
@@ -51,10 +53,29 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
         }
       />
       <UiInfoBlockRow label="Expire time:" value={dayjs(expireAt).format(DATE_TIME_FORMAT)} />
-      <UiInfoBlockRow label="iDNA taker:" value={matcher || 'None'} />
       <UiInfoBlockRow
-        label="iDNA claim deadline for buyer:"
-        value={matchExpireAt ? dayjs(matchExpireAt).format(DATE_TIME_FORMAT) : 'None'}
+        label="iDNA taker:"
+        value={
+          matcher ? (
+            <UiSpan color={isMatchExpired ? palette.error.main : palette.secondary.dark}>
+              {matcher}
+            </UiSpan>
+          ) : (
+            'None'
+          )
+        }
+      />
+      <UiInfoBlockRow
+        label="iDNA claim deadline:"
+        value={
+          matchExpireAt ? (
+            <UiSpan color={isMatchExpired ? palette.error.main : palette.secondary.dark}>
+              {dayjs(matchExpireAt).format(DATE_TIME_FORMAT)}
+            </UiSpan>
+          ) : (
+            'None'
+          )
+        }
       />
     </UiInfoBlockContent>
   );

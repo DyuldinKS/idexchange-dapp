@@ -33,7 +33,7 @@ export async function getIdenaOrderListState() {
           dnaState && xdaiState ? { hash, dnaState, xdaiState } : null,
         )
         .catch((err) => {
-          console.log('getIdenaOrderListState caught err for hash', hash, err);
+          console.warn('getIdenaOrderListState caught err for hash', hash, err);
           return null;
         }),
     ),

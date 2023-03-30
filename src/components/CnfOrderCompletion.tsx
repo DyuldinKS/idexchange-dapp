@@ -7,16 +7,18 @@ import { waitForTransaction } from '@wagmi/core';
 
 import { canCompleteCnfOrder } from '../utils/orderControls';
 import { completeXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
-import { UiSubmitButton } from './ui';
+import { UiError, UiSubmitButton } from './ui';
 import { z } from 'zod';
 import { isHexString } from 'ethers/lib/utils.js';
 import { APP_CONFIG } from '../app.config';
+import { useRemoteData } from '../hooks/useRemoteData';
+import { rData } from '../utils/remoteData';
 
 export type SecretSchema = z.infer<typeof secretSchema>;
 
 export const secretSchema = z.object({
   secret: z.string().refine((val) => isHexString(val, APP_CONFIG.idena.secretBytesLength), {
-    message: "The order's secret expected to be a 40 bytes hex string.",
+    message: `The order's secret expected to be a ${APP_CONFIG.idena.secretBytesLength} bytes hex string.`,
   }),
 });
 
@@ -34,6 +36,8 @@ const CnfOrderCompletion: FC<{ cnfOrder: XdaiConfirmedOrder; onComplete: () => v
     register,
     formState: { errors },
   } = form;
+  // TODO: fix component unmount and state reload
+  const [txRD, txRDM] = useRemoteData(null);
 
   return (
     <Stack spacing={1}>
@@ -46,17 +50,20 @@ const CnfOrderCompletion: FC<{ cnfOrder: XdaiConfirmedOrder; onComplete: () => v
         size="small"
       />
       <UiSubmitButton
-        disabled={!canCompleteCnfOrder(cnfOrder)}
-        onClick={() => {
+        disabled={!canCompleteCnfOrder(cnfOrder) || rData.isLoading(txRD)}
+        onClick={(evt) => {
           handleSubmit(({ secret }) => {
-            completeXdaiCnfOrder(secret)
-              .then((tx) => waitForTransaction({ hash: tx.hash }))
-              .finally(onComplete);
-          });
+            txRDM.track(
+              completeXdaiCnfOrder(secret).then((tx) =>
+                waitForTransaction({ hash: tx.hash }).then(onComplete),
+              ),
+            );
+          })(evt).catch((err) => console.warn('completeXdaiCnfOrder', err));
         }}
       >
-        Withdraw xDAI and complete order
+        {rData.isLoading(txRD) ? 'Sending transaction...' : 'Withdraw xDAI and complete order'}
       </UiSubmitButton>
+      <UiError err={txRD.error} />
     </Stack>
   );
 };
