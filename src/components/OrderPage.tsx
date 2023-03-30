@@ -75,7 +75,9 @@ export const OrderPage: FC = () => {
   const renderOrder = () => {
     if (rData.isNotAsked(orderRD) || rData.isLoading(orderRD)) return 'Loading...';
     if (rData.isFailure(orderRD)) return <UiError err={orderRD.error} />;
-    return orderRD.data ? null : 'Order not found.';
+    return orderRD.data
+      ? null
+      : 'The order has already been completed, cancelled, or never existed.';
   };
 
   const renderConfirmedOrder = () => {
@@ -88,7 +90,9 @@ export const OrderPage: FC = () => {
       return 'Loading...';
     if (error) return <UiError err={error} />;
 
-    return cnfOrderRD.data ? null : 'Order confirmation not found.';
+    return cnfOrderRD.data
+      ? null
+      : 'The confirmation order has already been completed, cancelled, or never existed.';
   };
 
   return (

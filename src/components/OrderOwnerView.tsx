@@ -62,7 +62,7 @@ export const OrderOwnerView: FC<{
     if (rData.isFailure(orderRD)) return <UiError err={orderRD.error} />;
 
     const order = orderRD.data;
-    if (!order) return 'Order not found.';
+    if (!order) return 'The order has already been completed, cancelled, or never existed.';
 
     const buildCancelTxAndSign = async () => {
       cancelOrderTxRDM.track(
