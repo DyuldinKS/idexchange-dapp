@@ -1,5 +1,6 @@
 import {
   Box,
+  BoxProps,
   Breakpoint,
   Button,
   ButtonProps,
@@ -13,18 +14,18 @@ import {
   useTheme,
 } from '@mui/material';
 import { StackProps } from '@mui/system';
-import { FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
+import { ComponentProps, FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FCC } from '../types/FCC';
 
-export const UiSubmitButton = (props: ButtonProps) => (
+export const UiSubmitButton: FC<ButtonProps> = (props) => (
   <Button size="medium" variant="contained" {...props} />
 );
 
 export const UiLogo = () => (
   <RouterLink to="/">
     <Typography
-      sx={{ textDecoration: 'none', fontSize: { sm: '2.4rem', xs: '1.8rem' } }}
+      sx={{ textDecoration: 'none', fontSize: { sm: '2rem', xs: '1.8rem' } }}
       variant="h2"
       color="#aaa"
       fontWeight={200}
@@ -41,16 +42,18 @@ export const UiPage = styled(Container)({
   alignItems: 'stretch',
 });
 
-export const UiError: FC<TypographyProps & { err?: { message?: string }; msg?: ReactNode }> = ({
+export const UiError: FC<TypographyProps & { err?: any; msg?: ReactNode }> = ({
   msg,
   err,
   ...typProps
-}) =>
-  err?.message || msg ? (
-    <Typography color="error" {...typProps}>
-      {(typeof err === 'object' && err.message) || msg}
-    </Typography>
+}) => {
+  const errText = err?.data?.message || err?.message || msg;
+  return errText ? (
+    <UiSpan color="error" {...typProps}>
+      {errText}
+    </UiSpan>
   ) : null;
+};
 
 export const UiInputTooltipBtn = styled(Stack)(({ theme }) => ({
   backgroundColor: theme.palette.grey[200],
@@ -119,9 +122,22 @@ export const UiBlock = styled(Stack)(({ theme }) => ({
   alignItems: 'stretch',
 }));
 
-export const UiBlockTitle: FCC<{ tooltip?: ReactNode }> = ({ tooltip, children }) => {
+export type UiBlockTitleProps = ComponentProps<typeof UiBlockTitle>;
+
+export const UiBlockTitle: FCC<{ tooltip?: ReactNode } & TypographyProps> = ({
+  tooltip,
+  children,
+  ...typProps
+}) => {
   return (
-    <Typography variant="h3" fontSize="1.25rem" display="flex" alignItems="center" fontWeight={500}>
+    <Typography
+      variant="h3"
+      fontSize="1.25rem"
+      display="flex"
+      alignItems="center"
+      fontWeight={500}
+      {...typProps}
+    >
       {children}
       {tooltip && (
         <Tooltip title={tooltip}>
@@ -132,19 +148,19 @@ export const UiBlockTitle: FCC<{ tooltip?: ReactNode }> = ({ tooltip, children }
   );
 };
 
-export const UiInfoBlockRow: FC<{ label: ReactNode; value?: ReactNode } & TypographyProps> = ({
+export const UiInfoBlockRow: FC<{ label: ReactNode; value?: ReactNode } & BoxProps> = ({
   label,
   value,
   ...props
 }) => {
   const theme = useTheme();
   return (
-    <Typography {...props} sx={{ wordWrap: 'break-word' }}>
+    <Box component="span" {...props} sx={{ wordWrap: 'break-word' }}>
       <Box component="span" mr={1} color={theme.palette.grey[700]}>
         {label}
       </Box>
       {value && <Box component="span">{value}</Box>}
-    </Typography>
+    </Box>
   );
 };
 

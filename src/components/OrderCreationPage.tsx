@@ -7,12 +7,9 @@ import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, TextField, Typography } from '@mui/material';
-import { gnosis } from '@wagmi/core/chains';
 
-import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
-import { CONTRACTS } from '../constants/contracts';
 import { useRemoteData } from '../hooks/useRemoteData';
-import { useGetSecurityDepositInfo } from '../hooks/useSecurityDepositInfo';
+import { useXdaiSecurityDeposit } from '../hooks/useXdaiSecurityDeposit';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import {
   generateRandomSecret,
@@ -23,9 +20,9 @@ import {
 import { rData } from '../utils/remoteData';
 import { IdenaOrderCreation } from './IdenaOrderCreation';
 import { SecretCodeBlock } from './SecretCode';
-import { SecurityDeposit } from './SecurityDeposit';
 import { UiPage } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
+import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
@@ -56,10 +53,7 @@ export const OrderCreationPage: FC = () => {
   });
   const { register, formState } = form;
   const { errors, isSubmitting } = formState;
-  const {
-    rData: [securityDepositRD],
-    reloadSecurityDeposit,
-  } = useGetSecurityDepositInfo(CONTRACTS[gnosis.id].receiveXdai, abiToReceiveXdai);
+  const [securityDepositRD, securityDepositRDM] = useXdaiSecurityDeposit();
   const [idenaOrderRD, idenaOrderRDM] = useRemoteData<IdenaOrderState | null>(null);
   const navigate = useNavigate();
   const [secret] = useState(generateRandomSecret);
@@ -120,10 +114,10 @@ export const OrderCreationPage: FC = () => {
             {renderWalletRoutineIfNeeded(web3Store) || (
               <>
                 {
-                  <SecurityDeposit
-                    state={securityDepositRD}
-                    reloadSecurityDeposit={reloadSecurityDeposit}
-                    isWithdrawDisabled={isOrderSuccessfullyCreated}
+                  <XdaiSecurityDeposit
+                    address={web3Store.address}
+                    securityDepositRD={securityDepositRD}
+                    securityDepositRDM={securityDepositRDM}
                   />
                 }
                 {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (

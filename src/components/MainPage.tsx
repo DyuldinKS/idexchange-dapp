@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { APP_CONFIG } from '../app.config';
 import { getSecretHash } from '../utils/idena';
+import { OrderList } from './OrderList';
 import { UiPage, UiSubmitButton } from './ui';
 
 export type OrderSearchSchema = z.infer<typeof orderSearchSchema>;
@@ -48,12 +49,6 @@ export const MainPage = () => {
           </UiSubmitButton>
         </Stack>
         <Stack mt={2} spacing={1}>
-          <Typography>Show available orders</Typography>
-          <UiSubmitButton size="large" LinkComponent={Link} {...{ to: '/list' }}>
-            Show orders
-          </UiSubmitButton>
-        </Stack>
-        <Stack mt={2} spacing={1}>
           <Typography>Or find existing order by id</Typography>
           <Box>
             <Grid container spacing={1}>
@@ -79,6 +74,9 @@ export const MainPage = () => {
               </Grid>
             </Grid>
           </Box>
+        </Stack>
+        <Stack mt={4}>
+          <OrderList />
         </Stack>
       </Stack>
     </UiPage>

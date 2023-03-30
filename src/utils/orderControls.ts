@@ -1,9 +1,7 @@
-import { gnosis } from '@wagmi/core/chains';
-import { formatUnits } from 'ethers/lib/utils.js';
-import { IDENA_BLOCK_DURATION_MS, IdenaOrderState, IdenaContractStaticInfo } from './idena';
+import { Address } from '@wagmi/core';
+import { isAddrEqual } from './address';
+import { IdenaContractStaticInfo, IdenaOrderState, parseIdna } from './idena';
 import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
-import dnaToBigInt from './dnaToBigInt';
-import bignumberishToBigInt from './bignumberishToBigInt';
 
 /**
  * A gap between idena.expireAt and xdai.matchDeadline + xdai.ownerClaimPeriod,
@@ -13,22 +11,35 @@ import bignumberishToBigInt from './bignumberishToBigInt';
 const GAP_AFTER_MAX_EXECUTION_DEADLINE = 10 * 60 * 1000; // 10 min
 const ORDER_MIN_TTL = 4 * 60 * 60 * 1000; // 4h
 const NETWORK_ERR = 30 * 1000;
-export const minTimeForIdena = 3_600 * 1000; // 1h
-const minTimeForGnosis = minTimeForIdena / 2; // 30min
 
 export const getOrderMinTTL = (
-  contract: IdenaContractStaticInfo,
+  saleContract: IdenaContractStaticInfo,
   cnfContract: XdaiContractAttributes,
 ) =>
   Math.max(
     ORDER_MIN_TTL,
     Math.max(
-      contract.minOrderTTL,
+      saleContract.minOrderTTL,
       cnfContract.minOrderTTL + cnfContract.ownerClaimPeriod + GAP_AFTER_MAX_EXECUTION_DEADLINE,
     ),
   );
 
-export const isOrderConfirmationValid = (
+export const canCreateCnfOrder = (
+  order: IdenaOrderState | null,
+  cnfOrder: XdaiConfirmedOrder | null,
+  saleContract: IdenaContractStaticInfo,
+): order is IdenaOrderState => {
+  return Boolean(
+    !cnfOrder &&
+      order &&
+      // if order has matcher then it is already has the confirmation (or had)
+      !order.matcher &&
+      order.expireAt &&
+      Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt,
+  );
+};
+
+export const isCnfOrderValid = (
   order: IdenaOrderState | null,
   cnfOrder: XdaiConfirmedOrder | null,
   cnfContract: XdaiContractAttributes,
@@ -37,39 +48,80 @@ export const isOrderConfirmationValid = (
   if (!order || !cnfOrder) return null;
 
   return (
-    formatUnits(cnfOrder.amountXDAI, gnosis.nativeCurrency.decimals) === order.amountXdai &&
-    Math.abs(calcCnfOrderMatchDeadline(order, cnfContract) - cnfOrder.matchDeadline) <
-      IDENA_BLOCK_DURATION_MS + NETWORK_ERR
+    cnfOrder.amountXDAI.eq(parseIdna(order.amountXdai)) &&
+    isAddrEqual(order.payoutAddress, cnfOrder.payoutAddress) &&
+    cnfOrder.matchDeadline + cnfContract.ownerClaimPeriod < order.expireAt
   );
-};
-
-
-
-export const isOrderMatchable = (
-  order: IdenaOrderState,
-  cnfOrder: XdaiConfirmedOrder,
-  cnfContract: XdaiContractAttributes,
-  currentTimestamp: number,
-) => {
-  if (!order || !cnfOrder) return null;
-
-  if (bignumberishToBigInt(cnfOrder.amountXDAI) !== dnaToBigInt(order.amountXdai)) return false
-  if (BigInt(cnfOrder.payoutAddress) !== BigInt(order.payoutAddress)) return false
-
-  if (currentTimestamp + NETWORK_ERR + minTimeForIdena > order.expireAt) return false
-  if (currentTimestamp + NETWORK_ERR > cnfOrder.matchDeadline) return false
-
-  if (order.matcher === null) return true
-
-  return currentTimestamp > (order.matchExpireAt as number)
 };
 
 export const calcCnfOrderMatchDeadline = (
   order: IdenaOrderState,
   cnfContract: XdaiContractAttributes,
-) =>
-  (console.log('calcCnfOrderMatchDeadline', {
-    expireAt: order.expireAt,
-    ownerClaimPeriod: cnfContract.ownerClaimPeriod,
-    GAP_AFTER_MAX_EXECUTION_DEADLINE,
-  }) as any) || order.expireAt - cnfContract.ownerClaimPeriod - GAP_AFTER_MAX_EXECUTION_DEADLINE;
+) => order.expireAt - cnfContract.ownerClaimPeriod - GAP_AFTER_MAX_EXECUTION_DEADLINE;
+
+export const canCancelCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
+  Boolean(
+    cnfOrder &&
+      (cnfOrder.executionDeadline
+        ? cnfOrder.executionDeadline < Date.now()
+        : cnfOrder.matchDeadline < Date.now()),
+  );
+
+// export const canBuyOrder = (order: IdenaOrderState | null, cnfOrder: XdaiConfirmedOrder | null, cnfContract: XdaiContractAttributes | null) => {
+//   return Boolean(order && cnfOrder && cnfContract ? order)
+// }
+
+export const canMatchOrder = (
+  order: IdenaOrderState | null,
+  cnfOrder: XdaiConfirmedOrder | null,
+  saleContract: IdenaContractStaticInfo,
+) => {
+  if (!order || !cnfOrder) return false;
+
+  const isOrderNotMatched = !order.matcher && !order.matchExpireAt;
+  const isPrevMatchExpired =
+    order.matcher && order.matchExpireAt && order.matchExpireAt < Date.now();
+  const hasTimeForFulfilling = Date.now() + saleContract.fulfilPeriod < order.expireAt;
+  const isOrderPartValid = (isOrderNotMatched || isPrevMatchExpired) && hasTimeForFulfilling;
+
+  const isCnfOrderPartValid = !cnfOrder.matcher && Date.now() < cnfOrder.matchDeadline;
+
+  return Boolean(isOrderPartValid && isCnfOrderPartValid);
+};
+
+export const canMatchCnfOrder = (
+  order: IdenaOrderState | null,
+  cnfOrder: XdaiConfirmedOrder | null,
+  saleContract: IdenaContractStaticInfo,
+) => {
+  return Boolean(
+    order &&
+      // if prev match expired
+      order.matchExpireAt &&
+      Date.now() < order.matchExpireAt &&
+      Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt &&
+      cnfOrder &&
+      !cnfOrder.matcher &&
+      Date.now() < cnfOrder.matchDeadline,
+  );
+};
+
+export const canCompleteCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
+  cnfOrder &&
+  cnfOrder.matcher &&
+  cnfOrder.executionDeadline &&
+  Date.now() < cnfOrder.executionDeadline;
+
+export const canCompleteOrder = (
+  order: IdenaOrderState | null,
+  cnfOrder: XdaiConfirmedOrder | null,
+  idenaAddress: string,
+) => {
+  // confirmation order should be already completed
+  return (
+    !cnfOrder &&
+    order &&
+    Date.now() < order.expireAt &&
+    isAddrEqual(idenaAddress, order.matcher || '')
+  );
+};

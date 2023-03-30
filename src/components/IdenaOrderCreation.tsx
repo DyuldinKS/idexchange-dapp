@@ -10,7 +10,7 @@ import { mapRejected } from '../utils/async';
 import {
   buildCreateIdenaOrderTx,
   getIdenaLinkToSignTx,
-  getIdenaOrderState,
+  readIdenaOrderState,
   IdenaOrderState,
   openIdenaAppToSignTx,
 } from '../utils/idena';
@@ -21,6 +21,7 @@ import { OrderCreationFormSchema } from './OrderCreationPage';
 import { UiError, UiSubmitButton } from './ui';
 import { getOrderMinTTL } from '../utils/orderControls';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
+import { useWeb3Store } from '../providers/store/StoreProvider';
 
 const log = debug('IdenaOrderCreation');
 
@@ -30,6 +31,7 @@ export const IdenaOrderCreation: FC<{
   form: UseFormReturn<OrderCreationFormSchema>;
   secretHash: string;
 }> = ({ idenaOrderRD, idenaOrderRDM, form: { handleSubmit }, secretHash }) => {
+  const [{ address }] = useWeb3Store();
   const [createOrderTxRD, createOrderTxRDM] = useRemoteData<Transaction>(null);
   const contractsAttrsRD = useContractsAttributes();
   const error = idenaOrderRD.error || createOrderTxRD.error || contractsAttrsRD.error;
@@ -41,7 +43,7 @@ export const IdenaOrderCreation: FC<{
 
   const reloadOrderState = async () => {
     idenaOrderRDM.track(
-      getIdenaOrderState(secretHash).catch(
+      readIdenaOrderState(secretHash).catch(
         mapRejected((err: any) => {
           console.error('Failed to load order state:', err);
           return err;
@@ -60,7 +62,8 @@ export const IdenaOrderCreation: FC<{
   const buildCreateOrderTx = (evt: React.BaseSyntheticEvent): Promise<Transaction | null> => {
     idenaOrderRDM.setNotAsked();
     return new Promise((resolve) => {
-      if (!contractsAttrsRD.data) return null;
+      if (!contractsAttrsRD.data || !address)
+        return createOrderTxRDM.setFailure('No contracts info or wallet address');
 
       handleSubmit((values) => {
         log('generate tx link to create order', values);
@@ -71,6 +74,7 @@ export const IdenaOrderCreation: FC<{
           idenaAddress,
           amountToSell,
           amountToReceive,
+          address,
           secretHash,
           orderMinTTL,
         );

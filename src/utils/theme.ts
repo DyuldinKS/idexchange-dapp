@@ -6,7 +6,7 @@ export const theme = createTheme({
       main: '#225569',
     },
     secondary: {
-      main: '#693622',
+      main: '#2cb3ae',
     },
     background: {
       default: '#f7f7f7',
@@ -53,4 +53,5 @@ export const theme = createTheme({
 
 export const getColor = {
   textGrey: (theme: Theme) => theme.palette.grey[700],
+  textLink: (theme: Theme) => theme.palette.secondary.dark,
 };

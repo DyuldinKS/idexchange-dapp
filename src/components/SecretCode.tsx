@@ -7,20 +7,13 @@ import { useRemoteData } from '../hooks/useRemoteData';
 import { tapRejected } from '../utils/async';
 import { downloadFile } from '../utils/misc';
 import { rData } from '../utils/remoteData';
-import {
-  UiBlock,
-  UiBlockTitle,
-  UiInfoBlockContent,
-  UiInfoBlockRow,
-  UiSpan,
-  UiSubmitButton,
-} from './ui';
+import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiSubmitButton } from './ui';
 
 export const SecretCodeBlock: FC<{
   secret: string;
   secretHash: string;
   isSaved: boolean;
-  setIsSaved: (isSaved: boolean) => void;
+  setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
 }> = ({ secret, secretHash, isSaved, setIsSaved }) => {
   const [copyingRD, copyingRDM] = useRemoteData<boolean>(null);
   const [saveBtnClicked, setSaveBtnClicked] = useState(false);
@@ -49,7 +42,7 @@ export const SecretCodeBlock: FC<{
       </UiBlockTitle>
       <UiInfoBlockContent>
         <UiInfoBlockRow label="Secret:" value={secret} />
-        <UiInfoBlockRow label={<span>Order id:</span>} value={secretHash} />
+        <UiInfoBlockRow label={<span>Order&nbsp;id:</span>} value={secretHash} />
       </UiInfoBlockContent>
       {!isSaved && (
         <Stack mt={2} direction="row" spacing={1}>
@@ -96,7 +89,7 @@ export const SecretCodeBlock: FC<{
           <Checkbox
             disabled={!isCopyBtnClicked && !saveBtnClicked}
             checked={isSaved}
-            onChange={() => setIsSaved(!isSaved)}
+            onChange={() => setIsSaved((prev) => !prev)}
           />
         }
         label="I confirm that I have saved the secret in a safe place."

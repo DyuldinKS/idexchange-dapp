@@ -1,34 +1,38 @@
 import { formatUnits } from 'ethers/lib/utils.js';
 
-import { Box, Stack, Tooltip, Typography, TypographyProps, useTheme } from '@mui/material';
-import { gnosis } from '@wagmi/core/chains';
+import { Stack, Typography } from '@mui/material';
+import { Chain } from '@wagmi/core/chains';
 
-import { SecurityDepositInfoType } from '../hooks/useSecurityDepositInfo';
-import React, { FC, ReactNode } from 'react';
-import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiInputTooltipBtn } from './ui';
+import React, { ReactNode } from 'react';
+import { SecurityDepositType } from '../types/contracts';
 import { FCC } from '../types/FCC';
-import { StackProps } from '@mui/system';
+import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiSpan } from './ui';
 
-export const SecurityDepositInfoBlock: FCC<Pick<SecurityDepositInfoType, 'amount' | 'isInUse'>> = ({
-  amount,
-  isInUse,
-  children,
-}) => {
+export const SecurityDepositInfoBlock: FCC<{
+  securityDeposit: Pick<SecurityDepositType, 'amount' | 'isInUse'> | null;
+  nativeCurrency: Chain['nativeCurrency'];
+  description?: ReactNode;
+  title?: ReactNode;
+}> = ({ securityDeposit, nativeCurrency, title, description, children }) => {
   return (
     <UiBlock alignItems="start">
-      <UiBlockTitle>Security deposit</UiBlockTitle>
-      <UiInfoBlockContent>
-        <UiInfoBlockRow
-          label="Current security deposit:"
-          value={`${formatUnits(amount, gnosis.nativeCurrency.decimals)} xDAI`}
-        />
-        {isInUse && (
-          <Typography color="error">
-            This deposit is already being used to confirm another order. You have to wait until your
-            previous order is complete/expired or use a different account to create a new order.
-          </Typography>
-        )}
-      </UiInfoBlockContent>
+      {title || <UiBlockTitle>Security deposit</UiBlockTitle>}
+      {securityDeposit && (
+        <UiInfoBlockContent>
+          {description && <UiInfoBlockRow label={description} />}
+          <UiInfoBlockRow
+            label="Deposited:"
+            value={
+              <UiSpan>
+                <UiSpan fontWeight={600}>
+                  {formatUnits(securityDeposit.amount, nativeCurrency.decimals)}
+                </UiSpan>{' '}
+                {nativeCurrency.symbol}
+              </UiSpan>
+            }
+          />
+        </UiInfoBlockContent>
+      )}
       {React.Children.toArray(children).filter(Boolean).length > 0 && (
         <Stack mt={2} alignItems="stretch">
           {children}
