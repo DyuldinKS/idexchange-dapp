@@ -28,7 +28,6 @@ import {
 } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
-import { ethereumClient, wagmiClient } from '../utils/web3Modal';
 import {
   getSecretFromLogs,
   matchXdaiCnfOrder,
@@ -43,6 +42,7 @@ import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import debug from 'debug';
 import { useSearchParams } from 'react-router-dom';
+import { BuyerInfoBlock } from './BuyerInfo';
 
 const log = debug('OrderBuyerView');
 const logSecret = (...args: any[]) => log('secret', ...args);
@@ -237,7 +237,7 @@ export const OrderBuyerView: FC<{
       return (
         <UiSpan color={theme.palette.secondary.dark}>{`${formatEther(
           cnfOrder.amountXDAI,
-        )} xDAI deposited successfully! Wait for the owner to complete the order, after which you can proceed to withdraw iDNA.`}</UiSpan>
+        )} xDAI deposited successfully! Wait for the owner to complete the order, after which you can proceed to claim iDNA.`}</UiSpan>
       );
     }
 
@@ -287,6 +287,7 @@ export const OrderBuyerView: FC<{
               !isAddrEqual(order.matcher || '', idenaAddress),
           )}
         />
+        <BuyerInfoBlock />
         <IdenaOrderInfoBlock title="Idena chain" order={orderRD.data} secretHash={secretHash}>
           {renderOrderControls()}
         </IdenaOrderInfoBlock>

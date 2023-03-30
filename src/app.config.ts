@@ -10,4 +10,5 @@ export const APP_CONFIG = {
     callbackUrl: window.location.origin,
     secretBytesLength: 40,
   },
+  telegramNotificationBotUrl: 'https://t.me/+0etEyXyNdfQzYzdi',
 } as const;

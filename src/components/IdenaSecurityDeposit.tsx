@@ -28,13 +28,7 @@ export const IdenaSecurityDeposit: FC<{
   form: UseFormReturn<AddressSchema>;
   isWithdrawDisabled?: boolean;
   showAlreadyUsedError?: boolean;
-}> = ({
-  securityDepositRD,
-  securityDepositRDM,
-  form,
-  isWithdrawDisabled,
-  showAlreadyUsedError,
-}) => {
+}> = ({ securityDepositRD, securityDepositRDM, form, showAlreadyUsedError }) => {
   const error = securityDepositRD.error;
   const [topUpDepositTxRD, topUpDepositTxRDM] = useRemoteData<Transaction>(null);
   const theme = useTheme();
@@ -44,7 +38,7 @@ export const IdenaSecurityDeposit: FC<{
       securityDeposit={securityDepositRD.data}
       nativeCurrency={IDENA_CHAIN.nativeCurrency}
       title={
-        <UiBlockTitle tooltip="The existence of a deposit incentivizes the buyer to fulfill their obligation in the transaction. For instance, if a buyer books an order on Idena network and subsequently fails to pay xDAI on Gnosis network, their deposit will be transferred to the owner of the order as compensation  for the time the order was frozen.">
+        <UiBlockTitle tooltip="The existence of a deposit incentivizes the buyer to fulfill their obligation in the transaction. For instance, if a buyer books an order on Idena network and subsequently fails to pay xDAI on Gnosis network, their deposit will be seized.">
           iDNA security deposit
         </UiBlockTitle>
       }

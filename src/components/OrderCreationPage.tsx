@@ -23,6 +23,7 @@ import { SecretCodeBlock } from './SecretCode';
 import { UiPage } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
+import { SellerInfoBlock } from './SellerInfo';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
 
@@ -102,6 +103,7 @@ export const OrderCreationPage: FC = () => {
           size="small"
         />
       </Stack>
+      <SellerInfoBlock />
       <SecretCodeBlock
         secret={secret}
         secretHash={secretHash}
