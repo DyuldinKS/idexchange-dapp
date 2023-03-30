@@ -181,9 +181,9 @@ export const openIdenaAppToSignTx = (tx: Transaction) => {
 
 export const readIdenaContractInfo = () => {
   // it is impossible to read idena contract attributes
-  const minOrderTTL = 3 * 60 * 60; // 3h
+  const minOrderTTL = 3 * 60 * 60 * 1000; // 3h
   const minOrderTTLInBlocks = minOrderTTL / IDENA_BLOCK_DURATION_MS;
-  const fulfilPeriod = 60 * 60;
+  const fulfilPeriod = 60 * 60 * 1000; // 1h
   const fulfilPeriodInBlocks = fulfilPeriod / IDENA_BLOCK_DURATION_MS;
 
   return {

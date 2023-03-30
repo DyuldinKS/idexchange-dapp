@@ -1,5 +1,5 @@
 import debug from 'debug';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { hexToUint8Array } from 'idena-sdk-js';
 import { zipObj } from 'ramda';
 
@@ -15,6 +15,7 @@ import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
 import { CONTRACTS } from '../constants/contracts';
 import { SecurityDepositType } from '../types/contracts';
 import { isAddrEqual, ZERO_ADDRESS } from './address';
+import { wagmiClient } from './web3Modal';
 
 const log = debug('utils:xdai');
 
@@ -39,6 +40,8 @@ export type XdaiConfirmedOrder = Omit<
   executionDeadline: number | null; // ms
 };
 
+const XDAI_BLOCK_DURATION_MS = 5000;
+const XDAI_BLOCK_DURATION_ERR = 0.2; // 20%
 const CONTRACT_INFO = {
   chainId: gnosis.id,
   address: CONTRACTS[gnosis.id].receiveXdai,
@@ -175,4 +178,32 @@ export const submitXdaiSecutityDeposit = async (amount: BigNumber) => {
       value: amount,
     },
   }).then(writeContract);
+};
+
+export const getSecretFromLogs = async (secretHash: string, timeWindowMs: number) => {
+  const contract = new ethers.Contract(CONTRACT_INFO.address, CONTRACT_INFO.abi);
+  const filter = contract.filters.OrderCompleted(secretHash, null);
+
+  const rpcProvider = wagmiClient.getProvider();
+  const lastBlock = await rpcProvider.getBlockNumber();
+  const fromBlock = Math.floor(
+    lastBlock - (timeWindowMs * (1 + XDAI_BLOCK_DURATION_ERR)) / XDAI_BLOCK_DURATION_MS,
+  );
+  contract.interface.events;
+
+  const rawLogs = await rpcProvider.getLogs({ ...filter, fromBlock });
+  const logs = rawLogs
+    .map((log) => {
+      try {
+        return contract.interface.decodeEventLog('OrderCompleted', log.data, log.topics);
+      } catch (err) {
+        console.error('getSecretFromLogs decodeEventLog', err);
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  log('getSecretFromLogs result', logs);
+
+  return logs[0]?.secret || null;
 };

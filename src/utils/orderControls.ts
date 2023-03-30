@@ -122,6 +122,6 @@ export const canCompleteOrder = (
     !cnfOrder &&
     order &&
     Date.now() < order.expireAt &&
-    isAddrEqual(idenaAddress, order.payoutAddress)
+    isAddrEqual(idenaAddress, order.matcher || '')
   );
 };

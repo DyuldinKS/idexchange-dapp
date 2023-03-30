@@ -1,35 +1,50 @@
-import { formatEther, formatUnits, isAddress } from 'ethers/lib/utils.js';
-import { FC } from 'react';
+import { formatEther, isAddress } from 'ethers/lib/utils.js';
+import { Transaction } from 'idena-sdk-js';
+import { FC, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Stack, TextField, Typography, useTheme } from '@mui/material';
+import { waitForTransaction } from '@wagmi/core';
 
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useIdenaSecurityDeposit } from '../hooks/useIdenaSecurityDeposit';
 import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
 import { useWeb3Store } from '../providers/store/StoreProvider';
+import { isAddrEqual } from '../utils/address';
 import {
   buildMatchIdenaOrderTx,
   getIdenaLinkToSignTx,
-  readIdenaOrderState,
   IdenaOrderState,
   openIdenaAppToSignTx,
+  readIdenaOrderState,
 } from '../utils/idena';
-import { canMatchCnfOrder, canMatchOrder, isCnfOrderValid } from '../utils/orderControls';
+import {
+  canCompleteOrder,
+  canMatchCnfOrder,
+  canMatchOrder,
+  isCnfOrderValid,
+} from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
-import { matchXdaiCnfOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
+import { getColor } from '../utils/theme';
+import { ethereumClient, wagmiClient } from '../utils/web3Modal';
+import {
+  getSecretFromLogs,
+  matchXdaiCnfOrder,
+  readXdaiCnfOrder,
+  XdaiConfirmedOrder,
+} from '../utils/xdai';
 import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { IdenaSecurityDeposit } from './IdenaSecurityDeposit';
+import { OrderCompletion } from './OrderCompletion';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
-import { Transaction } from 'idena-sdk-js';
-import { getColor } from '../utils/theme';
-import { waitForTransaction } from '@wagmi/core';
-import { isAddrEqual } from '../utils/address';
-import { OrderCompletion } from './OrderCompletion';
+import debug from 'debug';
+
+const log = debug('OrderBuyerView');
+const logSecret = (...args: any[]) => log('secret', ...args);
 
 export type AddressSchema = z.infer<typeof addressSchema>;
 
@@ -53,6 +68,7 @@ export const OrderBuyerView: FC<{
   const cnfOrder = cnfOrderRD.data;
   const [matchOrderTxRD, matchOrderTxRDM] = useRemoteData<Transaction>(null);
   const [matchCnfOrderTxRD, matchCnfOrderTxRDM] = useRemoteData(null);
+  const [secretFromLogsRD, secretFromLogsRDM] = useRemoteData<string | null>(null, logSecret);
 
   const form = useForm<AddressSchema>({
     resolver: zodResolver(addressSchema),
@@ -70,6 +86,17 @@ export const OrderBuyerView: FC<{
   const [securityDepositRD, securityDepositRDM] = useIdenaSecurityDeposit(idenaAddress);
 
   const theme = useTheme();
+
+  useEffect(() => {
+    if (!canCompleteOrder(order, cnfOrder, idenaAddress) || !contractsAttrs) return;
+
+    secretFromLogsRDM.track(
+      getSecretFromLogs(
+        secretHash,
+        contractsAttrs.idena.fulfilPeriod * 2, // expand the window to make sure the fulfilPeriod is covered
+      ),
+    );
+  }, [order, cnfOrder, secretHash, idenaAddress, contractsAttrs]);
 
   const renderOrderControls = () => {
     if (rData.isNotAsked(orderRD) || rData.isLoading(orderRD) || !contractsAttrs)
@@ -143,6 +170,8 @@ export const OrderBuyerView: FC<{
         order={order}
         cnfOrder={cnfOrder}
         idenaAddress={idenaAddress}
+        secret={secretFromLogsRD.data}
+        secretHash={secretHash}
         onComplete={() => {
           orderRDM.track(readIdenaOrderState(secretHash));
         }}
@@ -217,6 +246,13 @@ export const OrderBuyerView: FC<{
           securityDepositRD={securityDepositRD}
           securityDepositRDM={securityDepositRDM}
           form={form}
+          showAlreadyUsedError={Boolean(
+            rData.isSuccess(securityDepositRD) &&
+              securityDepositRD.data.isInUse &&
+              order &&
+              idenaAddress &&
+              !isAddrEqual(order.matcher || '', idenaAddress),
+          )}
         />
         <IdenaOrderInfoBlock title="Idena chain" order={orderRD.data} secretHash={secretHash}>
           {renderOrderControls()}

@@ -9,7 +9,7 @@ const projectId = APP_CONFIG.walletConnect.projectId;
 const chains = [gnosis];
 
 const { provider } = configureChains(chains, [w3mProvider({ projectId })]);
-const wagmiClient = createClient({
+export const wagmiClient = createClient({
   autoConnect: true,
   connectors: [...w3mConnectors({ chains, version: 1, projectId })],
   provider,
