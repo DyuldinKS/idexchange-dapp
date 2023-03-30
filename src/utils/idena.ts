@@ -115,6 +115,7 @@ export const buildCreateIdenaOrderTx = async (
   from: string,
   idnaAmount: string,
   xDaiAmount: string,
+  payoutAddress: string,
   secretHashHex: string,
   ttlMs: number,
 ) => {
@@ -128,7 +129,7 @@ export const buildCreateIdenaOrderTx = async (
   const args = [
     { format: CAF.Dna, value: xDaiAmount },
     { format: CAF.Uint64, value: String(deadline) },
-    { format: CAF.Hex, value: from },
+    { format: CAF.Hex, value: payoutAddress },
     { format: CAF.Hex, value: secretHashHex },
   ];
   log('buildCreateIdenaOrderTx lastBlock', lastBlock, 'args', args);
