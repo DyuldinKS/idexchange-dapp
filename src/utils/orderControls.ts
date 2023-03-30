@@ -26,16 +26,14 @@ export const getOrderMinTTL = (
 
 export const canCreateCnfOrder = (
   order: IdenaOrderState | null,
-  address: Address | null,
   cnfOrder: XdaiConfirmedOrder | null,
   saleContract: IdenaContractStaticInfo,
-) => {
+): order is IdenaOrderState => {
   return Boolean(
     !cnfOrder &&
       order &&
       order.expireAt &&
-      Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt &&
-      isAddrEqual(address || '', order.payoutAddress),
+      Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt,
   );
 };
 

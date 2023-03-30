@@ -52,7 +52,7 @@ export const XdaiSecurityDeposit: FC<{
 
   if (rData.isNotAsked(securityDepositRD))
     return renderDepositInfo('Cannot load security deposit.');
-  if (rData.isLoading(securityDepositRD)) return renderDepositInfo('Loading...');
+  if (rData.isLoading(securityDepositRD) || !contractsAttrs) return renderDepositInfo('Loading...');
   if (rData.isFailure(securityDepositRD)) return renderDepositInfo(null);
 
   const deposit = securityDepositRD.data;
@@ -77,42 +77,17 @@ export const XdaiSecurityDeposit: FC<{
     return (
       <>
         {renderDepositInfo(
-          <UiSubmitButton onClick={replenishDeposit}>
-            {`Replenish deposit for ${formatUnits(
-              securityDepositRD.data.requiredAmount,
-              gnosis.nativeCurrency.decimals,
-            )} xDAI`}
+          <UiSubmitButton disabled={rData.isLoading(securityDepositRD)} onClick={replenishDeposit}>
+            {!rData.isLoading(securityDepositRD)
+              ? `Deposit ${formatUnits(
+                  contractsAttrs.xdai.securityDepositAmount,
+                  gnosis.nativeCurrency.decimals,
+                )} xDAI`
+              : 'Updating security deposit...'}
           </UiSubmitButton>,
         )}
       </>
     );
 
   return renderDepositInfo(null);
-
-  // TODO: move this logic to the specific order page
-  const withdrawDeposit = () => {
-    const processTx = async () => {
-      const txConfig = await prepareWriteContract({
-        ...contractInfo,
-        functionName: 'withdrawSecurityDeposit',
-      });
-      log('withdrawDeposit txConfig', txConfig);
-      const tx = await writeContract(txConfig);
-      await waitForTransaction({ hash: tx.hash });
-      await reloadSecurityDeposit();
-    };
-
-    depositChangeRDM.track(processTx().then(reloadSecurityDeposit));
-  };
-
-  return renderDepositInfo(
-    <UiSubmitButton
-      disabled={Boolean(isInUse || isWithdrawDisabled)}
-      color="error"
-      variant="outlined"
-      onClick={withdrawDeposit}
-    >
-      Withdraw xDAI deposit
-    </UiSubmitButton>,
-  );
 };

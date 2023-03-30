@@ -46,7 +46,7 @@ export const XdaiOrderConfirmation: FC<{
     );
   };
 
-  if (rData.isLoading(cnfOrderRD) || !rData.isSuccess(contractsAttrsRD)) {
+  if (!rData.isSuccess(contractsAttrsRD)) {
     return renderOrderBlock('Loading...');
   }
 
@@ -71,14 +71,15 @@ export const XdaiOrderConfirmation: FC<{
     return cnfOrderRDM.track(processTx().then(() => readXdaiCnfOrder(secretHash)));
   };
 
-  const isWrongAddress = isAddrEqual(address || '', order.payoutAddress);
+  const isWrongAddress = !isAddrEqual(address || '', order.payoutAddress);
+  const canConfirm = canCreateCnfOrder(order, cnfOrderRD.data, contractsAttrsRD.data.idena);
 
   return renderOrderBlock(
     <Stack alignItems="stretch">
       <Typography color={getColor.textGrey(theme)}>
         Confirm your order to be able to receive xDAI:
       </Typography>
-      {isWrongAddress && (
+      {canConfirm && isWrongAddress && (
         <UiError
           mt={2}
           msg={
@@ -93,9 +94,9 @@ export const XdaiOrderConfirmation: FC<{
       <UiSubmitButton
         sx={{ mt: 2 }}
         onClick={confirmOrder}
-        disabled={canCreateCnfOrder(order, address, cnfOrderRD.data, contractsAttrsRD.data.idena)}
+        disabled={!canConfirm || rData.isLoading(cnfOrderRD)}
       >
-        Confirm order
+        {rData.isLoading(cnfOrderRD) ? 'Loading...' : 'Confirm order'}
       </UiSubmitButton>
     </Stack>,
   );

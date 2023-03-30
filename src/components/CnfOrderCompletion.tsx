@@ -36,7 +36,7 @@ const CnfOrderCompletion: FC<{ cnfOrder: XdaiConfirmedOrder; onComplete: () => v
   } = form;
 
   return (
-    <Stack>
+    <Stack spacing={1}>
       <TextField
         {...register('secret')}
         error={Boolean(errors.secret)}
@@ -55,7 +55,7 @@ const CnfOrderCompletion: FC<{ cnfOrder: XdaiConfirmedOrder; onComplete: () => v
           });
         }}
       >
-        Take xDAI and complete order
+        Withdraw xDAI and complete order
       </UiSubmitButton>
     </Stack>
   );

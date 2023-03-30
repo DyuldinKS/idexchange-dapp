@@ -207,3 +207,10 @@ export const getSecretFromLogs = async (secretHash: string, timeWindowMs: number
 
   return logs[0]?.secret || null;
 };
+
+export const withdrawXdaiSecurityDeposit = async () => {
+  return prepareWriteContract({
+    ...CONTRACT_INFO,
+    functionName: 'withdrawSecurityDeposit',
+  }).then(writeContract);
+};

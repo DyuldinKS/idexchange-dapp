@@ -103,10 +103,7 @@ export const IdenaSecurityDeposit: FC<{
           onClick={buildTopUpDepositTxAndSign}
           disabled={rData.isLoading(topUpDepositTxRD)}
         >
-          {`Replenish deposit for ${formatUnits(
-            securityDepositRD.data.requiredAmount,
-            IDENA_DECIMALS,
-          )} iDNA`}
+          {`Deposit ${formatUnits(securityDepositRD.data.requiredAmount, IDENA_DECIMALS)} iDNA`}
         </UiSubmitButton>
       )}
       {rData.isSuccess(topUpDepositTxRD) && (

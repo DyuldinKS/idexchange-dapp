@@ -133,7 +133,16 @@ export const buildCreateIdenaOrderTx = async (
     { format: CAF.Hex, value: payoutAddress },
     { format: CAF.Hex, value: secretHashHex },
   ];
-  log('buildCreateIdenaOrderTx lastBlock', lastBlock, 'args', args);
+  log('buildCreateIdenaOrderTx original args', {
+    from,
+    idnaAmount,
+    xDaiAmount,
+    payoutAddress,
+    secretHashHex,
+    ttlMs,
+  });
+  log('buildCreateIdenaOrderTx lastBlock', lastBlock.height, (lastBlock as any).timestamp);
+  log('buildCreateIdenaOrderTx args', args);
   createOrderCallPayload.setArgs(buildContractArgs(args));
 
   const txData = {

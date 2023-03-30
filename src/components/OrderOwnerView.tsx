@@ -18,7 +18,7 @@ import {
   openIdenaAppToSignTx,
   readIdenaOrderState,
 } from '../utils/idena';
-import { canCancelCnfOrder, isCnfOrderValid } from '../utils/orderControls';
+import { canCancelCnfOrder, canCreateCnfOrder, isCnfOrderValid } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
@@ -43,17 +43,13 @@ export const OrderOwnerView: FC<{
   // if the order is still without confirmation
   const isCnfOrderNotFound =
     !rData.isSuccess(cnfOrderRD) || (rData.isSuccess(cnfOrderRD) && !cnfOrderRD.data);
-  const canConfirmOrder =
-    order &&
-    // TODO: take into account minOrderTTL <= (idena.expireAt - gnosis.deadline),
-    // because there's no need to create confirmation for order that could'n be matched.
-    // Should be replaced with: (order.expireAt - gnosis.minOrderTTL > Date.now())
-    order.expireAt > Date.now() &&
-    isCnfOrderNotFound;
   const [cancelOrderTxRD, cancelOrderTxRDM] = useRemoteData<Transaction>(null);
   const [burnConfirmedOrderRD, burnConfirmedOrderRDM] = useRemoteData(null);
   const contractsAttrsRD = useContractsAttributes();
   const contractsAttrs = contractsAttrsRD.data;
+  const canConfirmOrder =
+    contractsAttrs && canCreateCnfOrder(order, cnfOrderRD.data, contractsAttrs?.idena);
+
   const theme = useTheme();
   // TODO: get owner from events in case of order already burned, but confirmed order is still exists.
 
@@ -123,7 +119,7 @@ export const OrderOwnerView: FC<{
     const cnfOrder = cnfOrderRD.data;
     if (!cnfOrder)
       return 'The confirmation order has already been completed, cancelled, or never existed.';
-    if (isAddrEqual(web3Store.address || '', cnfOrder.owner))
+    if (!isAddrEqual(web3Store.address || '', cnfOrder.owner))
       return (
         <UiError
           msg={
@@ -150,7 +146,7 @@ export const OrderOwnerView: FC<{
         >
           Cancel order
         </UiSubmitButton>
-        <CnfOrderCompletion cnfOrder={cnfOrder} onComplete={reloadCnfOrder} />
+        {cnfOrder.matcher && <CnfOrderCompletion cnfOrder={cnfOrder} onComplete={reloadCnfOrder} />}
         <UiError err={burnConfirmedOrderRD.error} />
       </Stack>
     );
