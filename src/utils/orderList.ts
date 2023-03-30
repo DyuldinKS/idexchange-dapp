@@ -1,7 +1,7 @@
 import { ContractArgumentFormat as CAF } from 'idena-sdk-js';
 import { readIdenaOrderState, handleNilData, IdenaOrderState } from './idena';
 import { CONTRACTS } from '../constants/contracts';
-import { readXdaiConfirmedOrder, XdaiConfirmedOrder } from './xdai';
+import { readXdaiCnfOrder, XdaiConfirmedOrder } from './xdai';
 import { idenaProvider } from '../providers/idenaProvider';
 
 export type IdenaOrderListState = NonNullable<Awaited<ReturnType<typeof getIdenaOrderListState>>>;
@@ -25,7 +25,7 @@ export async function getIdenaOrderListState() {
 
   const [dnaStates, xdaiStates] = await Promise.all([
     Promise.all(results.map(readIdenaOrderState)),
-    Promise.all(results.map(readXdaiConfirmedOrder)),
+    Promise.all(results.map(readXdaiCnfOrder)),
   ]);
 
   const orders: { dnaState: IdenaOrderState; xdaiState: XdaiConfirmedOrder; hash: string }[] = [];
