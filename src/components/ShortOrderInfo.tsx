@@ -38,8 +38,8 @@ export const ShortOrderInfo: FCC<
             <Box component="span">
               <Box fontWeight="600" component="span">
                 {dnaState.amountXdai}
-              </Box>
-              {' '}xDAI
+              </Box>{' '}
+              xDAI
             </Box>
           }
         />

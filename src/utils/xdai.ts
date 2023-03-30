@@ -63,7 +63,7 @@ export const readXdaiContractInfo = async () => {
       }),
     ),
   );
-  const res = zipObj(funcNames, rawRes) as Record<typeof funcNames[number], BigNumber>;
+  const res = zipObj(funcNames, rawRes) as Record<(typeof funcNames)[number], BigNumber>;
   return {
     ...res,
     minOrderTTL: res.minOrderTTL.toNumber() * 1000,

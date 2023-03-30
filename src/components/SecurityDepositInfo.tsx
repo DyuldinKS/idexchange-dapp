@@ -16,9 +16,11 @@ export const SecurityDepositInfoBlock: FCC<{
 }> = ({ securityDeposit, nativeCurrency, title, description, children }) => {
   return (
     <UiBlock alignItems="start">
-      {title || <UiBlockTitle tooltip="The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking XDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller' security deposit will be seized in the following manner: 50% to the mather to compensate seized security deposit on Idena network and 50% to the protocol fund."
-      >Security deposit
-      </UiBlockTitle>}
+      {title || (
+        <UiBlockTitle tooltip="The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking XDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller' security deposit will be seized in the following manner: 50% to the mather to compensate seized security deposit on Idena network and 50% to the protocol fund.">
+          Security deposit
+        </UiBlockTitle>
+      )}
       {securityDeposit && (
         <UiInfoBlockContent>
           {description && <UiInfoBlockRow label={description} />}

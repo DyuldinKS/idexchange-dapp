@@ -28,12 +28,7 @@ export const IdenaSecurityDeposit: FC<{
   form: UseFormReturn<AddressSchema>;
   isWithdrawDisabled?: boolean;
   showAlreadyUsedError?: boolean;
-}> = ({
-  securityDepositRD,
-  securityDepositRDM,
-  form,
-  showAlreadyUsedError,
-}) => {
+}> = ({ securityDepositRD, securityDepositRDM, form, showAlreadyUsedError }) => {
   const error = securityDepositRD.error;
   const [topUpDepositTxRD, topUpDepositTxRDM] = useRemoteData<Transaction>(null);
   const theme = useTheme();
