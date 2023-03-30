@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 
 import { Box, useTheme } from '@mui/material';
@@ -22,24 +21,30 @@ export const ShortOrderInfo: FCC<
         <UiBlockTitle color={getColor.textLink(theme)}>{`Order ${shortenHash(id)}`}</UiBlockTitle>
       </Link>
       <UiInfoBlockContent>
-        <UiInfoBlockRow label="Id:" value={id} />
         <UiInfoBlockRow
-          label="Exchange:"
+          label="Amount:"
           value={
             <Box component="span">
               <Box fontWeight="600" component="span">
                 {dnaState.amountDna}
               </Box>{' '}
-              iDNA for{' '}
-              <Box fontWeight="600" component="span">
-                {dnaState.amountXdai}
-              </Box>{' '}
-              xDAI{' '}
+              iDNA{' '}
             </Box>
           }
         />
         <UiInfoBlockRow
-          label="Rate:"
+          label="Cost:"
+          value={
+            <Box component="span">
+              <Box fontWeight="600" component="span">
+                {dnaState.amountXdai}
+              </Box>
+              {' '}xDAI
+            </Box>
+          }
+        />
+        <UiInfoBlockRow
+          label="Exchange rate:"
           value={
             <Box component="span">
               iDNA ={' '}
@@ -49,10 +54,6 @@ export const ShortOrderInfo: FCC<
               xDAI
             </Box>
           }
-        />
-        <UiInfoBlockRow
-          label="Expire time:"
-          value={dayjs(dnaState.expireAt).format(DATE_TIME_FORMAT)}
         />
       </UiInfoBlockContent>
     </UiBlock>
