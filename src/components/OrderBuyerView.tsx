@@ -42,6 +42,7 @@ import { OrderCompletion } from './OrderCompletion';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import debug from 'debug';
+import { useSearchParams } from 'react-router-dom';
 
 const log = debug('OrderBuyerView');
 const logSecret = (...args: any[]) => log('secret', ...args);
@@ -50,7 +51,7 @@ export type AddressSchema = z.infer<typeof addressSchema>;
 
 const addressSchema = z.object({
   idenaAddress: z.string().refine((val) => isAddress(val), {
-    message: 'Invalid Idena idenaAddress.',
+    message: 'Invalid identity address.',
   }),
 });
 
@@ -69,10 +70,11 @@ export const OrderBuyerView: FC<{
   const [matchOrderTxRD, matchOrderTxRDM] = useRemoteData<Transaction>(null);
   const [matchCnfOrderTxRD, matchCnfOrderTxRDM] = useRemoteData(null);
   const [secretFromLogsRD, secretFromLogsRDM] = useRemoteData<string | null>(null, logSecret);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const form = useForm<AddressSchema>({
     resolver: zodResolver(addressSchema),
-    defaultValues: { idenaAddress: '' },
+    defaultValues: { idenaAddress: searchParams.get('dnaAddress') || '' },
     mode: 'onChange',
   });
   const {
@@ -80,6 +82,7 @@ export const OrderBuyerView: FC<{
     register,
     formState: { errors },
     watch,
+    setError,
   } = form;
 
   const idenaAddress = watch('idenaAddress');
@@ -97,6 +100,29 @@ export const OrderBuyerView: FC<{
       ),
     );
   }, [order, cnfOrder, secretHash, idenaAddress, contractsAttrs]);
+
+  useEffect(() => {
+    // ignore invalid address
+    const isValidAddress = isAddress(idenaAddress);
+    if (idenaAddress && !isValidAddress) return;
+
+    setSearchParams((prev) => {
+      // new URLSearchParams([...prev.entries(), ['dnaAddress', idenaAddress]])
+      const params = new URLSearchParams(prev);
+      if (isValidAddress) {
+        params.set('dnaAddress', idenaAddress);
+      } else {
+        params.delete('dnaAddress');
+      }
+      return params;
+    });
+  }, [idenaAddress]);
+
+  useEffect(() => {
+    if (!form.getValues('idenaAddress')) {
+      setError('idenaAddress', { message: 'Paste your identity address.' }, { shouldFocus: true });
+    }
+  }, []);
 
   const renderOrderControls = () => {
     if (rData.isNotAsked(orderRD) || rData.isLoading(orderRD) || !contractsAttrs)
@@ -241,7 +267,7 @@ export const OrderBuyerView: FC<{
           {...register('idenaAddress')}
           error={Boolean(errors.idenaAddress)}
           helperText={errors.idenaAddress?.message}
-          placeholder="Your Idena idenaAddress"
+          placeholder="Your Idena address"
           fullWidth
           size="small"
         />
