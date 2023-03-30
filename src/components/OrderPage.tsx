@@ -7,8 +7,10 @@ import { z } from 'zod';
 import { Box, Button, Grid, Stack, Typography, useTheme } from '@mui/material';
 
 import { APP_CONFIG } from '../app.config';
+import { useActualRef } from '../hooks/useActualRef';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
-import { useRemoteData } from '../hooks/useRemoteData';
+import { useInterval } from '../hooks/useInterval';
+import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { useRevision } from '../hooks/useRevision';
 import { shortenHash } from '../utils/address';
 import { IdenaOrderState, readIdenaOrderState } from '../utils/idena';
@@ -34,6 +36,33 @@ const secretSchema = z.object({
   }),
 });
 
+const ORDER_STATE_RELOAD_INTERVAL = 60 * 1000;
+
+const useOrderAutoUpdate = (
+  hash: string,
+  orderRDM: UseRemoteDataMethods<IdenaOrderState | null>,
+  cnfOrderRDM: UseRemoteDataMethods<XdaiConfirmedOrder | null>,
+) => {
+  const hashRef = useActualRef(hash);
+  useInterval(() => {
+    console.log('use interval');
+    readIdenaOrderState(hashRef.current).then((maybeNewState) => {
+      console.log('try update cnf order');
+      if (JSON.stringify(maybeNewState) !== JSON.stringify(orderRDM.getState().data)) {
+        log('useOrderAutoUpdate order auto-update');
+        orderRDM.setSuccess(maybeNewState);
+      }
+    });
+    readXdaiCnfOrder(hash).then((maybeNewState) => {
+      console.log('try update cnf order');
+      if (JSON.stringify(maybeNewState) !== JSON.stringify(cnfOrderRDM.getState().data)) {
+        log('useOrderAutoUpdate cnf order auto-update');
+        cnfOrderRDM.setSuccess(maybeNewState);
+      }
+    });
+  }, ORDER_STATE_RELOAD_INTERVAL);
+};
+
 export const OrderPage: FC = () => {
   const { hash } = useParams() as { hash: string };
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,6 +83,8 @@ export const OrderPage: FC = () => {
     orderRDM.track(readIdenaOrderState(hash));
     cnfOrderRDM.track(readXdaiCnfOrder(hash));
   }, [hash]);
+
+  useOrderAutoUpdate(hash, orderRDM, cnfOrderRDM);
 
   const renderOrder = () => {
     if (rData.isNotAsked(orderRD) || rData.isLoading(orderRD)) return 'Loading...';
@@ -132,7 +163,7 @@ export const OrderPage: FC = () => {
                           setSearchParams(new URLSearchParams({ viewAs: 'owner' }));
                         }}
                       >
-                        View as order owner
+                        Manage as owner
                       </Button>
                     </Grid>
                     <Grid item xs={6}>
@@ -144,7 +175,7 @@ export const OrderPage: FC = () => {
                           setSearchParams(new URLSearchParams({ viewAs: 'buyer' }));
                         }}
                       >
-                        View as iDNA buyer
+                        {orderRD.data?.matcher ? 'Manage as iDNA buyer' : 'Buy iDNA'}
                       </Button>
                     </Grid>
                   </Grid>

@@ -75,7 +75,6 @@ export const OrderList: FC = () => {
           <ShortOrderInfo key={x.hash} id={x.hash} dnaState={x.dnaState} xdaiState={x.xdaiState} />
         ))}
       </Stack>
-      ,
     </>,
   );
 };
