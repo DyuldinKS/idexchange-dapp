@@ -1,15 +1,6 @@
-import { gnosis } from '@wagmi/core/chains';
-import { formatUnits } from 'ethers/lib/utils.js';
-import { SecurityDepositType } from '../types/contracts';
-import {
-  IdenaContractStaticInfo,
-  IdenaOrderState,
-  IDENA_BLOCK_DURATION_MS,
-  parseIdna,
-  readIdenaContractInfo,
-} from './idena';
-import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
 import { isAddrEqual } from './address';
+import { IdenaContractStaticInfo, IdenaOrderState, parseIdna } from './idena';
+import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
 
 /**
  * A gap between idena.expireAt and xdai.matchDeadline + xdai.ownerClaimPeriod,
@@ -43,29 +34,9 @@ export const isCnfOrderValid = (
   return (
     cnfOrder.amountXDAI.eq(parseIdna(order.amountXdai)) &&
     isAddrEqual(order.payoutAddress, cnfOrder.payoutAddress) &&
-    Math.abs(calcCnfOrderMatchDeadline(order, cnfContract) - cnfOrder.matchDeadline) <=
-      IDENA_BLOCK_DURATION_MS + readIdenaContractInfo().fulfilPeriod + NETWORK_ERR
+    cnfOrder.matchDeadline + cnfContract.ownerClaimPeriod < order.expireAt
   );
 };
-
-// export const isOrderMatchable = (
-//   order: IdenaOrderState,
-//   cnfOrder: XdaiConfirmedOrder,
-//   cnfContract: XdaiContractAttributes,
-//   currentTimestamp: number,
-// ) => {
-//   if (!order || !cnfOrder) return null;
-
-//   if (bignumberishToBigInt(cnfOrder.amountXDAI) !== order.amountXdai) return false;
-//   if (BigInt(cnfOrder.payoutAddress) !== BigInt(order.payoutAddress)) return false;
-
-//   if (currentTimestamp + NETWORK_ERR + minTimeForIdena > order.expireAt) return false;
-//   if (currentTimestamp + NETWORK_ERR > cnfOrder.matchDeadline) return false;
-
-//   if (order.matcher === null) return true;
-
-//   return currentTimestamp > (order.matchExpireAt as number);
-// };
 
 export const calcCnfOrderMatchDeadline = (
   order: IdenaOrderState,
@@ -100,4 +71,21 @@ export const canMatchOrder = (
   const isCnfOrderPartValid = !cnfOrder.matcher && Date.now() < cnfOrder.matchDeadline;
 
   return Boolean(isOrderPartValid && isCnfOrderPartValid);
+};
+
+export const canMatchCnfOrder = (
+  order: IdenaOrderState | null,
+  cnfOrder: XdaiConfirmedOrder | null,
+  saleContract: IdenaContractStaticInfo,
+) => {
+  return Boolean(
+    order &&
+      // if prev match expired
+      order.matchExpireAt &&
+      Date.now() < order.matchExpireAt &&
+      Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt &&
+      cnfOrder &&
+      !cnfOrder.matcher &&
+      Date.now() < cnfOrder.matchDeadline,
+  );
 };
