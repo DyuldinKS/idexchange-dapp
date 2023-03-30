@@ -124,9 +124,20 @@ export const UiBlock = styled(Stack)(({ theme }) => ({
 
 export type UiBlockTitleProps = ComponentProps<typeof UiBlockTitle>;
 
-export const UiBlockTitle: FCC<{ tooltip?: ReactNode }> = ({ tooltip, children }) => {
+export const UiBlockTitle: FCC<{ tooltip?: ReactNode } & TypographyProps> = ({
+  tooltip,
+  children,
+  ...typProps
+}) => {
   return (
-    <Typography variant="h3" fontSize="1.25rem" display="flex" alignItems="center" fontWeight={500}>
+    <Typography
+      variant="h3"
+      fontSize="1.25rem"
+      display="flex"
+      alignItems="center"
+      fontWeight={500}
+      {...typProps}
+    >
       {children}
       {tooltip && (
         <Tooltip title={tooltip}>

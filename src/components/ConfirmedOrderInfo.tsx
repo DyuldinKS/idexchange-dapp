@@ -25,7 +25,7 @@ export const ConfirmedOrderInfoBlock: FCC<{
           <Stack direction="row" alignItems="center" spacing={2}>
             <Box>{title}</Box>
             {isValid ? (
-              <Chip variant="outlined" label="Valid" color="info" />
+              <Chip variant="outlined" label="Valid" color="secondary" />
             ) : (
               <Chip variant="outlined" label="Invalid" color="error" />
             )}

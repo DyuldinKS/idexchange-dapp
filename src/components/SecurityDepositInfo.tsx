@@ -6,7 +6,7 @@ import { Chain } from '@wagmi/core/chains';
 import React, { ReactNode } from 'react';
 import { SecurityDepositType } from '../types/contracts';
 import { FCC } from '../types/FCC';
-import { UiBlock, UiBlockTitle, UiBlockTitleProps, UiInfoBlockContent, UiInfoBlockRow } from './ui';
+import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiSpan } from './ui';
 
 export const SecurityDepositInfoBlock: FCC<{
   securityDeposit: Pick<SecurityDepositType, 'amount' | 'isInUse'> | null;
@@ -22,9 +22,14 @@ export const SecurityDepositInfoBlock: FCC<{
           {description && <UiInfoBlockRow label={description} />}
           <UiInfoBlockRow
             label="Deposited:"
-            value={`${formatUnits(securityDeposit.amount, nativeCurrency.decimals)} ${
-              nativeCurrency.symbol
-            }`}
+            value={
+              <UiSpan>
+                <UiSpan fontWeight={600}>
+                  {formatUnits(securityDeposit.amount, nativeCurrency.decimals)}
+                </UiSpan>{' '}
+                {nativeCurrency.symbol}
+              </UiSpan>
+            }
           />
           {securityDeposit.isInUse && (
             <Typography color="error">

@@ -2,11 +2,11 @@ import debug from 'debug';
 import { isHexString } from 'ethers/lib/utils.js';
 import { FC, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Button, Grid, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Grid, Stack, TextField, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { APP_CONFIG } from '../app.config';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
@@ -23,6 +23,7 @@ import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderBuyerView } from './OrderBuyerView';
 import { OrderOwnerView } from './OrderOwnerView';
 import { UiError, UiPage } from './ui';
+import { getColor } from '../utils/theme';
 
 const log = debug('OrderPage');
 const logOrderRD = (...args: any[]) => log('orderRD', ...args);
@@ -44,6 +45,8 @@ export const OrderPage: FC = () => {
   const [cnfOrderRD, cnfOrderRDM] = useRemoteData<XdaiConfirmedOrder | null>(null, logCnfOrderRD);
   const contractsAttrsRD = useContractsAttributes();
   const contractsAttrs = contractsAttrsRD.data;
+
+  const theme = useTheme();
 
   // owner part
   const form = useForm<SecretSchema>({
@@ -90,11 +93,11 @@ export const OrderPage: FC = () => {
 
   return (
     <UiPage maxWidth="sm">
-      <Tooltip title={hash}>
-        <Typography variant="h4" component="h1" fontWeight={400}>
+      <Link to={`/order/${hash}`}>
+        <Typography color={getColor.textLink(theme)} variant="h4" component="h1" fontWeight={400}>
           {`Order ${shortenHash(hash, 6, 5)}`}
         </Typography>
-      </Tooltip>
+      </Link>
       {(isOwner && (
         <OrderOwnerView
           secretHash={hash}
