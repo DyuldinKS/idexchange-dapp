@@ -27,7 +27,14 @@ export const IdenaSecurityDeposit: FC<{
   // TODO: replace with onTopUpHandler
   form: UseFormReturn<AddressSchema>;
   isWithdrawDisabled?: boolean;
-}> = ({ securityDepositRD, securityDepositRDM, form, isWithdrawDisabled }) => {
+  showAlreadyUsedError?: boolean;
+}> = ({
+  securityDepositRD,
+  securityDepositRDM,
+  form,
+  isWithdrawDisabled,
+  showAlreadyUsedError,
+}) => {
   const error = securityDepositRD.error;
   const [topUpDepositTxRD, topUpDepositTxRDM] = useRemoteData<Transaction>(null);
   const theme = useTheme();
@@ -48,6 +55,12 @@ export const IdenaSecurityDeposit: FC<{
       }
     >
       {children}
+      {showAlreadyUsedError && (
+        <Typography mt={children ? 2 : 0} color="error">
+          This deposit is already being used to confirm another order booking. You have to wait
+          until your previous order is complete or use a different account to book a new one.
+        </Typography>
+      )}
       {error && <UiError err={error} />}
     </SecurityDepositInfoBlock>
   );

@@ -14,6 +14,7 @@ import { rData, RemoteData } from '../utils/remoteData';
 import { readXdaiSecurityDeposit, submitXdaiSecutityDeposit } from '../utils/xdai';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
 import { UiError, UiSubmitButton } from './ui';
+import { Typography } from '@mui/material';
 
 const log = debug('XdaiSecurityDeposit');
 
@@ -39,6 +40,12 @@ export const XdaiSecurityDeposit: FC<{
       nativeCurrency={gnosis.nativeCurrency}
     >
       {children}
+      {securityDepositRD.data?.isInUse && (
+        <Typography mt={2} color="error">
+          This deposit is already being used to confirm another order. You have to wait until your
+          previous order is complete or use a different account to create a new order.
+        </Typography>
+      )}
       {error && <UiError mt={1} err={error} />}
     </SecurityDepositInfoBlock>
   );
