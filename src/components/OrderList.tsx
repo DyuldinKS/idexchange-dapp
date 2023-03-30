@@ -1,17 +1,18 @@
 import debug from 'debug';
 import { isHexString } from 'ethers/lib/utils.js';
-import { FC, ReactNode, useEffect } from 'react';
+import { FC, ReactNode, useEffect, useState } from 'react';
 import { z } from 'zod';
 
-import { Stack, Tooltip, Typography } from '@mui/material';
+import { Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
 
 import { APP_CONFIG } from '../app.config';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData } from '../hooks/useRemoteData';
-import { rData } from '../utils/remoteData';
+import { canMatchOrder } from '../utils/orderControls';
 import { getIdenaOrderListState, IdenaOrderListState } from '../utils/orderList';
-import { UiBlock, UiError, UiPage } from './ui';
+import { rData } from '../utils/remoteData';
 import { ShortOrderInfo } from './ShortOrderInfo';
+import { UiBlock, UiError } from './ui';
 
 const log = debug('OrderListPage');
 
@@ -31,6 +32,7 @@ const secretSchema = z.object({
 export const OrderList: FC = () => {
   const [orderListRD, orderListRDM] = useRemoteData<IdenaOrderListState>(null);
   const { data: contractsAttrs } = useContractsAttributes();
+  const [showOnlyMatchable, setShowOnlyMatchable] = useState(false);
 
   useEffect(() => {
     orderListRDM.track(getIdenaOrderListState());
@@ -39,7 +41,7 @@ export const OrderList: FC = () => {
   const renderContent = (content: ReactNode) => (
     <Stack>
       <Typography variant="h4" component="h2" fontWeight={400}>
-        Active orders
+        Orders
       </Typography>
       <Stack mt={2}>{content}</Stack>
     </Stack>
@@ -52,13 +54,28 @@ export const OrderList: FC = () => {
     return renderContent(uiBlock(<UiError err={orderListRD.error} />));
 
   const orders = orderListRD.data;
-  if (orders.length === 0) return renderContent(uiBlock('No active orders found.'));
+  const filteredOrders = showOnlyMatchable
+    ? orders.filter((x) => canMatchOrder(x.dnaState, x.xdaiState, contractsAttrs.idena))
+    : orders;
+  if (filteredOrders.length === 0) return renderContent(uiBlock('No active orders found.'));
 
   return renderContent(
-    <Stack spacing={2}>
-      {orders.map((x) => (
-        <ShortOrderInfo key={x.hash} id={x.hash} dnaState={x.dnaState} xdaiState={x.xdaiState} />
-      ))}
-    </Stack>,
+    <>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={showOnlyMatchable}
+            onChange={() => setShowOnlyMatchable((prev) => !prev)}
+          />
+        }
+        label="Show orders available for exchange"
+      />
+      <Stack spacing={2} mt={1}>
+        {filteredOrders.map((x) => (
+          <ShortOrderInfo key={x.hash} id={x.hash} dnaState={x.dnaState} xdaiState={x.xdaiState} />
+        ))}
+      </Stack>
+      ,
+    </>,
   );
 };
