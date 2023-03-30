@@ -12,6 +12,8 @@ import { CONTRACTS } from '../constants/contracts';
 import { formatUnits, keccak256, parseUnits } from 'ethers/lib/utils.js';
 import debug from 'debug';
 import { idenaProvider } from '../providers/idenaProvider';
+import { o } from 'ramda';
+import { BigNumberish } from 'ethers';
 
 export type IdenaOrderState = NonNullable<Awaited<ReturnType<typeof readIdenaOrderState>>>;
 export type IdenaContractStaticInfo = Awaited<ReturnType<typeof readIdenaContractInfo>>;
@@ -44,6 +46,9 @@ const BASE_TX_PROPS = {
 // TODO: make idena-sdk-js fix PR
 // idena-sdk-js uses wrong case of writeBigUInt64LE method. It is supported by nodejs, but not supported by browsers.
 globalThis.Buffer.prototype.writeBigUint64LE = Buffer.prototype.writeBigUInt64LE;
+
+export const parseIdna = (val: string) => parseUnits(val, IDENA_DECIMALS);
+export const formatIdna = (val: BigNumberish) => formatUnits(val, IDENA_DECIMALS);
 
 export const isNilData = (err: any) => /data is nil/.test(err?.message || String(err));
 
@@ -176,12 +181,15 @@ export const readIdenaContractInfo = () => {
   // it is impossible to read idena contract attributes
   const minOrderTTL = 3 * 60 * 60; // 3h
   const minOrderTTLInBlocks = minOrderTTL / IDENA_BLOCK_DURATION_MS;
+  const fulfilPeriod = 60 * 60;
+  const fulfilPeriodInBlocks = fulfilPeriod / IDENA_BLOCK_DURATION_MS;
 
   return {
     minOrderTTL,
     minOrderTTLInBlocks,
+    fulfilPeriod,
+    fulfilPeriodInBlocks,
     minAmount: parseUnits('100.0', IDENA_DECIMALS),
-    fulfilPeriodInBlocks: 3600 / 20,
     requiredSecurityDepositAmount: parseUnits('10.0', IDENA_DECIMALS),
   };
 };

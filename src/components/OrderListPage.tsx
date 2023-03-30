@@ -3,7 +3,7 @@ import { isHexString } from 'ethers/lib/utils.js';
 import { FC, useEffect } from 'react';
 import { z } from 'zod';
 
-import { Tooltip, Typography } from '@mui/material';
+import { Stack, Tooltip, Typography } from '@mui/material';
 
 import { APP_CONFIG } from '../app.config';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
@@ -31,8 +31,6 @@ const secretSchema = z.object({
 
 export const OrderListPage: FC = () => {
   const [orderListRD, orderListRDM] = useRemoteData<IdenaOrderListState | null>(null);
-  const contractsAttrsRD = useContractsAttributes();
-  const contractsAttrs = contractsAttrsRD.data;
 
   useEffect(() => {
     orderListRDM.track(getIdenaOrderListState());
@@ -51,13 +49,13 @@ export const OrderListPage: FC = () => {
           Active orders
         </Typography>
       </Tooltip>
-      <IdenaOrderList
-        currentTimestamp={idenaLastBlock.timestamp}
-        orders={orderListRD.data}
-        xdaiContractProps={contractsAttrs && contractsAttrs.xdai}
-      >
-        {renderOrderListError()}
-      </IdenaOrderList>
+      <Stack mt={4}>
+        <IdenaOrderList
+          currentTimestamp={idenaLastBlock.timestamp}
+          orders={orderListRD.data || []}
+        />
+      </Stack>
+      <Stack mt={4}>{renderOrderListError()}</Stack>
     </UiPage>
   );
 };

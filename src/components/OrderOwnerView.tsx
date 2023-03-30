@@ -17,7 +17,7 @@ import {
   openIdenaAppToSignTx,
   readIdenaOrderState,
 } from '../utils/idena';
-import { isCnfOrderValid, minTimeForIdena, canCancelCnfOrder } from '../utils/orderControls';
+import { isCnfOrderValid, canCancelCnfOrder } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';

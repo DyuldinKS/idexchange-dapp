@@ -3,13 +3,16 @@ import { readIdenaOrderState, handleNilData, IdenaOrderState } from './idena';
 import { CONTRACTS } from '../constants/contracts';
 import { readXdaiCnfOrder, XdaiConfirmedOrder } from './xdai';
 import { idenaProvider } from '../providers/idenaProvider';
+import debug from 'debug';
 
 export type IdenaOrderListState = NonNullable<Awaited<ReturnType<typeof getIdenaOrderListState>>>;
+
+const log = debug('utils:orderList');
 
 export async function getIdenaOrderListState() {
   const { Contract } = idenaProvider;
 
-  const results = [];
+  const secretHashes = [];
   let current;
   let i = 0;
   while (
@@ -20,28 +23,24 @@ export async function getIdenaOrderListState() {
       CAF.Hex,
     ).catch(handleNilData('getIdenaOrderListState')))
   ) {
-    results.push(current);
+    secretHashes.push(current);
   }
 
-  const [dnaStates, xdaiStates] = await Promise.all([
-    Promise.all(results.map(readIdenaOrderState)),
-    Promise.all(results.map(readXdaiCnfOrder)),
-  ]);
+  const rawOrders = await Promise.all(
+    secretHashes.map((hash) =>
+      Promise.all([readIdenaOrderState(hash), readXdaiCnfOrder(hash)] as const)
+        .then(([dnaState, xdaiState]) =>
+          dnaState && xdaiState ? { hash, dnaState, xdaiState } : null,
+        )
+        .catch((err) => {
+          console.log('getIdenaOrderListState caught err for hash', hash, err);
+          return null;
+        }),
+    ),
+  );
 
-  const orders: { dnaState: IdenaOrderState; xdaiState: XdaiConfirmedOrder; hash: string }[] = [];
-
-  results.forEach((hash, i) => {
-    if (!dnaStates[i]) return;
-    if (!xdaiStates[i]) return;
-    orders.push({
-      dnaState: dnaStates[i] as IdenaOrderState,
-      xdaiState: xdaiStates[i] as XdaiConfirmedOrder,
-      hash,
-    });
-  });
-
-  console.log(orders);
-
+  const orders = rawOrders.filter(Boolean);
+  log('loaded orders:', orders);
   return orders;
 }
 

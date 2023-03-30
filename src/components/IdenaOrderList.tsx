@@ -1,38 +1,32 @@
-import React from 'react';
-import { UiBlock } from './ui';
-import { IdenaOrderListState } from '../utils/orderList';
 import { Stack } from '@mui/system';
-import { XdaiConfirmedOrder, XdaiContractAttributes } from '../utils/xdai';
-import { isOrderMatchable } from '../utils/orderControls';
-import { IdenaOrderState } from '../utils/idena';
-import { FCC } from '../types/FCC';
+import { FC } from 'react';
+import { useContractsAttributes } from '../hooks/useContractsAttributes';
+import { canMatchOrder } from '../utils/orderControls';
+import { IdenaOrderListState } from '../utils/orderList';
 import { ShortOrderInfo } from './ShortOrderInfo';
 
-export const IdenaOrderList: FCC<{ orders: IdenaOrderListState | null, xdaiContractProps: XdaiContractAttributes | null, currentTimestamp: number }> = ({ orders, children, xdaiContractProps, currentTimestamp }) => {
-  const validOrders = orders && xdaiContractProps &&
-    (orders as { xdaiState: XdaiConfirmedOrder, dnaState: IdenaOrderState }[])
-      .filter(({ xdaiState, dnaState }) => isOrderMatchable(dnaState, xdaiState, xdaiContractProps, currentTimestamp))
+export const IdenaOrderList: FC<{
+  orders: IdenaOrderListState;
+  currentTimestamp: number;
+}> = ({ orders, currentTimestamp }) => {
+  const { data: contractsAttrs } = useContractsAttributes();
+  const validOrders =
+    contractsAttrs &&
+    orders.filter(({ xdaiState, dnaState }) =>
+      canMatchOrder(dnaState, xdaiState, contractsAttrs.idena),
+    );
 
   return (
-    <UiBlock>
-      {
-        validOrders &&
-        (validOrders as { xdaiState: XdaiConfirmedOrder, dnaState: IdenaOrderState, hash: string }[])
-          .map(x =>
-            <Stack mt={4}>
-              <Stack spacing={2}>
-                <ShortOrderInfo
-                  id={x.hash} dnaState={x.dnaState} xdaiState={x.xdaiState}>
-                </ShortOrderInfo>
-              </Stack>
-            </Stack>
-          )
-      }
-      {React.Children.toArray(children).filter(Boolean).length > 0 && (
-        <Stack mt={2} alignItems="stretch">
-          {children}
-        </Stack>
-      )}
-    </UiBlock>
+    <Stack spacing={2}>
+      {validOrders &&
+        validOrders.map((x) => (
+          <ShortOrderInfo
+            key={x.hash}
+            id={x.hash}
+            dnaState={x.dnaState}
+            xdaiState={x.xdaiState}
+          ></ShortOrderInfo>
+        ))}
+    </Stack>
   );
 };

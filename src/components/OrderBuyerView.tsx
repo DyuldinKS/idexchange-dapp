@@ -99,7 +99,10 @@ export const OrderBuyerView: FC<{
       if (!rData.isSuccess(matchIdenaOrderTxRD)) {
         return (
           <UiSubmitButton
-            disabled={!canMatchOrder(order, cnfOrder, contractsAttrs.idena, securityDepositRD.data)}
+            disabled={
+              !securityDepositRD.data?.isValid ||
+              !canMatchOrder(order, cnfOrder, contractsAttrs.idena)
+            }
             onClick={buildMatchOrderTxAndSign}
           >
             Book order
