@@ -11,12 +11,13 @@ import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { useWeb3Store } from '../providers/store/StoreProvider';
 import { IdenaOrderState } from '../utils/idena';
-import { calcCnfOrderMatchDeadline } from '../utils/orderControls';
+import { calcCnfOrderMatchDeadline, canCreateCnfOrder } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { isChainSupported } from '../utils/web3Modal';
 import { createXdaiCnfOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
-import { UiBlock, UiBlockTitle, UiError, UiSubmitButton } from './ui';
+import { UiBlock, UiBlockTitle, UiError, UiSpan, UiSubmitButton } from './ui';
+import { isAddrEqual } from '../utils/address';
 
 const log = debug('XdaiOrderConfirmation');
 
@@ -27,7 +28,7 @@ export const XdaiOrderConfirmation: FC<{
   cnfOrderRDM: UseRemoteDataMethods<XdaiConfirmedOrder | null>;
 }> = ({ secretHash, order, cnfOrderRD, cnfOrderRDM }) => {
   const [{ chainId, address }] = useWeb3Store();
-  const contractsAttrs = useContractsAttributes();
+  const contractsAttrsRD = useContractsAttributes();
   const theme = useTheme();
   const error = cnfOrderRD.error;
 
@@ -45,11 +46,14 @@ export const XdaiOrderConfirmation: FC<{
     );
   };
 
-  const confirmOrder = () => {
-    // TODO: add loader in case of contractsInfo loading
-    if (!address || !isChainSupported(chainId) || !contractsAttrs.data) return;
+  if (rData.isLoading(cnfOrderRD) || !rData.isSuccess(contractsAttrsRD)) {
+    return renderOrderBlock('Loading...');
+  }
 
-    const matchDeadline = calcCnfOrderMatchDeadline(order, contractsAttrs.data.xdai);
+  const confirmOrder = () => {
+    if (!address || !isChainSupported(chainId)) return;
+
+    const matchDeadline = calcCnfOrderMatchDeadline(order, contractsAttrsRD.data.xdai);
     log('confirmOrder', { order, matchDeadline });
 
     const processTx = async () => {
@@ -67,16 +71,30 @@ export const XdaiOrderConfirmation: FC<{
     return cnfOrderRDM.track(processTx().then(() => readXdaiCnfOrder(secretHash)));
   };
 
-  if (rData.isLoading(cnfOrderRD)) {
-    return renderOrderBlock('Loading...');
-  }
+  const isWrongAddress = isAddrEqual(address || '', order.payoutAddress);
 
   return renderOrderBlock(
     <Stack alignItems="stretch">
       <Typography color={getColor.textGrey(theme)}>
         Confirm your order to be able to receive xDAI:
       </Typography>
-      <UiSubmitButton sx={{ mt: 2 }} onClick={confirmOrder} disabled={rData.isLoading(cnfOrderRD)}>
+      {isWrongAddress && (
+        <UiError
+          mt={2}
+          msg={
+            <UiSpan>
+              Wrong address. Switch account to{' '}
+              <UiSpan fontWeight={600}>{order.payoutAddress}</UiSpan> since it has been used to
+              create the order in Idena chain.
+            </UiSpan>
+          }
+        />
+      )}
+      <UiSubmitButton
+        sx={{ mt: 2 }}
+        onClick={confirmOrder}
+        disabled={canCreateCnfOrder(order, address, cnfOrderRD.data, contractsAttrsRD.data.idena)}
+      >
         Confirm order
       </UiSubmitButton>
     </Stack>,

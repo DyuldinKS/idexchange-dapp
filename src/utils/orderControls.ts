@@ -1,3 +1,4 @@
+import { Address } from '@wagmi/core';
 import { isAddrEqual } from './address';
 import { IdenaContractStaticInfo, IdenaOrderState, parseIdna } from './idena';
 import { XdaiConfirmedOrder, XdaiContractAttributes } from './xdai';
@@ -22,6 +23,21 @@ export const getOrderMinTTL = (
       cnfContract.minOrderTTL + cnfContract.ownerClaimPeriod + GAP_AFTER_MAX_EXECUTION_DEADLINE,
     ),
   );
+
+export const canCreateCnfOrder = (
+  order: IdenaOrderState | null,
+  address: Address | null,
+  cnfOrder: XdaiConfirmedOrder | null,
+  saleContract: IdenaContractStaticInfo,
+) => {
+  return Boolean(
+    !cnfOrder &&
+      order &&
+      order.expireAt &&
+      Date.now() + saleContract.fulfilPeriodInBlocks < order.expireAt &&
+      isAddrEqual(address || '', order.payoutAddress),
+  );
+};
 
 export const isCnfOrderValid = (
   order: IdenaOrderState | null,
