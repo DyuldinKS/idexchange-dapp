@@ -45,16 +45,13 @@ const useOrderAutoUpdate = (
 ) => {
   const hashRef = useActualRef(hash);
   useInterval(() => {
-    console.log('use interval');
     readIdenaOrderState(hashRef.current).then((maybeNewState) => {
-      console.log('try update cnf order');
       if (JSON.stringify(maybeNewState) !== JSON.stringify(orderRDM.getState().data)) {
         log('useOrderAutoUpdate order auto-update');
         orderRDM.setSuccess(maybeNewState);
       }
     });
     readXdaiCnfOrder(hash).then((maybeNewState) => {
-      console.log('try update cnf order');
       if (JSON.stringify(maybeNewState) !== JSON.stringify(cnfOrderRDM.getState().data)) {
         log('useOrderAutoUpdate cnf order auto-update');
         cnfOrderRDM.setSuccess(maybeNewState);

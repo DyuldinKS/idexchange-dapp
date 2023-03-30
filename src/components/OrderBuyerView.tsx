@@ -106,7 +106,6 @@ export const OrderBuyerView: FC<{
     if (idenaAddress && !isValidAddress) return;
 
     setSearchParams((prev) => {
-      // new URLSearchParams([...prev.entries(), ['dnaAddress', idenaAddress]])
       const params = new URLSearchParams(prev);
       if (isValidAddress) {
         params.set('dnaAddress', idenaAddress);
