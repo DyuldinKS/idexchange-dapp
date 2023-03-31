@@ -52,7 +52,7 @@ export const IdenaSecurityDeposit: FC<{
       {showAlreadyUsedError && (
         <Typography mt={children ? 2 : 0} color="error">
           This deposit is already being used to confirm another order booking. You have to wait
-          until your previous order is complete or use a different account to book a new one.
+          until your previous order is complete or use a different account to book this one.
         </Typography>
       )}
       {error && <UiError err={error} />}

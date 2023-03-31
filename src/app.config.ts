@@ -11,4 +11,5 @@ export const APP_CONFIG = {
     secretBytesLength: 40,
   },
   telegramNotificationBotUrl: 'https://t.me/+0etEyXyNdfQzYzdi',
+  orderPageStateReloadIntevalMs: 60000,
 } as const;

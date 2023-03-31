@@ -8,19 +8,22 @@ import { tapRejected } from '../utils/async';
 import { downloadFile } from '../utils/misc';
 import { rData } from '../utils/remoteData';
 import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiSubmitButton } from './ui';
+import { UseFormHandleSubmit, UseFormReturn } from 'react-hook-form';
+import { OrderCreationFormSchema } from './OrderCreationPage';
 
-export const SecretCodeBlock: FC<{
+export const SecretCodeForm: FC<{
   secret: string;
   secretHash: string;
   isSaved: boolean;
   setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
-}> = ({ secret, secretHash, isSaved, setIsSaved }) => {
+  form: UseFormReturn<OrderCreationFormSchema>;
+}> = ({ secret, secretHash, isSaved, setIsSaved, form }) => {
   const [copyingRD, copyingRDM] = useRemoteData<boolean>(null);
   const [saveBtnClicked, setSaveBtnClicked] = useState(false);
 
-  const infoToSave = `Secret: ${secret}\nOrder id: ${secretHash}`;
   const isCopied = Boolean(copyingRD.data);
   const isCopyBtnClicked = !rData.isNotAsked(copyingRD);
+  const idenaAddress = form.getValues('idenaAddress');
 
   useEffect(() => {
     if (isCopied) {
@@ -30,6 +33,12 @@ export const SecretCodeBlock: FC<{
       return () => clearTimeout(timerId);
     }
   }, [isCopied, copyingRDM]);
+
+  useEffect(() => {
+    setIsSaved(false);
+    setSaveBtnClicked(false);
+    copyingRDM.setNotAsked();
+  }, [idenaAddress]);
 
   return (
     <UiBlock mt={4}>
@@ -51,7 +60,8 @@ export const SecretCodeBlock: FC<{
             fullWidth
             size="medium"
             disabled={isCopied}
-            onClick={() => {
+            onClick={form.handleSubmit(({ idenaAddress }) => {
+              const infoToSave = `Idena address: ${idenaAddress}\nSecret: ${secret}\nOrder id: ${secretHash}`;
               navigator.clipboard
                 .writeText(infoToSave)
                 .then(() => {
@@ -63,19 +73,21 @@ export const SecretCodeBlock: FC<{
                     return 'Failed to copy secret code';
                   }),
                 );
-            }}
+            })}
           >
             {isCopied ? 'Copied!' : 'Copy'}
           </UiSubmitButton>
           <UiSubmitButton
-            onClick={() => {
+            onClick={form.handleSubmit(({ idenaAddress }) => {
               setSaveBtnClicked(true);
+              const postfix = idenaAddress.slice(0, 5);
+              const infoToSave = `Idena address: ${idenaAddress}\nSecret: ${secret}\nOrder id: ${secretHash}`;
               downloadFile(
                 infoToSave,
-                `idena-atomic-dex.${dayjs().format('YYYY-MM-DDTHH-mm-ss')}.txt`,
+                `idena-atomic-dex.${dayjs().format('YYYY-MM-DDTHH-mm-ss')}.${postfix}.txt`,
                 'plain/text',
               );
-            }}
+            })}
             fullWidth
             size="medium"
           >
