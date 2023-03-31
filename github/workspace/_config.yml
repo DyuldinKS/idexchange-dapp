@@ -31,8 +31,8 @@ url: 'https://idexchange.tech' # the base hostname & protocol for your site, e.g
 #   - jekyll-seo-tag
 
 command: npm run build
-destination: ./dist
-source: ./src
+destination: dist
+source: src
 
 include:
   - node_modules
