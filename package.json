@@ -1,9 +1,11 @@
 {
-  "name": "idena-atomic-dex-dapp",
+  "name": "idexchange-dapp",
   "homepage": "https://idexchange.tech",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "license": "MIT",
+  "author": "dyuldinks and chainpioneer",
   "scripts": {
     "dev": "vite --force",
     "build": "tsc && vite build",
