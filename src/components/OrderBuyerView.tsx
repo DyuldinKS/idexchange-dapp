@@ -129,7 +129,9 @@ export const OrderBuyerView: FC<{
 
     if (!order) return 'The order has already been completed, cancelled, or never existed.';
 
-    // TODO: compare idenaAddress with order.owner
+    if (isAddrEqual(idenaAddress, order.owner)) {
+      return <UiError msg="The order owner address cannot be used for buying iDNA." />;
+    }
 
     const buildMatchOrderTx = async (
       evt: React.BaseSyntheticEvent,
@@ -192,7 +194,9 @@ export const OrderBuyerView: FC<{
       );
     }
 
-    // TODO: compare idenaAddress with order.matcher
+    if (idenaAddress && !isAddrEqual(idenaAddress, order.matcher)) {
+      return <UiError msg="The taker address doesn't match the address you provided." />;
+    }
 
     return (
       <OrderCompletion
