@@ -30,7 +30,7 @@ export const UiLogo = () => (
       color="#aaa"
       fontWeight={200}
     >
-      Idena Atomic&nbsp;DEX
+      IDEXCHANGE
     </Typography>
   </RouterLink>
 );
