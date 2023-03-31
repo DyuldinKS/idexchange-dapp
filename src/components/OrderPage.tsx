@@ -36,8 +36,6 @@ const secretSchema = z.object({
   }),
 });
 
-const ORDER_STATE_RELOAD_INTERVAL = 60 * 1000;
-
 const useOrderAutoUpdate = (
   hash: string,
   orderRDM: UseRemoteDataMethods<IdenaOrderState | null>,
@@ -57,7 +55,7 @@ const useOrderAutoUpdate = (
         cnfOrderRDM.setSuccess(maybeNewState);
       }
     });
-  }, ORDER_STATE_RELOAD_INTERVAL);
+  }, APP_CONFIG.orderPageStateReloadIntevalMs);
 };
 
 export const OrderPage: FC = () => {
