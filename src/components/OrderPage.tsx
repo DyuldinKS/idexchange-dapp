@@ -43,6 +43,9 @@ const useOrderAutoUpdate = (
 ) => {
   const hashRef = useActualRef(hash);
   useInterval(() => {
+    // if the order doesn't exist (not found, completed or cancelled) stop reloading.
+    if (!orderRDM.getState().data && !cnfOrderRDM.getState().data) return;
+
     readIdenaOrderState(hashRef.current).then((maybeNewState) => {
       if (JSON.stringify(maybeNewState) !== JSON.stringify(orderRDM.getState().data)) {
         log('useOrderAutoUpdate order auto-update');
