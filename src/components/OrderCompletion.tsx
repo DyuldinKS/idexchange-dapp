@@ -1,8 +1,16 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, Stack, TextField, Typography, useTheme } from '@mui/material';
+import {
+  Checkbox,
+  FormControlLabel,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import { waitForTransaction } from '@wagmi/core';
 
 import {
@@ -14,7 +22,7 @@ import {
 import { canCompleteOrder } from '../utils/orderControls';
 import { completeXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import { SecretSchema, secretSchema } from './CnfOrderCompletion';
-import { UiError, UiSubmitButton } from './ui';
+import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { useRemoteData } from '../hooks/useRemoteData';
 import { Transaction } from 'idena-sdk-js';
 import { rData } from '../utils/remoteData';
@@ -27,40 +35,72 @@ export const OrderCompletion: FC<{
   secret: string | null;
   secretHash: string;
   onComplete: () => void;
-}> = ({ order, cnfOrder, idenaAddress, secret, secretHash, onComplete }) => {
-  // TODO: show input to paste secret manually
-  // const form = useForm<SecretSchema>({
-  //   resolver: zodResolver(secretSchema),
-  //   defaultValues: { secret: '' },
-  //   mode: 'onChange',
-  // });
-  // const {
-  //   handleSubmit,
-  //   register,
-  //   formState: { errors },
-  // } = form;
+}> = ({ order, cnfOrder, idenaAddress, secret: loadedSecret, onComplete }) => {
+  const [iKnowSecret, setIKnowSecret] = useState(false);
+  const form = useForm<SecretSchema>({
+    resolver: zodResolver(secretSchema),
+    defaultValues: { secret: '' },
+    mode: 'onChange',
+  });
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = form;
   const [completeOrderTxRD, completeOrderTxRDM] = useRemoteData<Transaction>(null);
   const theme = useTheme();
 
+  const canComplete = canCompleteOrder(order, cnfOrder, idenaAddress);
+  const complete = async (secretCode: string) =>
+    completeOrderTxRDM
+      .track(buildCompleteOrderTx(idenaAddress, secretCode))
+      .then((tx) => tx && openIdenaAppToSignTx(tx));
+
+  // TODO: fix unmounting this component and completeOrderTxRD state reload
   if (!rData.isSuccess(completeOrderTxRD)) {
+    if (!loadedSecret) {
+      return (
+        <Stack spacing={1}>
+          {canComplete && (
+            <>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={iKnowSecret}
+                    onChange={() => setIKnowSecret((prev) => !prev)}
+                  />
+                }
+                label="I know the secret."
+              />
+              {iKnowSecret && (
+                <TextField
+                  {...register('secret')}
+                  error={Boolean(errors.secret)}
+                  helperText={errors.secret?.message}
+                  placeholder="Secret code"
+                  fullWidth
+                  size="small"
+                />
+              )}
+            </>
+          )}
+          <UiSubmitButton
+            disabled={!canComplete || !iKnowSecret}
+            onClick={handleSubmit(({ secret: pastedSecret }) => complete(pastedSecret))}
+          >
+            Withdraw iDNA and complete order
+          </UiSubmitButton>
+          {completeOrderTxRD.error && <UiError>{completeOrderTxRD.error}</UiError>}
+        </Stack>
+      );
+    }
+
     return (
       <Stack spacing={1}>
-        {/* <TextField
-        {...register('secret')}
-        error={Boolean(errors.secret)}
-        helperText={errors.secret?.message}
-        placeholder="Secret code"
-        fullWidth
-        size="small"
-      /> */}
+        <UiSpan color={theme.palette.secondary.dark}></UiSpan>
         <UiSubmitButton
-          disabled={!canCompleteOrder(order, cnfOrder, idenaAddress) || !secret}
-          onClick={async () => {
-            if (!secret) return;
-            await completeOrderTxRDM
-              .track(buildCompleteOrderTx(idenaAddress, secret))
-              .then((tx) => tx && openIdenaAppToSignTx(tx));
-          }}
+          disabled={!canComplete || !loadedSecret}
+          onClick={() => loadedSecret && complete(loadedSecret)}
         >
           Withdraw iDNA and complete order
         </UiSubmitButton>
