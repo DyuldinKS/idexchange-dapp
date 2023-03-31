@@ -19,7 +19,7 @@ import {
 } from '../utils/idena';
 import { rData } from '../utils/remoteData';
 import { IdenaOrderCreation } from './IdenaOrderCreation';
-import { SecretCodeBlock } from './SecretCode';
+import { SecretCodeForm } from './SecretCodeForm';
 import { UiPage } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
@@ -52,7 +52,7 @@ export const OrderCreationPage: FC = () => {
     },
     mode: 'onChange',
   });
-  const { register, formState } = form;
+  const { register, formState, handleSubmit } = form;
   const { errors, isSubmitting } = formState;
   const [securityDepositRD, securityDepositRDM] = useXdaiSecurityDeposit();
   const [idenaOrderRD, idenaOrderRDM] = useRemoteData<IdenaOrderState | null>(null);
@@ -77,7 +77,7 @@ export const OrderCreationPage: FC = () => {
       <Stack spacing="1rem" mt={4}>
         <TextField
           {...register('idenaAddress')}
-          disabled={isSubmitting || isOrderSuccessfullyCreated}
+          disabled={isSubmitting || isOrderSuccessfullyCreated || isSecretSaved}
           error={Boolean(errors.idenaAddress)}
           helperText={errors.idenaAddress?.message}
           variant="outlined"
@@ -86,7 +86,7 @@ export const OrderCreationPage: FC = () => {
         />
         <TextField
           {...register('amountToSell')}
-          disabled={isSubmitting || isOrderSuccessfullyCreated}
+          disabled={isSubmitting || isOrderSuccessfullyCreated || isSecretSaved}
           error={Boolean(errors.amountToSell)}
           helperText={errors.amountToSell?.message}
           variant="outlined"
@@ -95,7 +95,7 @@ export const OrderCreationPage: FC = () => {
         />
         <TextField
           {...register('amountToReceive')}
-          disabled={isSubmitting || isOrderSuccessfullyCreated}
+          disabled={isSubmitting || isOrderSuccessfullyCreated || isSecretSaved}
           error={Boolean(errors.amountToReceive)}
           helperText={errors.amountToReceive?.message}
           variant="outlined"
@@ -104,7 +104,8 @@ export const OrderCreationPage: FC = () => {
         />
       </Stack>
       <SellerInfoBlock />
-      <SecretCodeBlock
+      <SecretCodeForm
+        form={form}
         secret={secret}
         secretHash={secretHash}
         isSaved={isSecretSaved}
