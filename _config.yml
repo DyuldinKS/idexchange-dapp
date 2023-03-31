@@ -1,0 +1,20 @@
+theme: jekyll-theme-minimal
+
+exclude:
+  - node_modules
+  - src
+
+plugins:
+  - jekyll-seo-tag
+
+# Serve the site with Vite
+development:
+  command: npm run dev
+  destination: ./dist
+  source: ./src
+
+# Build the site for production
+production:
+  command: npm run build
+  destination: ./dist
+  source: ./src
