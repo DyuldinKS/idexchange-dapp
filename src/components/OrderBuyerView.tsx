@@ -161,7 +161,6 @@ export const OrderBuyerView: FC<{
             disabled={
               !securityDepositRD.data?.isValid ||
               !canMatchOrder(order, cnfOrder, contractsAttrs.idena) ||
-              !isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai) ||
               isAddrEqual(order.owner, idenaAddress)
             }
             onClick={buildMatchOrderTxAndSign}
@@ -221,7 +220,7 @@ export const OrderBuyerView: FC<{
 
     if (!cnfOrder)
       return 'The order confirmation has already been completed, cancelled, or never existed.';
-    if (!isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai))
+    if (!isCnfOrderValid(order, cnfOrder))
       return <UiError>Invalid confirmation, it is impossible to buy iDNA.</UiError>;
 
     if (cnfOrder.matcher && !isAddrEqual(web3Store.address || '', cnfOrder.matcher))
@@ -257,7 +256,7 @@ export const OrderBuyerView: FC<{
       <>
         <UiSubmitButton
           disabled={
-            !isCnfOrderValid(order, cnfOrder, contractsAttrs.xdai) ||
+            !isCnfOrderValid(order, cnfOrder) ||
             !canMatchCnfOrder(order, cnfOrder, contractsAttrs.idena)
           }
           onClick={matchCnfOrderAndReload}
@@ -296,9 +295,7 @@ export const OrderBuyerView: FC<{
         </IdenaOrderInfoBlock>
         {renderWalletRoutineIfNeeded(web3Store) || (
           <ConfirmedOrderInfoBlock
-            isValid={
-              contractsAttrs && isCnfOrderValid(orderRD.data, cnfOrderRD.data, contractsAttrs.xdai)
-            }
+            isValid={isCnfOrderValid(orderRD.data, cnfOrderRD.data)}
             title="Confirmation in Gnosis chain"
             order={cnfOrderRD.data}
           >

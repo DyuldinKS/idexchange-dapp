@@ -178,10 +178,7 @@ export const OrderOwnerView: FC<{
             </Stack>
           ) : (
             <ConfirmedOrderInfoBlock
-              isValid={
-                contractsAttrs &&
-                isCnfOrderValid(orderRD.data, cnfOrderRD.data, contractsAttrs.xdai)
-              }
+              isValid={isCnfOrderValid(orderRD.data, cnfOrderRD.data)}
               title="Confirmation in Gnosis chain"
               order={cnfOrderRD.data}
             >

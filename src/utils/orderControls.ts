@@ -42,15 +42,12 @@ export const canCreateCnfOrder = (
 export const isCnfOrderValid = (
   order: IdenaOrderState | null,
   cnfOrder: XdaiConfirmedOrder | null,
-  cnfContract: XdaiContractAttributes,
 ) => {
-  // TOOD: move outside
-  if (!order || !cnfOrder) return null;
-
-  return (
-    cnfOrder.amountXDAI.eq(parseIdna(order.amountXdai)) &&
-    isAddrEqual(order.payoutAddress, cnfOrder.payoutAddress) &&
-    cnfOrder.matchDeadline + cnfContract.ownerClaimPeriod < order.expireAt
+  return Boolean(
+    order &&
+      cnfOrder &&
+      cnfOrder.amountXDAI.eq(parseIdna(order.amountXdai)) &&
+      isAddrEqual(order.payoutAddress, cnfOrder.payoutAddress),
   );
 };
 
@@ -67,10 +64,6 @@ export const canCancelCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
         : cnfOrder.matchDeadline < Date.now()),
   );
 
-// export const canBuyOrder = (order: IdenaOrderState | null, cnfOrder: XdaiConfirmedOrder | null, cnfContract: XdaiContractAttributes | null) => {
-//   return Boolean(order && cnfOrder && cnfContract ? order)
-// }
-
 export const canMatchOrder = (
   order: IdenaOrderState | null,
   cnfOrder: XdaiConfirmedOrder | null,
@@ -84,7 +77,8 @@ export const canMatchOrder = (
   const hasTimeForFulfilling = Date.now() + saleContract.fulfilPeriod < order.expireAt;
   const isOrderPartValid = (isOrderNotMatched || isPrevMatchExpired) && hasTimeForFulfilling;
 
-  const isCnfOrderPartValid = !cnfOrder.matcher && Date.now() < cnfOrder.matchDeadline;
+  const isCnfOrderPartValid =
+    !cnfOrder.matcher && Date.now() < cnfOrder.matchDeadline && isCnfOrderValid(order, cnfOrder);
 
   return Boolean(isOrderPartValid && isCnfOrderPartValid);
 };
