@@ -14,24 +14,20 @@ export const ConfirmedOrderInfoBlock: FCC<{
   title: ReactNode;
   order: XdaiConfirmedOrder | null;
   showFullInfo?: boolean;
-  isValid?: boolean | null;
-}> = ({ title, order, showFullInfo, isValid, children }) => {
+  isValid?: boolean;
+}> = ({ title, order, isValid, children }) => {
   const { palette } = useTheme();
   return (
     <UiBlock>
       <UiBlockTitle>
-        {isValid == null ? (
-          title
-        ) : (
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Box>{title}</Box>
-            {isValid ? (
-              <Chip variant="outlined" label="Valid" color="success" />
-            ) : (
-              <Chip variant="outlined" label="Invalid" color="error" />
-            )}
-          </Stack>
-        )}
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Box>{title}</Box>
+          {isValid ? (
+            <Chip variant="outlined" label="Valid" color="success" />
+          ) : (
+            <Chip variant="outlined" label="Invalid" color="error" />
+          )}
+        </Stack>
       </UiBlockTitle>
       {order && (
         <UiInfoBlockContent>
