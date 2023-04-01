@@ -18,12 +18,12 @@ import {
   openIdenaAppToSignTx,
   readIdenaOrderState,
 } from '../utils/idena';
-import { canCancelCnfOrder, canCreateCnfOrder, isCnfOrderValid } from '../utils/orderControls';
+import { canCancelCnfOrder, canCreateCnfOrder } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
 import CnfOrderCompletion from './CnfOrderCompletion';
-import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
+import { CnfOrderStatusChip, ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
@@ -40,9 +40,6 @@ export const OrderOwnerView: FC<{
   const [web3Store] = useWeb3Store();
   const [securityDepositRD, securityDepositRDM] = useXdaiSecurityDeposit();
   const order = orderRD.data;
-  // if the order is still without confirmation
-  const isCnfOrderNotFound =
-    !rData.isSuccess(cnfOrderRD) || (rData.isSuccess(cnfOrderRD) && !cnfOrderRD.data);
   const [cancelOrderTxRD, cancelOrderTxRDM] = useRemoteData<Transaction>(null);
   const [burnConfirmedOrderRD, burnConfirmedOrderRDM] = useRemoteData(null);
   const contractsAttrsRD = useContractsAttributes();
@@ -178,9 +175,9 @@ export const OrderOwnerView: FC<{
             </Stack>
           ) : (
             <ConfirmedOrderInfoBlock
-              isValid={isCnfOrderValid(orderRD.data, cnfOrderRD.data)}
+              statusChip={<CnfOrderStatusChip order={order} cnfOrder={cnfOrderRD.data} />}
               title="Confirmation in Gnosis chain"
-              order={cnfOrderRD.data}
+              cnfOrder={cnfOrderRD.data}
             >
               {renderConfirmedOrder()}
             </ConfirmedOrderInfoBlock>

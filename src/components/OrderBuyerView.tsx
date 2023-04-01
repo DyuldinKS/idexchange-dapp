@@ -8,6 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, Stack, TextField, Typography, useTheme } from '@mui/material';
 import { waitForTransaction } from '@wagmi/core';
 
+import debug from 'debug';
+import { useSearchParams } from 'react-router-dom';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useIdenaSecurityDeposit } from '../hooks/useIdenaSecurityDeposit';
 import { useRemoteData, UseRemoteDataReturn } from '../hooks/useRemoteData';
@@ -34,15 +36,13 @@ import {
   readXdaiCnfOrder,
   XdaiConfirmedOrder,
 } from '../utils/xdai';
-import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
+import { BuyerInfoBlock } from './BuyerInfo';
+import { CnfOrderStatusChip, ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { IdenaSecurityDeposit } from './IdenaSecurityDeposit';
 import { OrderCompletion } from './OrderCompletion';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
-import debug from 'debug';
-import { useSearchParams } from 'react-router-dom';
-import { BuyerInfoBlock } from './BuyerInfo';
 
 const log = debug('OrderBuyerView');
 const logSecret = (...args: any[]) => log('secret', ...args);
@@ -295,9 +295,9 @@ export const OrderBuyerView: FC<{
         </IdenaOrderInfoBlock>
         {renderWalletRoutineIfNeeded(web3Store) || (
           <ConfirmedOrderInfoBlock
-            isValid={isCnfOrderValid(orderRD.data, cnfOrderRD.data)}
+            statusChip={<CnfOrderStatusChip order={order} cnfOrder={cnfOrder} />}
             title="Confirmation in Gnosis chain"
-            order={cnfOrderRD.data}
+            cnfOrder={cnfOrderRD.data}
           >
             {renderCnfOrderControls()}
           </ConfirmedOrderInfoBlock>
