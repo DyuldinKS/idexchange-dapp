@@ -14,11 +14,10 @@ import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { useRevision } from '../hooks/useRevision';
 import { shortenHash } from '../utils/address';
 import { IdenaOrderState, readIdenaOrderState } from '../utils/idena';
-import { isCnfOrderValid } from '../utils/orderControls';
 import { rData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
-import { ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
+import { CnfOrderStatusChip, ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { OrderBuyerView } from './OrderBuyerView';
 import { OrderOwnerView } from './OrderOwnerView';
@@ -138,9 +137,9 @@ export const OrderPage: FC = () => {
                 {renderOrder()}
               </IdenaOrderInfoBlock>
               <ConfirmedOrderInfoBlock
-                isValid={isCnfOrderValid(orderRD.data, cnfOrderRD.data)}
+                statusChip={<CnfOrderStatusChip order={orderRD.data} cnfOrder={cnfOrderRD.data} />}
                 title="Confirmation in Gnosis chain"
-                order={cnfOrderRD.data}
+                cnfOrder={cnfOrderRD.data}
               >
                 {renderConfirmedOrder()}
               </ConfirmedOrderInfoBlock>

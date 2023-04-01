@@ -39,6 +39,12 @@ export const canCreateCnfOrder = (
   );
 };
 
+export const isCnfOrderExecutionExpired = (cnfOrder: XdaiConfirmedOrder) =>
+  cnfOrder.executionDeadline && Date.now() < cnfOrder.executionDeadline;
+
+export const isPayoutAddressValid = (order: IdenaOrderState, cnfOrder: XdaiConfirmedOrder) =>
+  isAddrEqual(order.payoutAddress, cnfOrder.payoutAddress);
+
 export const isCnfOrderValid = (
   order: IdenaOrderState | null,
   cnfOrder: XdaiConfirmedOrder | null,
@@ -47,7 +53,7 @@ export const isCnfOrderValid = (
     order &&
       cnfOrder &&
       cnfOrder.amountXDAI.eq(parseIdna(order.amountXdai)) &&
-      isAddrEqual(order.payoutAddress, cnfOrder.payoutAddress),
+      isPayoutAddressValid(order, cnfOrder),
   );
 };
 

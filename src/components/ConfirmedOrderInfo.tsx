@@ -1,43 +1,53 @@
 import dayjs from 'dayjs';
 import { formatUnits } from 'ethers/lib/utils.js';
-import React, { ReactNode } from 'react';
+import React, { FC, ReactNode } from 'react';
 
 import { Box, Chip, Stack, useTheme } from '@mui/material';
 import { gnosis } from '@wagmi/core/chains';
 
 import { FCC } from '../types/FCC';
+import { IdenaOrderState } from '../utils/idena';
+import { isCnfOrderExecutionExpired, isCnfOrderValid } from '../utils/orderControls';
 import { XdaiConfirmedOrder } from '../utils/xdai';
 import { DATE_TIME_FORMAT } from './IdenaOrderInfo';
 import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiSpan } from './ui';
 
+export const CnfOrderStatusChip: FC<{
+  order: IdenaOrderState | null;
+  cnfOrder: XdaiConfirmedOrder | null;
+}> = ({ order, cnfOrder }) => {
+  if (!order || !cnfOrder) return null;
+
+  return isCnfOrderValid(order, cnfOrder) ? (
+    <Chip variant="outlined" label="Valid" color="success" />
+  ) : (
+    <Chip variant="outlined" label="Invalid" color="error" />
+  );
+};
+
 export const ConfirmedOrderInfoBlock: FCC<{
   title: ReactNode;
-  order: XdaiConfirmedOrder | null;
-  showFullInfo?: boolean;
-  isValid?: boolean;
-}> = ({ title, order, isValid, children }) => {
+  cnfOrder: XdaiConfirmedOrder | null;
+  statusChip: ReactNode;
+}> = ({ title, cnfOrder, statusChip, children }) => {
   const { palette } = useTheme();
   return (
     <UiBlock>
       <UiBlockTitle>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Box>{title}</Box>
-          {isValid ? (
-            <Chip variant="outlined" label="Valid" color="success" />
-          ) : (
-            <Chip variant="outlined" label="Invalid" color="error" />
-          )}
+          {statusChip}
         </Stack>
       </UiBlockTitle>
-      {order && (
+      {cnfOrder && (
         <UiInfoBlockContent>
-          <UiInfoBlockRow label="Owner:" value={String(order.owner)} />
+          <UiInfoBlockRow label="Owner:" value={String(cnfOrder.owner)} />
           <UiInfoBlockRow
             label="Amount:"
             value={
               <Box component="span">
                 <Box component="span" fontWeight={600}>
-                  {formatUnits(order.amountXDAI, gnosis.nativeCurrency.decimals)}
+                  {formatUnits(cnfOrder.amountXDAI, gnosis.nativeCurrency.decimals)}
                 </Box>{' '}
                 xDAI
               </Box>
@@ -45,16 +55,20 @@ export const ConfirmedOrderInfoBlock: FCC<{
           />
           <UiInfoBlockRow
             label="Response deadline:"
-            value={
-              order.matchDeadline ? dayjs(order.matchDeadline).format(DATE_TIME_FORMAT) : 'None'
-            }
+            value={dayjs(cnfOrder.matchDeadline).format(DATE_TIME_FORMAT)}
           />
           <UiInfoBlockRow
             label="xDAI giver:"
             value={
-              order.matcher ? (
-                <UiSpan color={!isValid ? palette.error.main : palette.secondary.dark}>
-                  {order.matcher}
+              cnfOrder.matcher ? (
+                <UiSpan
+                  color={
+                    isCnfOrderExecutionExpired(cnfOrder)
+                      ? palette.error.main
+                      : palette.secondary.dark
+                  }
+                >
+                  {cnfOrder.matcher}
                 </UiSpan>
               ) : (
                 'None'
@@ -64,9 +78,15 @@ export const ConfirmedOrderInfoBlock: FCC<{
           <UiInfoBlockRow
             label="xDAI claim deadline:"
             value={
-              order.executionDeadline ? (
-                <UiSpan color={!isValid ? palette.error.main : palette.secondary.dark}>
-                  {dayjs(order.executionDeadline).format(DATE_TIME_FORMAT)}
+              cnfOrder.executionDeadline ? (
+                <UiSpan
+                  color={
+                    isCnfOrderExecutionExpired(cnfOrder)
+                      ? palette.error.main
+                      : palette.secondary.dark
+                  }
+                >
+                  {dayjs(cnfOrder.executionDeadline).format(DATE_TIME_FORMAT)}
                 </UiSpan>
               ) : (
                 'None'
