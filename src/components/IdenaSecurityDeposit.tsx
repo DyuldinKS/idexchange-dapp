@@ -1,6 +1,6 @@
 import { formatUnits, isAddress } from 'ethers/lib/utils.js';
 import { Transaction } from 'idena-sdk-js';
-import { FC, ReactNode } from 'react';
+import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
 import { Link, Stack, Typography, useTheme } from '@mui/material';
@@ -19,8 +19,16 @@ import {
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { AddressSchema } from './OrderBuyerView';
-import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
-import { UiBlockTitle, UiError, UiSpan, UiSubmitButton } from './ui';
+import { SecurityDepositAmount } from './SecurityDepositInfo';
+import {
+  UiBlock,
+  UiBlockTitle,
+  UiError,
+  UiInfoBlockContent,
+  UiInfoBlockRow,
+  UiSpan,
+  UiSubmitButton,
+} from './ui';
 
 export type IdenaSecurityDepositProps = {
   address: string;
@@ -39,29 +47,36 @@ export const IDENA_SEC_DEPOSIT_TEXTS = {
 
 export const IdenaSecurityDepositBuyerPage: FC<
   IdenaSecurityDepositProps & {
-    showAlreadyUsedError?: boolean;
+    showAlreadyInUseError?: boolean;
   }
 > = (props) => {
-  const { securityDepositRD, showAlreadyUsedError } = props;
+  const { securityDepositRD, showAlreadyInUseError } = props;
   const error = securityDepositRD.error;
+  const securityDeposit = securityDepositRD.data;
 
   return (
-    <SecurityDepositInfoBlock
-      securityDeposit={securityDepositRD.data}
-      nativeCurrency={IDENA_CHAIN.nativeCurrency}
-      title={
-        <UiBlockTitle tooltip={IDENA_SEC_DEPOSIT_TEXTS.exclusionExample}>
-          iDNA security deposit
-        </UiBlockTitle>
-      }
-      description={
-        securityDepositRD.data?.amount.eq(0) &&
-        'In order to guarantee the reliability of the exchange, it is essential to make a deposit of iDNA. After the exchange is completed, the iDNA can be withdrawn from the protocol back to your wallet.'
-      }
-    >
+    <UiBlock alignItems="start">
+      <UiBlockTitle tooltip={IDENA_SEC_DEPOSIT_TEXTS.exclusionExample}>
+        iDNA security deposit
+      </UiBlockTitle>
+      {securityDeposit && (
+        <UiInfoBlockContent>
+          {securityDeposit.amount.eq(0) && (
+            <UiInfoBlockRow
+              label={
+                'In order to guarantee the reliability of the exchange, it is essential to make a deposit of iDNA. After the exchange is completed, the iDNA can be withdrawn from the protocol back to your wallet.'
+              }
+            />
+          )}
+          <SecurityDepositAmount
+            amount={securityDeposit.amount}
+            nativeCurrency={IDENA_CHAIN.nativeCurrency}
+          />
+        </UiInfoBlockContent>
+      )}
       <Stack mt={2} spacing={2}>
         <IdenaSecurityDepositControls {...props} />
-        {showAlreadyUsedError && (
+        {showAlreadyInUseError && (
           <Typography color="error">
             This deposit is already being used to confirm another order booking. You have to wait
             until that order is complete or use a different account to book this one.
@@ -69,7 +84,7 @@ export const IdenaSecurityDepositBuyerPage: FC<
         )}
       </Stack>
       {error && <UiError err={error} />}
-    </SecurityDepositInfoBlock>
+    </UiBlock>
   );
 };
 
@@ -96,8 +111,6 @@ export const IdenaSecurityDepositControls: FC<IdenaSecurityDepositProps> = ({
   if (rData.isFailure(securityDepositRD)) return null;
 
   const deposit = securityDepositRD.data;
-  // if (deposit.isValid) return renderDepositInfo(null);
-  // handled by SecurityDepositInfoBlock
   if (deposit.isInUse) return null;
 
   const buildTopUpDepositTx = async (

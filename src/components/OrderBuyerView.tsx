@@ -282,7 +282,7 @@ export const OrderBuyerView: FC<{
           form={form}
           securityDepositRD={securityDepositRD}
           securityDepositRDM={securityDepositRDM}
-          showAlreadyUsedError={Boolean(
+          showAlreadyInUseError={Boolean(
             rData.isSuccess(securityDepositRD) &&
               securityDepositRD.data.isInUse &&
               order &&

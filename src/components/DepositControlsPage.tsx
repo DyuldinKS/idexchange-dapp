@@ -12,15 +12,8 @@ import { IDENA_SEC_DEPOSIT_TEXTS, IdenaSecurityDepositControls } from './IdenaSe
 import { AddressSchema, addressSchema } from './OrderBuyerView';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
-import {
-  UiBlock,
-  UiBlockTitle,
-  UiError,
-  UiInfoBlockContent,
-  UiInfoBlockRow,
-  UiInfoBlockTokenAmount,
-  UiPage,
-} from './ui';
+import { UiBlock, UiBlockTitle, UiError, UiInfoBlockContent, UiInfoBlockRow, UiPage } from './ui';
+import { SecurityDepositAmount } from './SecurityDepositInfo';
 
 const log = debug('DepositControlsPage');
 
@@ -45,18 +38,13 @@ export const DepositControlsIdena: FC = () => {
     <UiBlock alignItems="start">
       <UiBlockTitle tooltip={IDENA_SEC_DEPOSIT_TEXTS.exclusionExample}>
         iDNA security deposit
-      </UiBlockTitle>
+      </UiBlockTitle>{' '}
       {securityDeposit && (
         <UiInfoBlockContent>
           <UiInfoBlockRow label="In order to ensure that buyers are trustworthy, the protocol requires them to make one-time security deposit in iDNA." />
-          <UiInfoBlockRow
-            label="Deposited:"
-            value={
-              <UiInfoBlockTokenAmount
-                amount={securityDeposit.amount}
-                {...IDENA_CHAIN.nativeCurrency}
-              />
-            }
+          <SecurityDepositAmount
+            amount={securityDeposit.amount}
+            nativeCurrency={IDENA_CHAIN.nativeCurrency}
           />
         </UiInfoBlockContent>
       )}

@@ -14,8 +14,8 @@ import {
   submitXdaiSecutityDeposit,
   withdrawXdaiSecurityDeposit,
 } from '../utils/xdai';
-import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
-import { UiBlockTitle, UiError, UiSubmitButton } from './ui';
+import { SecurityDepositAmount } from './SecurityDepositInfo';
+import { UiBlock, UiBlockTitle, UiError, UiInfoBlockContent, UiSubmitButton } from './ui';
 
 export const XdaiSecurityDeposit: FC<{
   address: string | null;
@@ -26,13 +26,21 @@ export const XdaiSecurityDeposit: FC<{
   const { data: contractsAttrs } = useContractsAttributes();
   const [depositChangeTxRD, depositChangeTxRDM] = useRemoteData(null);
   const error = securityDepositRD.error || depositChangeTxRD.error;
+  const securityDeposit = securityDepositRD.data;
 
   const renderDepositInfo = (children: ReactNode) => (
-    <SecurityDepositInfoBlock
-      title={<UiBlockTitle>xDAI security deposit</UiBlockTitle>}
-      securityDeposit={securityDepositRD.data}
-      nativeCurrency={gnosis.nativeCurrency}
-    >
+    <UiBlock alignItems="start">
+      <UiBlockTitle tooltip="The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking xDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller' security deposit will be seized in the following manner: 50% to the mather to compensate seized security deposit on Idena network and 50% to the protocol fund.">
+        Security deposit
+      </UiBlockTitle>
+      {securityDeposit && (
+        <UiInfoBlockContent>
+          <SecurityDepositAmount
+            amount={securityDeposit.amount}
+            nativeCurrency={gnosis.nativeCurrency}
+          />
+        </UiInfoBlockContent>
+      )}
       <Stack mt={2} spacing={2}>
         {children}
         {securityDepositRD.data?.isInUse && (
@@ -43,7 +51,7 @@ export const XdaiSecurityDeposit: FC<{
         )}
       </Stack>
       {error && <UiError mt={1} err={error} />}
-    </SecurityDepositInfoBlock>
+    </UiBlock>
   );
 
   if (rData.isNotAsked(securityDepositRD))
@@ -54,8 +62,6 @@ export const XdaiSecurityDeposit: FC<{
   if (rData.isFailure(securityDepositRD)) return renderDepositInfo(null);
 
   const deposit = securityDepositRD.data;
-  // if (deposit.isValid) return renderDepositInfo(null);
-  // handled by SecurityDepositInfoBlock
   if (deposit.isInUse) return renderDepositInfo(null);
 
   const replenishDeposit = () => {
