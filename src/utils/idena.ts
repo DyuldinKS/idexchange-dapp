@@ -83,6 +83,7 @@ export async function readIdenaOrderState(secretHash: string) {
 
   const expirationBlock = res[4];
   const matchExpirationBlock = res[6];
+  const expireAt = getExpireTime(expirationBlock);
 
   return {
     owner: res[0],
@@ -92,7 +93,8 @@ export async function readIdenaOrderState(secretHash: string) {
     expirationBlock,
     matcher: res[5],
     matchExpirationBlock,
-    expireAt: getExpireTime(expirationBlock),
+    expireAt,
+    matchDeadline: expireAt - readIdenaContractInfo().fulfilPeriod,
     matchExpireAt: matchExpirationBlock && getExpireTime(matchExpirationBlock),
   };
 }

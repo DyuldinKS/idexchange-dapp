@@ -40,10 +40,13 @@ export const canCreateCnfOrder = (
 };
 
 export const isCnfOrderExecutionExpired = (cnfOrder: XdaiConfirmedOrder) =>
-  cnfOrder.executionDeadline && Date.now() < cnfOrder.executionDeadline;
+  cnfOrder.executionDeadline && cnfOrder.executionDeadline < Date.now();
 
 export const isPayoutAddressValid = (order: IdenaOrderState, cnfOrder: XdaiConfirmedOrder) =>
   isAddrEqual(order.payoutAddress, cnfOrder.payoutAddress);
+
+export const isCnfOrderMatchDeadlinePassed = (cnfOrder: XdaiConfirmedOrder) =>
+  cnfOrder.matchDeadline < Date.now();
 
 export const isCnfOrderValid = (
   order: IdenaOrderState | null,
@@ -67,7 +70,7 @@ export const canCancelCnfOrder = (cnfOrder: XdaiConfirmedOrder | null) =>
     cnfOrder &&
       (cnfOrder.executionDeadline
         ? cnfOrder.executionDeadline < Date.now()
-        : cnfOrder.matchDeadline < Date.now()),
+        : isCnfOrderMatchDeadlinePassed(cnfOrder)),
   );
 
 export const canMatchOrder = (
