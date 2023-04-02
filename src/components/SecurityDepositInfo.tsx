@@ -37,11 +37,7 @@ export const SecurityDepositInfoBlock: FCC<{
           />
         </UiInfoBlockContent>
       )}
-      {React.Children.toArray(children).filter(Boolean).length > 0 && (
-        <Stack mt={2} alignItems="stretch">
-          {children}
-        </Stack>
-      )}
+      {children}
     </UiBlock>
   );
 };

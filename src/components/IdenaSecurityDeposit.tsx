@@ -20,31 +20,27 @@ import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { AddressSchema } from './OrderBuyerView';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
-import { UiBlockTitle, UiError, UiSubmitButton } from './ui';
+import { UiBlockTitle, UiError, UiSpan, UiSubmitButton } from './ui';
 
-export const IdenaSecurityDeposit: FC<{
+export type IdenaSecurityDepositProps = {
   address: string;
   securityDepositRD: RemoteData<SecurityDepositType>;
   securityDepositRDM: UseRemoteDataMethods<SecurityDepositType>;
   // TODO: replace with onTopUpHandler
   form: UseFormReturn<AddressSchema>;
   isWithdrawDisabled?: boolean;
-  showAlreadyUsedError?: boolean;
   allowWithdrawal?: boolean;
-}> = ({
-  address,
-  securityDepositRD,
-  securityDepositRDM,
-  form,
-  showAlreadyUsedError,
-  allowWithdrawal,
-}) => {
-  const error = securityDepositRD.error;
-  const [topUpDepositTxRD, topUpDepositTxRDM] = useRemoteData<Transaction>(null);
-  const [withdrawDepositTxRD, withdrawDepositTxRDM] = useRemoteData<Transaction>(null);
-  const theme = useTheme();
+};
 
-  const renderDepositInfo = (children: ReactNode) => (
+export const IdenaSecurityDeposit: FC<
+  IdenaSecurityDepositProps & {
+    showAlreadyUsedError?: boolean;
+  }
+> = (props) => {
+  const { securityDepositRD, showAlreadyUsedError } = props;
+  const error = securityDepositRD.error;
+
+  return (
     <SecurityDepositInfoBlock
       securityDeposit={securityDepositRD.data}
       nativeCurrency={IDENA_CHAIN.nativeCurrency}
@@ -59,30 +55,46 @@ export const IdenaSecurityDeposit: FC<{
           : undefined
       }
     >
-      {children}
-      {showAlreadyUsedError && (
-        <Typography mt={children ? 2 : 0} color="error">
-          This deposit is already being used to confirm another order booking. You have to wait
-          until your previous order is complete or use a different account to book this one.
-        </Typography>
-      )}
+      <Stack mt={2} spacing={2}>
+        <IdenaSecurityDepositControls {...props} />
+        {showAlreadyUsedError && (
+          <Typography color="error">
+            This deposit is already being used to confirm another order booking. You have to wait
+            until your previous order is complete or use a different account to book this one.
+          </Typography>
+        )}
+      </Stack>
       {error && <UiError err={error} />}
     </SecurityDepositInfoBlock>
   );
+};
+
+export const IdenaSecurityDepositControls: FC<IdenaSecurityDepositProps> = ({
+  address,
+  securityDepositRD,
+  securityDepositRDM,
+  form,
+  allowWithdrawal,
+}) => {
+  const [topUpDepositTxRD, topUpDepositTxRDM] = useRemoteData<Transaction>(null);
+  const [withdrawDepositTxRD, withdrawDepositTxRDM] = useRemoteData<Transaction>(null);
+  const theme = useTheme();
 
   if (rData.isNotAsked(securityDepositRD))
-    return renderDepositInfo(
-      !isAddress(address || '')
-        ? 'Idena address is not provided.'
-        : 'Cannot load security deposit.',
+    return (
+      <UiSpan>
+        {!isAddress(address || '')
+          ? 'Idena address is not provided.'
+          : 'Cannot load security deposit.'}
+      </UiSpan>
     );
-  if (rData.isLoading(securityDepositRD)) return renderDepositInfo('Loading...');
-  if (rData.isFailure(securityDepositRD)) return renderDepositInfo(null);
+  if (rData.isLoading(securityDepositRD)) return <UiSpan>Loading...</UiSpan>;
+  if (rData.isFailure(securityDepositRD)) return null;
 
   const deposit = securityDepositRD.data;
   // if (deposit.isValid) return renderDepositInfo(null);
   // handled by SecurityDepositInfoBlock
-  if (deposit.isInUse) return renderDepositInfo(null);
+  if (deposit.isInUse) return null;
 
   const buildTopUpDepositTx = async (
     evt: React.BaseSyntheticEvent,
@@ -106,7 +118,7 @@ export const IdenaSecurityDeposit: FC<{
   };
 
   if (!deposit.isValid) {
-    return renderDepositInfo(
+    return (
       <Stack spacing={2}>
         {!rData.isSuccess(topUpDepositTxRD) && (
           <UiSubmitButton
@@ -138,7 +150,7 @@ export const IdenaSecurityDeposit: FC<{
           </>
         )}
         {rData.isFailure(topUpDepositTxRD) && <UiError err={topUpDepositTxRD.error} />}
-      </Stack>,
+      </Stack>
     );
   }
 
@@ -164,7 +176,7 @@ export const IdenaSecurityDeposit: FC<{
   };
 
   if (allowWithdrawal) {
-    return renderDepositInfo(
+    return (
       <Stack spacing={2}>
         {!rData.isSuccess(withdrawDepositTxRD) && (
           <UiSubmitButton
@@ -197,7 +209,7 @@ export const IdenaSecurityDeposit: FC<{
           </>
         )}
         {rData.isFailure(withdrawDepositTxRD) && <UiError err={withdrawDepositTxRD.error} />}
-      </Stack>,
+      </Stack>
     );
   }
 

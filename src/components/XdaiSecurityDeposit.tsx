@@ -1,12 +1,10 @@
 import { formatUnits, isAddress } from 'ethers/lib/utils.js';
 import { FC, ReactNode } from 'react';
 
-import { prepareWriteContract, waitForTransaction, writeContract } from '@wagmi/core';
+import { waitForTransaction } from '@wagmi/core';
 import { gnosis } from '@wagmi/core/chains';
 
-import debug from 'debug';
-import abiToReceiveXdai from '../abi/idena-atomic-dex-gnosis.json';
-import { CONTRACTS } from '../constants/contracts';
+import { Stack, Typography } from '@mui/material';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { SecurityDepositType } from '../types/contracts';
@@ -18,15 +16,6 @@ import {
 } from '../utils/xdai';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
 import { UiBlockTitle, UiError, UiSubmitButton } from './ui';
-import { Typography } from '@mui/material';
-
-const log = debug('XdaiSecurityDeposit');
-
-const contractInfo = {
-  chainId: gnosis.id,
-  address: CONTRACTS[gnosis.id].receiveXdai,
-  abi: abiToReceiveXdai,
-};
 
 export const XdaiSecurityDeposit: FC<{
   address: string | null;
@@ -44,13 +33,15 @@ export const XdaiSecurityDeposit: FC<{
       securityDeposit={securityDepositRD.data}
       nativeCurrency={gnosis.nativeCurrency}
     >
-      {children}
-      {securityDepositRD.data?.isInUse && (
-        <Typography mt={2} color="error">
-          This deposit is already being used to confirm another order. You have to wait until your
-          previous order is complete or use a different account to create a new order.
-        </Typography>
-      )}
+      <Stack mt={2} spacing={2}>
+        {children}
+        {securityDepositRD.data?.isInUse && (
+          <Typography color="error">
+            This deposit is already being used to confirm another order. You have to wait until your
+            previous order is complete or use a different account to create a new order.
+          </Typography>
+        )}
+      </Stack>
       {error && <UiError mt={1} err={error} />}
     </SecurityDepositInfoBlock>
   );
