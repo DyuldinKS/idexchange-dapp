@@ -22,7 +22,7 @@ import { IdenaOrderCreation } from './IdenaOrderCreation';
 import { SecretCodeForm } from './SecretCodeForm';
 import { UiPage } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
-import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
+import { XdaiSecurityDepositControls, XdaiSecurityDepositOwnerView } from './XdaiSecurityDeposit';
 import { SellerInfoBlock } from './SellerInfo';
 
 export type OrderCreationFormSchema = z.infer<typeof orderCreationFormSchema>;
@@ -117,10 +117,15 @@ export const OrderCreationPage: FC = () => {
             {renderWalletRoutineIfNeeded(web3Store) || (
               <>
                 {
-                  <XdaiSecurityDeposit
-                    address={web3Store.address}
+                  <XdaiSecurityDepositOwnerView
                     securityDepositRD={securityDepositRD}
-                    securityDepositRDM={securityDepositRDM}
+                    controls={
+                      <XdaiSecurityDepositControls
+                        address={web3Store.address}
+                        securityDepositRD={securityDepositRD}
+                        securityDepositRDM={securityDepositRDM}
+                      />
+                    }
                   />
                 }
                 {rData.isSuccess(securityDepositRD) && securityDepositRD.data.isValid && (

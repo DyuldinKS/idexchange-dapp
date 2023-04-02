@@ -6,6 +6,7 @@ import { SecurityDepositType } from '../types/contracts';
 import { readXdaiSecurityDeposit } from '../utils/xdai';
 import { useContractsAttributes } from './useContractsAttributes';
 import { useRemoteData } from './useRemoteData';
+import { rData } from '../utils/remoteData';
 
 const log = debug('hooks:useSecurityDepositInfo');
 
@@ -16,7 +17,10 @@ export const useXdaiSecurityDeposit = () => {
   const [, rdMethods] = rd;
 
   useEffect(() => {
-    if (!address || !chainId || !contractAttrs) return;
+    if (!address || !chainId || !contractAttrs) {
+      if (rData.isNotAsked(rdMethods.getState())) return;
+      return rdMethods.setNotAsked();
+    }
 
     rdMethods.track(readXdaiSecurityDeposit(address, contractAttrs.xdai));
   }, [address, chainId, contractAttrs, rdMethods]);

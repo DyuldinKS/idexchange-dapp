@@ -39,7 +39,7 @@ import {
 import { BuyerInfoBlock } from './BuyerInfo';
 import { CnfOrderStatusChip, ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
-import { IdenaSecurityDepositBuyerPage } from './IdenaSecurityDeposit';
+import { IdenaSecurityDepositBuyerView } from './IdenaSecurityDeposit';
 import { OrderCompletion } from './OrderCompletion';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
@@ -277,7 +277,7 @@ export const OrderBuyerView: FC<{
           fullWidth
           size="small"
         />
-        <IdenaSecurityDepositBuyerPage
+        <IdenaSecurityDepositBuyerView
           address={idenaAddress}
           form={form}
           securityDepositRD={securityDepositRD}

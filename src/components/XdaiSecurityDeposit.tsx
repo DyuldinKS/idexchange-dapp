@@ -15,26 +15,43 @@ import {
   withdrawXdaiSecurityDeposit,
 } from '../utils/xdai';
 import { SecurityDepositAmount } from './SecurityDepositInfo';
-import { UiBlock, UiBlockTitle, UiError, UiInfoBlockContent, UiSubmitButton } from './ui';
+import {
+  UiBlock,
+  UiBlockTitle,
+  UiError,
+  UiInfoBlockContent,
+  UiInfoBlockRow,
+  UiSpan,
+  UiSubmitButton,
+} from './ui';
+import { FCC } from '../types/FCC';
 
-export const XdaiSecurityDeposit: FC<{
-  address: string | null;
+export const XDAI_SEC_DEPOSIT_TEXTS = {
+  exclusionExample:
+    "The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking xDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller' security deposit will be seized in the following manner: 50% to the mather to compensate seized security deposit on Idena network and 50% to the protocol fund.",
+};
+
+export const XdaiSecurityDepositOwnerView: FC<{
   securityDepositRD: RemoteData<SecurityDepositType>;
-  securityDepositRDM: UseRemoteDataMethods<SecurityDepositType>;
-  allowWithdrawal?: boolean;
-}> = ({ address, securityDepositRD, securityDepositRDM, allowWithdrawal }) => {
-  const { data: contractsAttrs } = useContractsAttributes();
-  const [depositChangeTxRD, depositChangeTxRDM] = useRemoteData(null);
-  const error = securityDepositRD.error || depositChangeTxRD.error;
+  controls: ReactNode;
+}> = ({ securityDepositRD, controls }) => {
+  const error = securityDepositRD.error;
   const securityDeposit = securityDepositRD.data;
 
-  const renderDepositInfo = (children: ReactNode) => (
+  return (
     <UiBlock alignItems="start">
-      <UiBlockTitle tooltip="The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking xDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller' security deposit will be seized in the following manner: 50% to the mather to compensate seized security deposit on Idena network and 50% to the protocol fund.">
-        Security deposit
+      <UiBlockTitle tooltip={XDAI_SEC_DEPOSIT_TEXTS.exclusionExample}>
+        xDAI security deposit
       </UiBlockTitle>
       {securityDeposit && (
         <UiInfoBlockContent>
+          {securityDeposit.amount.eq(0) && (
+            <UiInfoBlockRow
+              label={
+                'In order to guarantee the reliability of the exchange, it is essential to make a deposit of xDAI. After the exchange is completed, the it can be withdrawn from the protocol back to your wallet.'
+              }
+            />
+          )}
           <SecurityDepositAmount
             amount={securityDeposit.amount}
             nativeCurrency={gnosis.nativeCurrency}
@@ -42,7 +59,7 @@ export const XdaiSecurityDeposit: FC<{
         </UiInfoBlockContent>
       )}
       <Stack mt={2} spacing={2}>
-        {children}
+        {controls}
         {securityDepositRD.data?.isInUse && (
           <Typography color="error">
             This deposit is already being used to confirm another order. You have to wait until your
@@ -53,16 +70,30 @@ export const XdaiSecurityDeposit: FC<{
       {error && <UiError mt={1} err={error} />}
     </UiBlock>
   );
+};
+
+export const XdaiSecurityDepositControls: FCC<{
+  address: string | null;
+  securityDepositRD: RemoteData<SecurityDepositType>;
+  securityDepositRDM: UseRemoteDataMethods<SecurityDepositType>;
+  allowWithdrawal?: boolean;
+}> = ({ address, securityDepositRD, securityDepositRDM, allowWithdrawal }) => {
+  const { data: contractsAttrs } = useContractsAttributes();
+  const [depositChangeTxRD, depositChangeTxRDM] = useRemoteData(null);
 
   if (rData.isNotAsked(securityDepositRD))
-    return renderDepositInfo(
-      !isAddress(address || '') ? 'xDAI address is not provided.' : 'Cannot load security deposit.',
+    return (
+      <UiSpan>
+        {!isAddress(address || '')
+          ? 'xDAI address is not provided.'
+          : 'Cannot load security deposit.'}
+      </UiSpan>
     );
-  if (rData.isLoading(securityDepositRD) || !contractsAttrs) return renderDepositInfo('Loading...');
-  if (rData.isFailure(securityDepositRD)) return renderDepositInfo(null);
+  if (rData.isLoading(securityDepositRD) || !contractsAttrs) return <UiSpan>Loading...</UiSpan>;
+  if (rData.isFailure(securityDepositRD)) return null;
 
   const deposit = securityDepositRD.data;
-  if (deposit.isInUse) return renderDepositInfo(null);
+  if (deposit.isInUse) return null;
 
   const replenishDeposit = () => {
     if (!address || !contractsAttrs) return;
@@ -86,13 +117,9 @@ export const XdaiSecurityDeposit: FC<{
 
   if (!deposit.isValid)
     return (
-      <>
-        {renderDepositInfo(
-          <UiSubmitButton disabled={isTxLoading} onClick={replenishDeposit}>
-            {!isTxLoading ? `Deposit ${amountStr} xDAI` : 'Updating security deposit...'}
-          </UiSubmitButton>,
-        )}
-      </>
+      <UiSubmitButton disabled={isTxLoading} onClick={replenishDeposit}>
+        {!isTxLoading ? `Deposit ${amountStr} xDAI` : 'Updating security deposit...'}
+      </UiSubmitButton>
     );
 
   const withdrawDeposit = () => {
@@ -104,12 +131,12 @@ export const XdaiSecurityDeposit: FC<{
   };
 
   if (allowWithdrawal) {
-    return renderDepositInfo(
+    return (
       <UiSubmitButton variant="outlined" disabled={isTxLoading} onClick={withdrawDeposit}>
         {!isTxLoading ? `Withdraw ${amountStr} xDAI` : 'Updating security deposit...'}
-      </UiSubmitButton>,
+      </UiSubmitButton>
     );
   }
 
-  return renderDepositInfo(null);
+  return null;
 };

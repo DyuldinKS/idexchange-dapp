@@ -45,7 +45,7 @@ export const IDENA_SEC_DEPOSIT_TEXTS = {
     'The existence of a deposit incentivizes the buyer to fulfill their obligation in the transaction. For instance, if a buyer books an order on Idena network and subsequently fails to pay xDAI on Gnosis network, their deposit will be seized.',
 };
 
-export const IdenaSecurityDepositBuyerPage: FC<
+export const IdenaSecurityDepositBuyerView: FC<
   IdenaSecurityDepositProps & {
     showAlreadyInUseError?: boolean;
   }

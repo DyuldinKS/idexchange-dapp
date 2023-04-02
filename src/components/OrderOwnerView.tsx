@@ -28,7 +28,7 @@ import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
 import { XdaiOrderConfirmation } from './XdaiOrderConfirmation';
-import { XdaiSecurityDeposit } from './XdaiSecurityDeposit';
+import { XdaiSecurityDepositControls, XdaiSecurityDepositOwnerView } from './XdaiSecurityDeposit';
 
 export const OrderOwnerView: FC<{
   secretHash: string;
@@ -161,10 +161,15 @@ export const OrderOwnerView: FC<{
         {renderWalletRoutineIfNeeded(web3Store) ||
           (canConfirmOrder && rData.isSuccess(cnfOrderRD) ? (
             <Stack alignItems="stretch" mt={2} spacing={2}>
-              <XdaiSecurityDeposit
-                address={web3Store.address}
+              <XdaiSecurityDepositOwnerView
                 securityDepositRD={securityDepositRD}
-                securityDepositRDM={securityDepositRDM}
+                controls={
+                  <XdaiSecurityDepositControls
+                    address={web3Store.address}
+                    securityDepositRD={securityDepositRD}
+                    securityDepositRDM={securityDepositRDM}
+                  />
+                }
               />
               <XdaiOrderConfirmation
                 secretHash={secretHash}
