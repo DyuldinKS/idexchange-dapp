@@ -17,6 +17,8 @@ import { StackProps } from '@mui/system';
 import { ComponentProps, FC, forwardRef, PropsWithChildren, ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FCC } from '../types/FCC';
+import { BigNumber } from 'ethers';
+import { formatUnits } from 'ethers/lib/utils.js';
 
 export const UiSubmitButton: FC<ButtonProps> = (props) => (
   <Button size="medium" variant="contained" {...props} />
@@ -163,6 +165,16 @@ export const UiInfoBlockRow: FC<{ label: ReactNode; value?: ReactNode } & BoxPro
     </Box>
   );
 };
+
+export const UiInfoBlockTokenAmount: FC<{
+  amount: BigNumber;
+  decimals: number;
+  symbol: string;
+}> = ({ amount, decimals, symbol }) => (
+  <UiSpan>
+    <UiSpan fontWeight={600}>{formatUnits(amount, decimals)}</UiSpan> {symbol}
+  </UiSpan>
+);
 
 export const UiInfoBlockContent: FCC<StackProps> = (props) => {
   return <Stack mt={2} spacing={1} {...props} />;
