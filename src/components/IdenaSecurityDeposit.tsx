@@ -1,4 +1,4 @@
-import { formatUnits } from 'ethers/lib/utils.js';
+import { formatUnits, isAddress } from 'ethers/lib/utils.js';
 import { Transaction } from 'idena-sdk-js';
 import { FC, ReactNode } from 'react';
 import { UseFormReturn } from 'react-hook-form';
@@ -9,6 +9,7 @@ import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { SecurityDepositType } from '../types/contracts';
 import {
   buildTopUpIdenaSecurityDepositTx,
+  buildWithdrawIdenaSecurityDepositTx,
   getIdenaLinkToSignTx,
   IDENA_CHAIN,
   IDENA_DECIMALS,
@@ -22,15 +23,25 @@ import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
 import { UiBlockTitle, UiError, UiSubmitButton } from './ui';
 
 export const IdenaSecurityDeposit: FC<{
+  address: string;
   securityDepositRD: RemoteData<SecurityDepositType>;
   securityDepositRDM: UseRemoteDataMethods<SecurityDepositType>;
   // TODO: replace with onTopUpHandler
   form: UseFormReturn<AddressSchema>;
   isWithdrawDisabled?: boolean;
   showAlreadyUsedError?: boolean;
-}> = ({ securityDepositRD, securityDepositRDM, form, showAlreadyUsedError }) => {
+  allowWithdrawal?: boolean;
+}> = ({
+  address,
+  securityDepositRD,
+  securityDepositRDM,
+  form,
+  showAlreadyUsedError,
+  allowWithdrawal,
+}) => {
   const error = securityDepositRD.error;
   const [topUpDepositTxRD, topUpDepositTxRDM] = useRemoteData<Transaction>(null);
+  const [withdrawDepositTxRD, withdrawDepositTxRDM] = useRemoteData<Transaction>(null);
   const theme = useTheme();
 
   const renderDepositInfo = (children: ReactNode) => (
@@ -60,12 +71,16 @@ export const IdenaSecurityDeposit: FC<{
   );
 
   if (rData.isNotAsked(securityDepositRD))
-    return renderDepositInfo('Cannot load security deposit.');
+    return renderDepositInfo(
+      !isAddress(address || '')
+        ? 'Idena address is not provided.'
+        : 'Cannot load security deposit.',
+    );
   if (rData.isLoading(securityDepositRD)) return renderDepositInfo('Loading...');
   if (rData.isFailure(securityDepositRD)) return renderDepositInfo(null);
 
   const deposit = securityDepositRD.data;
-  if (deposit.isValid) return renderDepositInfo(null);
+  // if (deposit.isValid) return renderDepositInfo(null);
   // handled by SecurityDepositInfoBlock
   if (deposit.isInUse) return renderDepositInfo(null);
 
@@ -90,38 +105,101 @@ export const IdenaSecurityDeposit: FC<{
     return buildTopUpDepositTx(evt).then((tx) => tx && openIdenaAppToSignTx(tx));
   };
 
-  return renderDepositInfo(
-    <Stack spacing={2}>
-      {!rData.isSuccess(topUpDepositTxRD) && (
-        <UiSubmitButton
-          onClick={buildTopUpDepositTxAndSign}
-          disabled={rData.isLoading(topUpDepositTxRD)}
-        >
-          {`Deposit ${formatUnits(securityDepositRD.data.requiredAmount, IDENA_DECIMALS)} iDNA`}
-        </UiSubmitButton>
-      )}
-      {rData.isSuccess(topUpDepositTxRD) && (
-        // TODO: move to IdenaTxLinkRoutine component
-        <>
-          <Typography color={getColor.textGrey(theme)}>
-            Click{' '}
-            <Link href={getIdenaLinkToSignTx(topUpDepositTxRD.data)} target="_blank">
-              this link
-            </Link>{' '}
-            if Idena App did not open automatically. Wait for the transaction to complete, then
-            reload deposit state.
-          </Typography>
+  if (!deposit.isValid) {
+    return renderDepositInfo(
+      <Stack spacing={2}>
+        {!rData.isSuccess(topUpDepositTxRD) && (
           <UiSubmitButton
-            sx={{ mt: 2 }}
-            onClick={() => {
-              securityDepositRDM.track(readIdenaSecurityDeposit(form.getValues('idenaAddress')));
-            }}
+            onClick={buildTopUpDepositTxAndSign}
+            disabled={rData.isLoading(topUpDepositTxRD)}
           >
-            Check deposit
+            {`Deposit ${formatUnits(securityDepositRD.data.requiredAmount, IDENA_DECIMALS)} iDNA`}
           </UiSubmitButton>
-        </>
-      )}
-      {rData.isFailure(topUpDepositTxRD) && <UiError err={topUpDepositTxRD.error} />}
-    </Stack>,
-  );
+        )}
+        {rData.isSuccess(topUpDepositTxRD) && (
+          // TODO: move to IdenaTxLinkRoutine component
+          <>
+            <Typography color={getColor.textGrey(theme)}>
+              Click{' '}
+              <Link href={getIdenaLinkToSignTx(topUpDepositTxRD.data)} target="_blank">
+                this link
+              </Link>{' '}
+              if Idena App did not open automatically. Wait for the transaction to complete, then
+              reload deposit state.
+            </Typography>
+            <UiSubmitButton
+              sx={{ mt: 2 }}
+              onClick={() => {
+                securityDepositRDM.track(readIdenaSecurityDeposit(address));
+              }}
+            >
+              Check deposit
+            </UiSubmitButton>
+          </>
+        )}
+        {rData.isFailure(topUpDepositTxRD) && <UiError err={topUpDepositTxRD.error} />}
+      </Stack>,
+    );
+  }
+
+  const buildWithdrawDepositTx = async (
+    evt: React.BaseSyntheticEvent,
+  ): Promise<Transaction | null> => {
+    return new Promise((resolve) => {
+      form
+        .handleSubmit(({ idenaAddress }) => {
+          const txPromise = buildWithdrawIdenaSecurityDepositTx(idenaAddress);
+          withdrawDepositTxRDM.track(txPromise);
+          resolve(txPromise);
+        })(evt)
+        .catch((err) => {
+          console.warn('buildWithdrawDepositTx caught', err);
+          resolve(null);
+        });
+    });
+  };
+
+  const buildWithdrawDepositTxAndSign = async (evt: React.BaseSyntheticEvent) => {
+    return buildWithdrawDepositTx(evt).then((tx) => tx && openIdenaAppToSignTx(tx));
+  };
+
+  if (allowWithdrawal) {
+    return renderDepositInfo(
+      <Stack spacing={2}>
+        {!rData.isSuccess(withdrawDepositTxRD) && (
+          <UiSubmitButton
+            onClick={buildWithdrawDepositTxAndSign}
+            disabled={rData.isLoading(withdrawDepositTxRD)}
+            variant="outlined"
+          >
+            {`Withdraw ${formatUnits(deposit.requiredAmount, IDENA_DECIMALS)} iDNA`}
+          </UiSubmitButton>
+        )}
+        {rData.isSuccess(withdrawDepositTxRD) && (
+          // TODO: move to IdenaTxLinkRoutine component
+          <>
+            <Typography color={getColor.textGrey(theme)}>
+              Click{' '}
+              <Link href={getIdenaLinkToSignTx(withdrawDepositTxRD.data)} target="_blank">
+                this link
+              </Link>{' '}
+              if Idena App did not open automatically. Wait for the transaction to complete, then
+              reload deposit state.
+            </Typography>
+            <UiSubmitButton
+              sx={{ mt: 2 }}
+              onClick={() => {
+                securityDepositRDM.track(readIdenaSecurityDeposit(address));
+              }}
+            >
+              Check deposit
+            </UiSubmitButton>
+          </>
+        )}
+        {rData.isFailure(withdrawDepositTxRD) && <UiError err={withdrawDepositTxRD.error} />}
+      </Stack>,
+    );
+  }
+
+  return null;
 };

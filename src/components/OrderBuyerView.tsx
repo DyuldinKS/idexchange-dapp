@@ -49,7 +49,7 @@ const logSecret = (...args: any[]) => log('secret', ...args);
 
 export type AddressSchema = z.infer<typeof addressSchema>;
 
-const addressSchema = z.object({
+export const addressSchema = z.object({
   idenaAddress: z.string().refine((val) => isAddress(val), {
     message: 'Invalid identity address.',
   }),
@@ -278,6 +278,7 @@ export const OrderBuyerView: FC<{
           size="small"
         />
         <IdenaSecurityDeposit
+          address={idenaAddress}
           securityDepositRD={securityDepositRD}
           securityDepositRDM={securityDepositRDM}
           form={form}

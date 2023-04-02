@@ -125,7 +125,7 @@ export const buildCreateIdenaOrderTx = async (
   const lastBlock = await idenaProvider.Blockchain.lastBlock();
   const deadline = Number(lastBlock.height) + Math.ceil(ttlMs / IDENA_BLOCK_DURATION_MS);
 
-  const createOrderCallPayload = new CallContractAttachment({
+  const callPayload = new CallContractAttachment({
     method: 'createOrder',
     args: [],
   });
@@ -145,13 +145,13 @@ export const buildCreateIdenaOrderTx = async (
   });
   log('buildCreateIdenaOrderTx lastBlock', lastBlock.height, (lastBlock as any).timestamp);
   log('buildCreateIdenaOrderTx args', args);
-  createOrderCallPayload.setArgs(buildContractArgs(args));
+  callPayload.setArgs(buildContractArgs(args));
 
   const txData = {
     ...BASE_TX_PROPS,
     from,
     amount: idnaAmount,
-    payload: createOrderCallPayload.toBytes(),
+    payload: callPayload.toBytes(),
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
   await estimateWriteTx(tx, from);
@@ -159,15 +159,15 @@ export const buildCreateIdenaOrderTx = async (
 };
 
 export const buildBurnIdenaOrderTx = async (from: string, secretHashHex: string) => {
-  const createOrderCallPayload = new CallContractAttachment({
+  const callPayload = new CallContractAttachment({
     method: 'burnOrder',
     args: [],
   });
-  createOrderCallPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secretHashHex }]));
+  callPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secretHashHex }]));
   const txData = {
     ...BASE_TX_PROPS,
     from,
-    payload: createOrderCallPayload.toBytes(),
+    payload: callPayload.toBytes(),
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
   await estimateWriteTx(tx, from);
@@ -225,7 +225,7 @@ export async function readIdenaSecurityDeposit(address: string) {
 }
 
 export const buildTopUpIdenaSecurityDepositTx = async (from: string) => {
-  const createOrderCallPayload = new CallContractAttachment({
+  const callPayload = new CallContractAttachment({
     method: 'submitSecurityDeposit',
     args: [],
   });
@@ -233,7 +233,7 @@ export const buildTopUpIdenaSecurityDepositTx = async (from: string) => {
     ...BASE_TX_PROPS,
     from,
     amount: formatUnits(readIdenaContractInfo().requiredSecurityDepositAmount, IDENA_DECIMALS),
-    payload: createOrderCallPayload.toBytes(),
+    payload: callPayload.toBytes(),
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
   await estimateWriteTx(tx, from);
@@ -241,15 +241,15 @@ export const buildTopUpIdenaSecurityDepositTx = async (from: string) => {
 };
 
 export const buildMatchIdenaOrderTx = async (from: string, secretHashHex: string) => {
-  const createOrderCallPayload = new CallContractAttachment({
+  const callPayload = new CallContractAttachment({
     method: 'matchOrder',
     args: [],
   });
-  createOrderCallPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secretHashHex }]));
+  callPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secretHashHex }]));
   const txData = {
     ...BASE_TX_PROPS,
     from,
-    payload: createOrderCallPayload.toBytes(),
+    payload: callPayload.toBytes(),
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
   await estimateWriteTx(tx, from);
@@ -257,15 +257,30 @@ export const buildMatchIdenaOrderTx = async (from: string, secretHashHex: string
 };
 
 export const buildCompleteOrderTx = async (from: string, secret: string) => {
-  const createOrderCallPayload = new CallContractAttachment({
+  const callPayload = new CallContractAttachment({
     method: 'completeOrder',
     args: [],
   });
-  createOrderCallPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secret }]));
+  callPayload.setArgs(buildContractArgs([{ format: CAF.Hex, value: secret }]));
   const txData = {
     ...BASE_TX_PROPS,
     from,
-    payload: createOrderCallPayload.toBytes(),
+    payload: callPayload.toBytes(),
+  };
+  const tx = await idenaProvider.Blockchain.buildTx(txData);
+  await estimateWriteTx(tx, from);
+  return tx;
+};
+
+export const buildWithdrawIdenaSecurityDepositTx = async (from: string) => {
+  const callPayload = new CallContractAttachment({
+    method: 'withdrawSecurityDeposit',
+    args: [],
+  });
+  const txData = {
+    ...BASE_TX_PROPS,
+    from,
+    payload: callPayload.toBytes(),
   };
   const tx = await idenaProvider.Blockchain.buildTx(txData);
   await estimateWriteTx(tx, from);

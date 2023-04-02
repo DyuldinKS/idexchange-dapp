@@ -1,4 +1,4 @@
-import { formatUnits } from 'ethers/lib/utils.js';
+import { formatUnits, isAddress } from 'ethers/lib/utils.js';
 import { FC, ReactNode } from 'react';
 
 import { prepareWriteContract, waitForTransaction, writeContract } from '@wagmi/core';
@@ -11,9 +11,13 @@ import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { SecurityDepositType } from '../types/contracts';
 import { rData, RemoteData } from '../utils/remoteData';
-import { readXdaiSecurityDeposit, submitXdaiSecutityDeposit } from '../utils/xdai';
+import {
+  readXdaiSecurityDeposit,
+  submitXdaiSecutityDeposit,
+  withdrawXdaiSecurityDeposit,
+} from '../utils/xdai';
 import { SecurityDepositInfoBlock } from './SecurityDepositInfo';
-import { UiError, UiSubmitButton } from './ui';
+import { UiBlockTitle, UiError, UiSubmitButton } from './ui';
 import { Typography } from '@mui/material';
 
 const log = debug('XdaiSecurityDeposit');
@@ -28,14 +32,15 @@ export const XdaiSecurityDeposit: FC<{
   address: string | null;
   securityDepositRD: RemoteData<SecurityDepositType>;
   securityDepositRDM: UseRemoteDataMethods<SecurityDepositType>;
-  isWithdrawDisabled?: boolean;
-}> = ({ address, securityDepositRD, securityDepositRDM, isWithdrawDisabled }) => {
+  allowWithdrawal?: boolean;
+}> = ({ address, securityDepositRD, securityDepositRDM, allowWithdrawal }) => {
   const { data: contractsAttrs } = useContractsAttributes();
-  const [depositChangeRD, depositChangeRDM] = useRemoteData(null);
-  const error = securityDepositRD.error || depositChangeRD.error;
+  const [depositChangeTxRD, depositChangeTxRDM] = useRemoteData(null);
+  const error = securityDepositRD.error || depositChangeTxRD.error;
 
   const renderDepositInfo = (children: ReactNode) => (
     <SecurityDepositInfoBlock
+      title={<UiBlockTitle>xDAI security deposit</UiBlockTitle>}
       securityDeposit={securityDepositRD.data}
       nativeCurrency={gnosis.nativeCurrency}
     >
@@ -51,12 +56,14 @@ export const XdaiSecurityDeposit: FC<{
   );
 
   if (rData.isNotAsked(securityDepositRD))
-    return renderDepositInfo('Cannot load security deposit.');
+    return renderDepositInfo(
+      !isAddress(address || '') ? 'xDAI address is not provided.' : 'Cannot load security deposit.',
+    );
   if (rData.isLoading(securityDepositRD) || !contractsAttrs) return renderDepositInfo('Loading...');
   if (rData.isFailure(securityDepositRD)) return renderDepositInfo(null);
 
   const deposit = securityDepositRD.data;
-  if (deposit.isValid) return renderDepositInfo(null);
+  // if (deposit.isValid) return renderDepositInfo(null);
   // handled by SecurityDepositInfoBlock
   if (deposit.isInUse) return renderDepositInfo(null);
 
@@ -68,26 +75,44 @@ export const XdaiSecurityDeposit: FC<{
       return waitForTransaction({ hash: tx.hash });
     };
 
-    depositChangeRDM
+    depositChangeTxRDM
       .track(processTx())
       .then(() => securityDepositRDM.track(readXdaiSecurityDeposit(address, contractsAttrs.xdai)));
   };
 
-  if (!securityDepositRD.data?.isValid)
+  const amountStr = formatUnits(
+    contractsAttrs.xdai.securityDepositAmount,
+    gnosis.nativeCurrency.decimals,
+  );
+
+  const isTxLoading = rData.isLoading(depositChangeTxRD);
+
+  if (!deposit.isValid)
     return (
       <>
         {renderDepositInfo(
-          <UiSubmitButton disabled={rData.isLoading(securityDepositRD)} onClick={replenishDeposit}>
-            {!rData.isLoading(securityDepositRD)
-              ? `Deposit ${formatUnits(
-                  contractsAttrs.xdai.securityDepositAmount,
-                  gnosis.nativeCurrency.decimals,
-                )} xDAI`
-              : 'Updating security deposit...'}
+          <UiSubmitButton disabled={isTxLoading} onClick={replenishDeposit}>
+            {!isTxLoading ? `Deposit ${amountStr} xDAI` : 'Updating security deposit...'}
           </UiSubmitButton>,
         )}
       </>
     );
+
+  const withdrawDeposit = () => {
+    if (!address || !contractsAttrs) return;
+
+    depositChangeTxRDM
+      .track(withdrawXdaiSecurityDeposit().then((tx) => waitForTransaction({ hash: tx.hash })))
+      .then(() => securityDepositRDM.track(readXdaiSecurityDeposit(address, contractsAttrs.xdai)));
+  };
+
+  if (allowWithdrawal) {
+    return renderDepositInfo(
+      <UiSubmitButton variant="outlined" disabled={isTxLoading} onClick={withdrawDeposit}>
+        {!isTxLoading ? `Withdraw ${amountStr} xDAI` : 'Updating security deposit...'}
+      </UiSubmitButton>,
+    );
+  }
 
   return renderDepositInfo(null);
 };
