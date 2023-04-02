@@ -32,7 +32,12 @@ export type IdenaSecurityDepositProps = {
   allowWithdrawal?: boolean;
 };
 
-export const IdenaSecurityDeposit: FC<
+export const IDENA_SEC_DEPOSIT_TEXTS = {
+  exclusionExample:
+    'The existence of a deposit incentivizes the buyer to fulfill their obligation in the transaction. For instance, if a buyer books an order on Idena network and subsequently fails to pay xDAI on Gnosis network, their deposit will be seized.',
+};
+
+export const IdenaSecurityDepositBuyerPage: FC<
   IdenaSecurityDepositProps & {
     showAlreadyUsedError?: boolean;
   }
@@ -45,14 +50,13 @@ export const IdenaSecurityDeposit: FC<
       securityDeposit={securityDepositRD.data}
       nativeCurrency={IDENA_CHAIN.nativeCurrency}
       title={
-        <UiBlockTitle tooltip="The existence of a deposit incentivizes the buyer to fulfill their obligation in the transaction. For instance, if a buyer books an order on Idena network and subsequently fails to pay xDAI on Gnosis network, their deposit will be seized.">
+        <UiBlockTitle tooltip={IDENA_SEC_DEPOSIT_TEXTS.exclusionExample}>
           iDNA security deposit
         </UiBlockTitle>
       }
       description={
-        securityDepositRD.data?.amount.eq(0)
-          ? 'In order to guarantee the reliability of the exchange, it is essential to make a deposit of iDNA. After the exchange is completed, the iDNA can be withdrawn from the protocol back to your wallet.'
-          : undefined
+        securityDepositRD.data?.amount.eq(0) &&
+        'In order to guarantee the reliability of the exchange, it is essential to make a deposit of iDNA. After the exchange is completed, the iDNA can be withdrawn from the protocol back to your wallet.'
       }
     >
       <Stack mt={2} spacing={2}>
@@ -60,7 +64,7 @@ export const IdenaSecurityDeposit: FC<
         {showAlreadyUsedError && (
           <Typography color="error">
             This deposit is already being used to confirm another order booking. You have to wait
-            until your previous order is complete or use a different account to book this one.
+            until that order is complete or use a different account to book this one.
           </Typography>
         )}
       </Stack>

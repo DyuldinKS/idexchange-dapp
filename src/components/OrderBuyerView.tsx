@@ -39,7 +39,7 @@ import {
 import { BuyerInfoBlock } from './BuyerInfo';
 import { CnfOrderStatusChip, ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
-import { IdenaSecurityDeposit } from './IdenaSecurityDeposit';
+import { IdenaSecurityDepositBuyerPage } from './IdenaSecurityDeposit';
 import { OrderCompletion } from './OrderCompletion';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
@@ -277,16 +277,17 @@ export const OrderBuyerView: FC<{
           fullWidth
           size="small"
         />
-        <IdenaSecurityDeposit
+        <IdenaSecurityDepositBuyerPage
           address={idenaAddress}
+          form={form}
           securityDepositRD={securityDepositRD}
           securityDepositRDM={securityDepositRDM}
-          form={form}
           showAlreadyUsedError={Boolean(
             rData.isSuccess(securityDepositRD) &&
               securityDepositRD.data.isInUse &&
               order &&
               idenaAddress &&
+              // if the security deposit is in use by current order, we don't want to show "already in use" error.
               !isAddrEqual(order.matcher || '', idenaAddress),
           )}
         />
