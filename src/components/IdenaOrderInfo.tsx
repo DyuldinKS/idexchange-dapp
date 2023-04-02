@@ -18,6 +18,7 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
   expireAt,
   matcher,
   matchExpireAt,
+  matchDeadline,
 }) => {
   const { palette } = useTheme();
   const isMatchExpired = Boolean(matchExpireAt && matchExpireAt <= Date.now());
@@ -52,7 +53,22 @@ export const IdenaOrderInfo: FC<NonNullable<IdenaOrderState & { id: string }>> =
           </Box>
         }
       />
-      <UiInfoBlockRow label="Expire time:" value={dayjs(expireAt).format(DATE_TIME_FORMAT)} />
+      <UiInfoBlockRow
+        label="Expire time:"
+        value={
+          <UiSpan color={expireAt < Date.now() ? palette.error.main : undefined}>
+            {dayjs(expireAt).format(DATE_TIME_FORMAT)}
+          </UiSpan>
+        }
+      />
+      <UiInfoBlockRow
+        label="Match deadline:"
+        value={
+          <UiSpan color={matchDeadline < Date.now() ? palette.error.main : undefined}>
+            {dayjs(matchDeadline).format(DATE_TIME_FORMAT)}
+          </UiSpan>
+        }
+      />
       <UiInfoBlockRow
         label="iDNA taker:"
         value={

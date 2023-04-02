@@ -7,7 +7,11 @@ import { gnosis } from '@wagmi/core/chains';
 
 import { FCC } from '../types/FCC';
 import { IdenaOrderState } from '../utils/idena';
-import { isCnfOrderExecutionExpired, isCnfOrderValid } from '../utils/orderControls';
+import {
+  isCnfOrderExecutionExpired,
+  isCnfOrderMatchDeadlinePassed,
+  isCnfOrderValid,
+} from '../utils/orderControls';
 import { XdaiConfirmedOrder } from '../utils/xdai';
 import { DATE_TIME_FORMAT } from './IdenaOrderInfo';
 import { UiBlock, UiBlockTitle, UiInfoBlockContent, UiInfoBlockRow, UiSpan } from './ui';
@@ -54,8 +58,18 @@ export const ConfirmedOrderInfoBlock: FCC<{
             }
           />
           <UiInfoBlockRow
-            label="Response deadline:"
-            value={dayjs(cnfOrder.matchDeadline).format(DATE_TIME_FORMAT)}
+            label="Match deadline:"
+            value={
+              <UiSpan
+                color={
+                  !cnfOrder.matcher && isCnfOrderMatchDeadlinePassed(cnfOrder)
+                    ? palette.error.main
+                    : undefined
+                }
+              >
+                {dayjs(cnfOrder.matchDeadline).format(DATE_TIME_FORMAT)}
+              </UiSpan>
+            }
           />
           <UiInfoBlockRow
             label="xDAI giver:"
