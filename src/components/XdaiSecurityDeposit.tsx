@@ -111,12 +111,16 @@ export const XdaiSecurityDepositControls: FCC<{
   );
 
   const isTxLoading = rData.isLoading(depositChangeTxRD);
+  const txError = depositChangeTxRD.error;
 
   if (!deposit.isValid)
     return (
-      <UiSubmitButton disabled={isTxLoading} onClick={replenishDeposit}>
-        {!isTxLoading ? `Deposit ${amountStr} xDAI` : 'Updating security deposit...'}
-      </UiSubmitButton>
+      <Stack spacing={1}>
+        <UiSubmitButton disabled={isTxLoading} onClick={replenishDeposit}>
+          {!isTxLoading ? `Deposit ${amountStr} xDAI` : 'Updating security deposit...'}
+        </UiSubmitButton>
+        <UiError err={txError} />
+      </Stack>
     );
 
   const withdrawDeposit = () => {
@@ -129,9 +133,12 @@ export const XdaiSecurityDepositControls: FCC<{
 
   if (allowWithdrawal) {
     return (
-      <UiSubmitButton variant="outlined" disabled={isTxLoading} onClick={withdrawDeposit}>
-        {!isTxLoading ? `Withdraw ${amountStr} xDAI` : 'Updating security deposit...'}
-      </UiSubmitButton>
+      <Stack spacing={1}>
+        <UiSubmitButton variant="outlined" disabled={isTxLoading} onClick={withdrawDeposit}>
+          {!isTxLoading ? `Withdraw ${amountStr} xDAI` : 'Updating security deposit...'}
+        </UiSubmitButton>
+        <UiError err={txError} />
+      </Stack>
     );
   }
 
