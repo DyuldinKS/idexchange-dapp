@@ -18,7 +18,7 @@ import {
   openIdenaAppToSignTx,
   readIdenaOrderState,
 } from '../utils/idena';
-import { canCancelCnfOrder, canCreateCnfOrder } from '../utils/orderControls';
+import { canCancelCnfOrder, canCancelOrder, canCreateCnfOrder } from '../utils/orderControls';
 import { rData, RemoteData } from '../utils/remoteData';
 import { getColor } from '../utils/theme';
 import { burnXdaiOrder, readXdaiCnfOrder, XdaiConfirmedOrder } from '../utils/xdai';
@@ -44,8 +44,12 @@ export const OrderOwnerView: FC<{
   const [burnConfirmedOrderRD, burnConfirmedOrderRDM] = useRemoteData(null);
   const contractsAttrsRD = useContractsAttributes();
   const contractsAttrs = contractsAttrsRD.data;
+
   const canConfirmOrder =
     contractsAttrs && canCreateCnfOrder(order, cnfOrderRD.data, contractsAttrs?.idena);
+
+  const canCancelIdenaOrder =
+    contractsAttrs && canCancelOrder(order, cnfOrderRD.data, contractsAttrs?.idena);
 
   const theme = useTheme();
   // TODO: get owner from events in case of order already burned, but confirmed order is still exists.
@@ -74,18 +78,10 @@ export const OrderOwnerView: FC<{
       );
     };
 
-    const fulfilPeriod = contractsAttrs && contractsAttrs.idena.fulfilPeriod || 0
-
-    const canBeCancelled =
-      Date.now() > order.expireAt - fulfilPeriod &&
-      !cnfOrderRD.data &&
-      !rData.isLoading(cancelOrderTxRD) &&
-      !rData.isLoading(cnfOrderRD);
-
     return (
       <Stack spacing={2}>
         {!rData.isSuccess(cancelOrderTxRD) && (
-          <UiSubmitButton disabled={!canBeCancelled} onClick={buildCancelTxAndSign}>
+          <UiSubmitButton disabled={!canCancelIdenaOrder} onClick={buildCancelTxAndSign}>
             Cancel order
           </UiSubmitButton>
         )}
