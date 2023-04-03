@@ -39,7 +39,10 @@ import {
 import { BuyerInfoBlock } from './BuyerInfo';
 import { CnfOrderStatusChip, ConfirmedOrderInfoBlock } from './ConfirmedOrderInfo';
 import { IdenaOrderInfoBlock } from './IdenaOrderInfo';
-import { IdenaSecurityDeposit } from './IdenaSecurityDeposit';
+import {
+  IdenaSecurityDepositBuyerView,
+  IdenaSecurityDepositControls,
+} from './IdenaSecurityDeposit';
 import { OrderCompletion } from './OrderCompletion';
 import { UiError, UiSpan, UiSubmitButton } from './ui';
 import { renderWalletRoutineIfNeeded } from './WalletRoutine';
@@ -49,7 +52,7 @@ const logSecret = (...args: any[]) => log('secret', ...args);
 
 export type AddressSchema = z.infer<typeof addressSchema>;
 
-const addressSchema = z.object({
+export const addressSchema = z.object({
   idenaAddress: z.string().refine((val) => isAddress(val), {
     message: 'Invalid identity address.',
   }),
@@ -277,17 +280,24 @@ export const OrderBuyerView: FC<{
           fullWidth
           size="small"
         />
-        <IdenaSecurityDeposit
+        <IdenaSecurityDepositBuyerView
           securityDepositRD={securityDepositRD}
-          securityDepositRDM={securityDepositRDM}
-          form={form}
-          showAlreadyUsedError={Boolean(
+          showAlreadyInUseError={Boolean(
             rData.isSuccess(securityDepositRD) &&
               securityDepositRD.data.isInUse &&
               order &&
               idenaAddress &&
+              // if the security deposit is in use by current order, we don't want to show "already in use" error.
               !isAddrEqual(order.matcher || '', idenaAddress),
           )}
+          controls={
+            <IdenaSecurityDepositControls
+              address={idenaAddress}
+              form={form}
+              securityDepositRD={securityDepositRD}
+              securityDepositRDM={securityDepositRDM}
+            />
+          }
         />
         <BuyerInfoBlock />
         <IdenaOrderInfoBlock title="Idena chain" order={orderRD.data} secretHash={secretHash}>

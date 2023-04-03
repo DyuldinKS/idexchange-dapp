@@ -5,6 +5,7 @@ import { SecurityDepositType } from '../types/contracts';
 
 import { readIdenaSecurityDeposit } from '../utils/idena';
 import { useRemoteData } from './useRemoteData';
+import { rData } from '../utils/remoteData';
 
 const log = debug('hooks:useIdenaSecurityDeposit');
 
@@ -13,7 +14,10 @@ export const useIdenaSecurityDeposit = (idenaAddress: string) => {
   const [, rdMethods] = rd;
 
   useEffect(() => {
-    if (!idenaAddress || !isAddress(idenaAddress)) return;
+    if (!idenaAddress || !isAddress(idenaAddress)) {
+      if (rData.isNotAsked(rdMethods.getState())) return;
+      return rdMethods.setNotAsked();
+    }
     rdMethods.track(readIdenaSecurityDeposit(idenaAddress));
   }, [idenaAddress, rdMethods]);
 

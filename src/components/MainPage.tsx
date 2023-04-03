@@ -42,14 +42,22 @@ export const MainPage = () => {
   return (
     <UiPage maxWidth="sm">
       <Stack>
-        <Stack spacing={1}>
-          <Typography>Create new order to exchange iDNA for xDAI</Typography>
+        <Stack>
           <UiSubmitButton size="large" LinkComponent={Link} {...{ to: '/order/new' }}>
-            Create order
+            Exchange iDNA for xDAI
           </UiSubmitButton>
         </Stack>
-        <Stack mt={2} spacing={1}>
-          <Typography>Or find existing order by id</Typography>
+        <Stack mt={2}>
+          <UiSubmitButton
+            variant="outlined"
+            size="large"
+            LinkComponent={Link}
+            {...{ to: '/deposits' }}
+          >
+            Manage security deposits
+          </UiSubmitButton>
+        </Stack>
+        <Stack mt={2}>
           <Box>
             <Grid container spacing={1}>
               <Grid item xs={12} sm={8}>
@@ -57,7 +65,7 @@ export const MainPage = () => {
                   {...register('orderId')}
                   error={Boolean(errors.orderId)}
                   helperText={errors.orderId?.message}
-                  placeholder="Secret or hash"
+                  placeholder="Order id or secret"
                   fullWidth
                   size="small"
                 />
@@ -75,6 +83,7 @@ export const MainPage = () => {
             </Grid>
           </Box>
         </Stack>
+
         <Stack mt={4}>
           <OrderList />
         </Stack>
