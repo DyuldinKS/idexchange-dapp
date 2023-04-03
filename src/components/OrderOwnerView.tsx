@@ -74,8 +74,10 @@ export const OrderOwnerView: FC<{
       );
     };
 
+    const fulfilPeriod = contractsAttrs && contractsAttrs.idena.fulfilPeriod || 0
+
     const canBeCancelled =
-      Date.now() > order.expireAt &&
+      Date.now() > order.expireAt - fulfilPeriod &&
       !cnfOrderRD.data &&
       !rData.isLoading(cancelOrderTxRD) &&
       !rData.isLoading(cnfOrderRD);

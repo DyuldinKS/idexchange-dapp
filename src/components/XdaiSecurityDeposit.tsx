@@ -4,7 +4,7 @@ import { FC, ReactNode } from 'react';
 import { waitForTransaction } from '@wagmi/core';
 import { gnosis } from '@wagmi/core/chains';
 
-import { Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
 import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
 import { SecurityDepositType } from '../types/contracts';
@@ -19,7 +19,6 @@ import {
   UiBlock,
   UiBlockTitle,
   UiError,
-  UiInfoBlockContent,
   UiInfoBlockRow,
   UiSpan,
   UiSubmitButton,
@@ -28,7 +27,7 @@ import { FCC } from '../types/FCC';
 
 export const XDAI_SEC_DEPOSIT_TEXTS = {
   exclusionExample:
-    "The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking xDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller's security deposit will be seized in the following manner: 50% to the mather to compensate seized security deposit on Idena network and 50% to the protocol fund.",
+    "The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking xDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller's security deposit will be seized in the following manner: 50% to the matcher to compensate seized security deposit on Idena network and 50% to the protocol fund.",
 };
 
 export const XdaiSecurityDepositOwnerView: FC<{
