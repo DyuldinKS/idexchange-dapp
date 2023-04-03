@@ -1,6 +1,6 @@
 import { formatUnits, isAddress } from 'ethers/lib/utils.js';
 import { Transaction } from 'idena-sdk-js';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
 import { Link, Stack, Typography, useTheme } from '@mui/material';
@@ -45,12 +45,11 @@ export const IDENA_SEC_DEPOSIT_TEXTS = {
     'The existence of a deposit incentivizes the buyer to fulfill their obligation in the transaction. For instance, if a buyer books an order on Idena network and subsequently fails to pay xDAI on Gnosis network, their deposit will be seized.',
 };
 
-export const IdenaSecurityDepositBuyerView: FC<
-  IdenaSecurityDepositProps & {
-    showAlreadyInUseError?: boolean;
-  }
-> = (props) => {
-  const { securityDepositRD, showAlreadyInUseError } = props;
+export const IdenaSecurityDepositBuyerView: FC<{
+  securityDepositRD: RemoteData<SecurityDepositType>;
+  showAlreadyInUseError?: boolean;
+  controls: ReactNode;
+}> = ({ securityDepositRD, showAlreadyInUseError, controls }) => {
   const error = securityDepositRD.error;
   const securityDeposit = securityDepositRD.data;
 
@@ -75,7 +74,7 @@ export const IdenaSecurityDepositBuyerView: FC<
         </UiInfoBlockContent>
       )}
       <Stack mt={2} spacing={2}>
-        <IdenaSecurityDepositControls {...props} />
+        {controls}
         {showAlreadyInUseError && (
           <Typography color="error">
             This deposit is already being used to confirm another order booking. You have to wait
@@ -101,7 +100,7 @@ export const IdenaSecurityDepositControls: FC<IdenaSecurityDepositProps> = ({
 
   if (rData.isNotAsked(securityDepositRD))
     return (
-      <UiSpan>
+      <UiSpan color={getColor.textGrey(theme)}>
         {!isAddress(address || '')
           ? 'Idena address is not provided.'
           : 'Cannot load security deposit.'}

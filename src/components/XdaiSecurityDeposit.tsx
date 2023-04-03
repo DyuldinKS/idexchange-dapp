@@ -28,14 +28,17 @@ import { FCC } from '../types/FCC';
 
 export const XDAI_SEC_DEPOSIT_TEXTS = {
   exclusionExample:
-    "The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking xDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller' security deposit will be seized in the following manner: 50% to the mather to compensate seized security deposit on Idena network and 50% to the protocol fund.",
+    "The existence of a deposit incentivizes the seller to fulfill their obligation in the transaction. For instance, if a seller confirms an order on Gnosis network, someone matches that order by locking xDAI for the seller to claim, and then a seller fails to reveal the secret on Gnosis network, seller's security deposit will be seized in the following manner: 50% to the mather to compensate seized security deposit on Idena network and 50% to the protocol fund.",
 };
 
 export const XdaiSecurityDepositOwnerView: FC<{
   securityDepositRD: RemoteData<SecurityDepositType>;
   controls: ReactNode;
 }> = ({ securityDepositRD, controls }) => {
-  const error = securityDepositRD.error;
+  const error =
+    (securityDepositRD.data?.isInUse &&
+      'This deposit is already being used to confirm another order. You have to wait until your previous order is complete or use a different account to create a new order.') ||
+    securityDepositRD.error;
   const securityDeposit = securityDepositRD.data;
 
   return (
@@ -43,31 +46,25 @@ export const XdaiSecurityDepositOwnerView: FC<{
       <UiBlockTitle tooltip={XDAI_SEC_DEPOSIT_TEXTS.exclusionExample}>
         xDAI security deposit
       </UiBlockTitle>
-      {securityDeposit && (
-        <UiInfoBlockContent>
-          {securityDeposit.amount.eq(0) && (
-            <UiInfoBlockRow
-              label={
-                'In order to guarantee the reliability of the exchange, it is essential to make a deposit of xDAI. After the exchange is completed, the it can be withdrawn from the protocol back to your wallet.'
-              }
-            />
-          )}
-          <SecurityDepositAmount
-            amount={securityDeposit.amount}
-            nativeCurrency={gnosis.nativeCurrency}
-          />
-        </UiInfoBlockContent>
-      )}
       <Stack mt={2} spacing={2}>
-        {controls}
-        {securityDepositRD.data?.isInUse && (
-          <Typography color="error">
-            This deposit is already being used to confirm another order. You have to wait until your
-            previous order is complete or use a different account to create a new order.
-          </Typography>
+        {securityDeposit && (
+          <Stack spacing={1}>
+            {securityDeposit.amount.eq(0) && (
+              <UiInfoBlockRow
+                label={
+                  'In order to guarantee the reliability of the exchange, it is essential to make a deposit of xDAI. After the exchange is completed, the it can be withdrawn from the protocol back to your wallet.'
+                }
+              />
+            )}
+            <SecurityDepositAmount
+              amount={securityDeposit.amount}
+              nativeCurrency={gnosis.nativeCurrency}
+            />
+          </Stack>
         )}
+        {controls}
+        {error && <UiError mt={1} err={error} />}
       </Stack>
-      {error && <UiError mt={1} err={error} />}
     </UiBlock>
   );
 };
