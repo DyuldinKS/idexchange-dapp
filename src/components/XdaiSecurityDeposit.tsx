@@ -6,24 +6,17 @@ import { gnosis } from '@wagmi/core/chains';
 
 import { Stack } from '@mui/material';
 import { useContractsAttributes } from '../hooks/useContractsAttributes';
-import { useRemoteData, UseRemoteDataMethods } from '../hooks/useRemoteData';
+import { UseRemoteDataMethods, useRemoteData } from '../hooks/useRemoteData';
+import { FCC } from '../types/FCC';
 import { SecurityDepositType } from '../types/contracts';
-import { rData, RemoteData } from '../utils/remoteData';
+import { RemoteData, rData } from '../utils/remoteData';
 import {
   readXdaiSecurityDeposit,
   submitXdaiSecutityDeposit,
   withdrawXdaiSecurityDeposit,
 } from '../utils/xdai';
 import { SecurityDepositAmount } from './SecurityDepositInfo';
-import {
-  UiBlock,
-  UiBlockTitle,
-  UiError,
-  UiInfoBlockRow,
-  UiSpan,
-  UiSubmitButton,
-} from './ui';
-import { FCC } from '../types/FCC';
+import { UiBlock, UiBlockTitle, UiError, UiInfoBlockRow, UiSpan, UiSubmitButton } from './ui';
 
 export const XDAI_SEC_DEPOSIT_TEXTS = {
   exclusionExample:
@@ -35,8 +28,10 @@ export const XdaiSecurityDepositOwnerView: FC<{
   controls: ReactNode;
 }> = ({ securityDepositRD, controls }) => {
   const error =
-    (securityDepositRD.data?.isInUse &&
-      'This deposit is already being used to confirm another order. You have to wait until your previous order is complete or use a different account to create a new order.') ||
+    (securityDepositRD.data?.isInUse && {
+      message:
+        'This deposit is already being used to confirm another order. You have to wait until your previous order is complete or use a different account to create a new order.',
+    }) ||
     securityDepositRD.error;
   const securityDeposit = securityDepositRD.data;
 
@@ -62,7 +57,7 @@ export const XdaiSecurityDepositOwnerView: FC<{
           </Stack>
         )}
         {controls}
-        {error && <UiError mt={1} err={error} />}
+        <UiError mt={1} err={error} />
       </Stack>
     </UiBlock>
   );
